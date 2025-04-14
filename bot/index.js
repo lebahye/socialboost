@@ -91,27 +91,7 @@ if (process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET) {
 }
 
 // Session configuration
-const localSession = new LocalSession({
-  database: 'sessions.json',
-  storage: {
-    read: (key) => {
-      try {
-        return JSON.parse(localSession.storageFileSync.read())[key] || null;
-      } catch (e) {
-        return null;
-      }
-    },
-    write: (key, value) => {
-      try {
-        const data = JSON.parse(localSession.storageFileSync.read()) || {};
-        data[key] = value;
-        localSession.storageFileSync.write(JSON.stringify(data));
-      } catch (e) {
-        localSession.storageFileSync.write(JSON.stringify({[key]: value}));
-      }
-    }
-  }
-});
+const localSession = new LocalSession({ database: 'sessions.json' });
 
 // Register session middleware
 bot.use(localSession.middleware());
