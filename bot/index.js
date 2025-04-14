@@ -57,23 +57,38 @@ const verificationService = require('./services/verification');
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
-// Connect to database
-mongoose.connect(process.env.MONGODB_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-}).then(() => {
-  console.log('Connected to MongoDB');
-}).catch(err => {
-  console.error('Error connecting to MongoDB:', err);
-});
+// Connect to database if MongoDB URI is provided
+if (process.env.MONGODB_URI) {
+  mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  }).then(() => {
+    console.log('Connected to MongoDB');
+  }).catch(err => {
+    console.error('Error connecting to MongoDB:', err);
+    console.log('Running in limited mode without database persistence');
+  });
+} else {
+  console.log('No MongoDB URI provided, running in limited mode without database persistence');
+}
 
 // Initialize X/Twitter API client
-const twitterClient = new TwitterApi({
-  appKey: process.env.TWITTER_API_KEY,
-  appSecret: process.env.TWITTER_API_SECRET,
-  accessToken: process.env.TWITTER_ACCESS_TOKEN,
-  accessSecret: process.env.TWITTER_ACCESS_SECRET,
-});
+let twitterClient = null;
+if (process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET) {
+  try {
+    twitterClient = new TwitterApi({
+      appKey: process.env.TWITTER_API_KEY,
+      appSecret: process.env.TWITTER_API_SECRET,
+      accessToken: process.env.TWITTER_ACCESS_TOKEN,
+      accessSecret: process.env.TWITTER_ACCESS_SECRET,
+    });
+    console.log('Twitter API client initialized');
+  } catch (error) {
+    console.error('Failed to initialize Twitter API client:', error);
+  }
+} else {
+  console.log('Twitter API credentials not found, X verification features will be limited');
+}
 
 // Session configuration
 const localSession = new LocalSession({
