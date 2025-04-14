@@ -1,5 +1,6 @@
 // Main entry point for the Campaign Coordination Telegram Bot
 const { Telegraf, Scenes, session } = require('telegraf');
+const LocalSession = require('telegraf-session-local');
 const mongoose = require('mongoose');
 const { TwitterApi } = require('twitter-api-v2');
 require('dotenv').config();
@@ -47,7 +48,7 @@ const {
 } = require('./handlers/analyticsHandlers');
 
 // Import middleware
-const { userMiddleware, projectOwnerMiddleware } = require('./middleware/auth');
+const { userMiddleware, projectOwnerMiddleware, authMiddleware } = require('./middleware/auth');
 
 // Import services
 const scheduler = require('./services/scheduler');
@@ -74,6 +75,32 @@ const twitterClient = new TwitterApi({
   accessSecret: process.env.TWITTER_ACCESS_SECRET,
 });
 
+// Session configuration
+const localSession = new LocalSession({
+  database: 'sessions.json',
+  storage: {
+    read: (key) => {
+      try {
+        return JSON.parse(localSession.storageFileSync.read())[key] || null;
+      } catch (e) {
+        return null;
+      }
+    },
+    write: (key, value) => {
+      try {
+        const data = JSON.parse(localSession.storageFileSync.read()) || {};
+        data[key] = value;
+        localSession.storageFileSync.write(JSON.stringify(data));
+      } catch (e) {
+        localSession.storageFileSync.write(JSON.stringify({[key]: value}));
+      }
+    }
+  }
+});
+
+// Register session middleware
+bot.use(localSession.middleware());
+
 // Configure session and scenes
 bot.use(session());
 
@@ -86,6 +113,7 @@ const stage = new Scenes.Stage([
 
 bot.use(stage.middleware());
 bot.use(userMiddleware);
+bot.use(authMiddleware);
 
 // Basic commands (available to all users)
 bot.command('start', startHandler);
@@ -143,15 +171,48 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Start bot
-if (process.env.NODE_ENV === 'production') {
-  // Webhook setup for production
-  bot.telegram.setWebhook(`${process.env.WEBHOOK_URL}/bot${process.env.TELEGRAM_BOT_TOKEN}`);
-  bot.startWebhook(`/bot${process.env.TELEGRAM_BOT_TOKEN}`, null, process.env.PORT || 3000);
-  console.log('Bot started with webhook mode');
+const isDevelopment = process.env.NODE_ENV === 'development';
+
+if (isDevelopment) {
+  // Use polling for development (easier for local testing)
+  bot.launch().then(() => {
+    console.log('Bot started in polling mode (development)');
+  });
 } else {
-  // Polling for development
-  bot.launch();
-  console.log('Bot started with polling mode');
+  // Use webhook for production
+  const PORT = process.env.PORT || 3000;
+  const WEBHOOK_URL = process.env.WEBHOOK_URL;
+
+  if (!WEBHOOK_URL) {
+    console.error('WEBHOOK_URL environment variable is required for production mode');
+    process.exit(1);
+  }
+
+  // Start webhook
+  bot.telegram.setWebhook(`${WEBHOOK_URL}/bot${process.env.TELEGRAM_BOT_TOKEN}`);
+
+  // Set up Express server for webhook
+  const express = require('express');
+  const app = express();
+
+  // Parse Telegram webhook requests
+  app.use(express.json());
+
+  // Set the webhook endpoint
+  app.post(`/bot${process.env.TELEGRAM_BOT_TOKEN}`, (req, res) => {
+    bot.handleUpdate(req.body, res);
+  });
+
+  // Health check endpoint
+  app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+  });
+
+  // Start server
+  app.listen(PORT, () => {
+    console.log(`Bot webhook server started on port ${PORT}`);
+    console.log(`Webhook URL: ${WEBHOOK_URL}/bot${process.env.TELEGRAM_BOT_TOKEN}`);
+  });
 }
 
 // Enable graceful stop

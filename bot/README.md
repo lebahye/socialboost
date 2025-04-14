@@ -1,60 +1,97 @@
-# Social Campaign Coordinator Bot
+# SocialBoost Telegram Bot
 
-A Telegram bot for coordinating social media campaigns between crypto/blockchain projects and their communities. This bot helps projects create and manage campaigns where their followers engage with social media posts, and the bot tracks participation across platforms.
-
-## Features
-
-- **User Registration**: New users can register and specify if they're community members or project owners
-- **Account Linking**: Users can connect and verify their X (Twitter) and Discord accounts
-- **Project Registration**: Project owners can register and manage their projects
-- **Campaign Management**: Create, track, and analyze social media campaigns
-- **Cross-platform Reminders**: Send notifications to non-participating users
-- **Analytics**: Track campaign performance and engagement metrics
-
-## Requirements
-
-- Node.js 16 or higher
-- MongoDB database
-- Telegram Bot token (obtained from BotFather)
-- X (Twitter) API credentials (optional, for verification)
+This folder contains the Telegram bot code that powers the SocialBoost platform for coordinating social media campaigns.
 
 ## Setup Instructions
 
-1. **Create a Telegram Bot**:
-   - Talk to [BotFather](https://t.me/botfather) on Telegram
-   - Use the `/newbot` command and follow instructions
-   - Note down the bot token provided
+### Prerequisites
 
-2. **Set up MongoDB**:
-   - Create a MongoDB Atlas account or set up a local MongoDB server
-   - Create a new database for the bot
-   - Note down the MongoDB connection string
+- Node.js 16+ installed
+- MongoDB database (local or cloud-based like MongoDB Atlas)
+- Telegram Bot Token (from BotFather)
 
-3. **Configure Environment Variables**:
-   - Copy `.env.example` to `.env`
-   - Update the following variables:
-     ```
-     TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
-     MONGODB_URI=your_mongodb_connection_string_here
-     NODE_ENV=development  # Change to 'production' for webhook mode
-     ```
-   - Optional: Add X (Twitter) API credentials if you want to enable X verification
+### Local Development
 
-4. **Install Dependencies**:
-   ```bash
-   cd bot
-   npm install
-   ```
+1. **Install dependencies**
 
-5. **Start the Bot**:
-   - Development mode (polling):
-     ```bash
-     npm run dev
-     ```
-   - Production mode (webhook):
-     ```bash
-     NODE_ENV=production npm start
-     ```
+```bash
+npm install
+```
+
+2. **Configure environment variables**
+
+Run the setup script to create and configure your .env file:
+
+```bash
+npm run setup
+```
+
+Or manually create a `.env` file with the following content:
+
+```
+# Telegram Bot Token (Get from BotFather)
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+
+# MongoDB Connection
+MONGODB_URI=your_mongodb_connection_string
+
+# Environment and Webhook Settings
+NODE_ENV=development
+PORT=3000
+```
+
+3. **Start the bot in development mode**
+
+```bash
+npm run dev
+```
+
+The bot will run in polling mode during development, which means it will continuously check for updates from Telegram.
+
+### Production Deployment
+
+For production deployment, you need a server with a public IP address or domain name with HTTPS. Using a webhook is recommended for production as it's more efficient than polling.
+
+1. **Set up your server with HTTPS**
+
+You'll need a domain name with a valid SSL certificate. You can use services like Let's Encrypt for free SSL certificates.
+
+2. **Set environment variables for production**
+
+Update your `.env` file with:
+
+```
+NODE_ENV=production
+WEBHOOK_URL=https://your-domain-name.com
+PORT=3000  # Or any port your hosting provider allows
+```
+
+3. **Start the bot**
+
+```bash
+npm start
+```
+
+The bot will start in webhook mode, where Telegram will send updates to your server when they occur.
+
+## Webhook Setup
+
+When running in production mode, the bot automatically sets up a webhook with Telegram. The webhook URL will be:
+
+```
+https://your-domain-name.com/bot<your_bot_token>
+```
+
+Telegram will send updates to this URL when users interact with your bot.
+
+## Bot Features
+
+- **User Registration**: Register users as community members or project owners
+- **Project Registration**: Project owners can register their crypto projects
+- **Campaign Management**: Create and manage social media campaigns
+- **X (Twitter) Verification**: Verify ownership of X accounts
+- **Discord Integration**: Connect and verify Discord accounts
+- **Campaign Analytics**: Track engagement and participation
 
 ## Project Structure
 
@@ -84,44 +121,21 @@ bot/
 └── package.json          # Bot dependencies
 ```
 
-## Usage
+## Commands
 
-Once the bot is running, users can interact with it using these commands:
+Here are the main commands supported by the bot:
 
-### Basic Commands
-- `/start` - Begin using the bot and register
-- `/help` - Display available commands
-- `/status` - Check user account status
-
-### Account Commands
-- `/link` - Link a social media account
-- `/verify` - Verify a linked social account
-- `/unlink` - Remove a linked social account
-
-### Project Owner Commands
-- `/newproject` - Register a new project
-- `/myprojects` - List your projects
-- `/project` - Manage a specific project
-
-### Campaign Commands
-- `/newcampaign` - Create a new campaign
-- `/campaigns` - Browse available campaigns
-- `/campaign` - View campaign details
-- `/check` - Check campaign participation
-- `/remind` - Send reminders to participants
-
-### Analytics Commands
-- `/analytics` - View campaign analytics
-- `/export` - Export campaign data
-
-## Deployment
-
-For production deployment, set up a webhook:
-
-1. Set `NODE_ENV=production` in your .env file
-2. Set `WEBHOOK_URL=https://your-domain.com`
-3. Set `PORT=3000` (or your preferred port)
-4. Run `npm start`
+- `/start` - Begin interaction with the bot
+- `/register` - Register as a community member or project owner
+- `/help` - Get assistance with bot features
+- `/profile` - View your profile and connected accounts
+- `/campaigns` - Browse active campaigns to participate in
+- `/mycampaigns` - View campaigns you've created or joined
+- `/create` - Create a new campaign (project owners only)
+- `/projects` - View and manage your projects (project owners only)
+- `/stats` - See your participation and reward statistics
+- `/connect` - Link your social media accounts
+- `/settings` - Configure your bot preferences
 
 ## License
 
