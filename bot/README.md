@@ -1,141 +1,99 @@
-# SocialBoost Telegram Bot
+# SocialBoost Campaign Coordination Bot
 
-This folder contains the Telegram bot code that powers the SocialBoost platform for coordinating social media campaigns.
+This Telegram bot helps project owners coordinate social media campaigns and reward participants.
 
 ## Setup Instructions
 
 ### Prerequisites
 
-- Node.js 16+ installed
-- MongoDB database (local or cloud-based like MongoDB Atlas)
-- Telegram Bot Token (from BotFather)
+- Node.js (v16+)
+- MongoDB database (optional for full functionality)
+- Telegram Bot token from BotFather
 
-### Local Development
+### Getting a Valid Telegram Bot Token
 
-1. **Install dependencies**
+1. Open Telegram and search for BotFather (@BotFather)
+2. Start a chat and send the command `/newbot`
+3. Follow the instructions to create a new bot
+4. Once created, BotFather will provide a token like: `1234567890:ABCDEFghijklmnopQRSTUVwxyz`
+5. Copy this token exactly as shown
+
+### Setting Up Bot Commands in Telegram
+
+1. In BotFather, send `/mybots`
+2. Select your bot
+3. Choose "Edit Bot" → "Edit Commands"
+4. Paste these commands:
+```
+start - Begin interaction with the bot
+help - Show available commands
+status - Check your current status
+link - Link social media accounts
+verify - Verify linked accounts
+unlink - Unlink social media accounts
+newproject - Create a new project
+myprojects - List your projects
+project - Manage a specific project
+newcampaign - Create a new campaign
+campaigns - List available campaigns
+campaign - Manage a specific campaign
+analytics - Show analytics for projects/campaigns
+export - Export project or campaign data
+```
+
+### Configuration
+
+1. Edit the `.env` file in the bot directory
+2. Add your valid Telegram Bot token:
+```
+TELEGRAM_BOT_TOKEN=your_actual_bot_token_from_botfather
+```
+3. (Optional) Add MongoDB connection string:
+```
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/database?retryWrites=true&w=majority
+```
+
+### Installation and Running
 
 ```bash
+# Navigate to bot directory
+cd socialboost/bot
+
+# Install dependencies
 npm install
+
+# Start the bot
+node index.js
 ```
 
-2. **Configure environment variables**
+### Troubleshooting
 
-Run the setup script to create and configure your .env file:
+If you encounter a "401 Unauthorized" error:
+1. Your token is invalid or has been revoked
+2. Get a fresh token from BotFather using `/token`
+3. Make sure to copy the entire token correctly
 
+If you see "MongoDB connection error":
+1. Check that your MongoDB URI is correctly formatted
+2. Ensure your IP address is whitelisted in MongoDB Atlas
+3. Verify username and password are correct
+
+### Testing Your Setup
+
+Run the environment check script:
 ```bash
-npm run setup
+node env_check.js
 ```
 
-Or manually create a `.env` file with the following content:
+This will confirm if your environment variables are set up correctly.
 
-```
-# Telegram Bot Token (Get from BotFather)
-TELEGRAM_BOT_TOKEN=your_bot_token_here
+## Bot Commands
 
-# MongoDB Connection
-MONGODB_URI=your_mongodb_connection_string
-
-# Environment and Webhook Settings
-NODE_ENV=development
-PORT=3000
-```
-
-3. **Start the bot in development mode**
-
-```bash
-npm run dev
-```
-
-The bot will run in polling mode during development, which means it will continuously check for updates from Telegram.
-
-### Production Deployment
-
-For production deployment, you need a server with a public IP address or domain name with HTTPS. Using a webhook is recommended for production as it's more efficient than polling.
-
-1. **Set up your server with HTTPS**
-
-You'll need a domain name with a valid SSL certificate. You can use services like Let's Encrypt for free SSL certificates.
-
-2. **Set environment variables for production**
-
-Update your `.env` file with:
-
-```
-NODE_ENV=production
-WEBHOOK_URL=https://your-domain-name.com
-PORT=3000  # Or any port your hosting provider allows
-```
-
-3. **Start the bot**
-
-```bash
-npm start
-```
-
-The bot will start in webhook mode, where Telegram will send updates to your server when they occur.
-
-## Webhook Setup
-
-When running in production mode, the bot automatically sets up a webhook with Telegram. The webhook URL will be:
-
-```
-https://your-domain-name.com/bot<your_bot_token>
-```
-
-Telegram will send updates to this URL when users interact with your bot.
-
-## Bot Features
-
-- **User Registration**: Register users as community members or project owners
-- **Project Registration**: Project owners can register their crypto projects
-- **Campaign Management**: Create and manage social media campaigns
-- **X (Twitter) Verification**: Verify ownership of X accounts
-- **Discord Integration**: Connect and verify Discord accounts
-- **Campaign Analytics**: Track engagement and participation
-
-## Project Structure
-
-```
-bot/
-├── index.js              # Main entry point
-├── models/               # MongoDB models
-│   ├── User.js           # User model for both community members and project owners
-│   ├── Project.js        # Project model for campaign coordination
-│   └── Campaign.js       # Campaign model for tracking participation
-├── scenes/               # Telegraf scenes for multi-step conversations
-│   ├── projectRegistration.js   # New project registration flow
-│   ├── campaignCreation.js      # Campaign creation wizard
-│   ├── userRegistration.js      # New user onboarding
-│   └── xVerification.js         # X (Twitter) account verification
-├── handlers/             # Command handlers
-│   ├── basicHandlers.js          # Basic bot commands
-│   ├── accountHandlers.js        # Social account management
-│   ├── projectHandlers.js        # Project management
-│   ├── campaignHandlers.js       # Campaign management
-│   └── analyticsHandlers.js      # Analytics and reporting
-├── middleware/           # Authentication middleware
-│   └── auth.js           # User authentication and project owner verification
-├── services/             # Bot services
-│   ├── verification.js   # Social account verification service
-│   └── scheduler.js      # Scheduled tasks (reminders, verification checks)
-└── package.json          # Bot dependencies
-```
-
-## Commands
-
-Here are the main commands supported by the bot:
-
-- `/start` - Begin interaction with the bot
-- `/register` - Register as a community member or project owner
-- `/help` - Get assistance with bot features
-- `/profile` - View your profile and connected accounts
-- `/campaigns` - Browse active campaigns to participate in
-- `/mycampaigns` - View campaigns you've created or joined
-- `/create` - Create a new campaign (project owners only)
-- `/projects` - View and manage your projects (project owners only)
-- `/stats` - See your participation and reward statistics
-- `/connect` - Link your social media accounts
-- `/settings` - Configure your bot preferences
+Once running, the bot will support all the commands you set up in BotFather:
+- `/start` - Begin interaction
+- `/help` - Show available commands
+- `/status` - Check your current status
+- And more as listed in the BotFather commands section
 
 ## License
 
