@@ -1,0 +1,2 @@
+run = "cd bot && npm install && npm run dev"
+entrypoint = "bot/index.js"
