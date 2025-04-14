@@ -719,7 +719,7 @@ export default function CreateCampaignPage({ params }: { params: { id: string } 
                 ) : (
                   <div className="space-y-3">
                     {form.watch('rewards').map((reward, index) => (
-                      <div key={index} className="flex justify-between items-start border rounded-md p-3">
+                      <div key={`${reward.type}-${reward.description}`} className="flex justify-between items-start border rounded-md p-3">
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <Badge variant="outline">{getRewardTypeDisplay(reward.type)}</Badge>
@@ -730,18 +730,11 @@ export default function CreateCampaignPage({ params }: { params: { id: string } 
                               <span className="font-medium">Requirements:</span> {reward.requirements}
                             </p>
                           )}
-                          {reward.value && (
-                            <p className="text-sm text-muted-foreground">
-                              <span className="font-medium">Value:</span> {reward.value}
-                            </p>
-                          )}
                         </div>
                         <Button
-                          type="button"
-                          variant="outline"
                           size="sm"
+                          variant="outline"
                           onClick={() => removeReward(index)}
-                          className="text-red-600"
                         >
                           Remove
                         </Button>
