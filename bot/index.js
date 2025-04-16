@@ -59,18 +59,26 @@ const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
 // Connect to database if MongoDB URI is provided
 if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-  }).then(() => {
-    console.log('Connected to MongoDB');
-  }).catch(err => {
-    console.error('Error connecting to MongoDB:', err);
-    console.log('Running in limited mode without database persistence');
-  });
+  mongoose.connect(process.env.MONGODB_URI)
+    .then(() => {
+      console.log('Connected to MongoDB');
+    })
+    .catch(err => {
+      console.error('Error connecting to MongoDB:', err);
+      console.log('Running in limited mode without database persistence');
+    });
 } else {
   console.log('No MongoDB URI provided, running in limited mode without database persistence');
 }
+
+// Handle MongoDB connection errors
+mongoose.connection.on('error', err => {
+  console.error('MongoDB connection error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected. Attempting to reconnect...');
+});
 
 // Initialize X/Twitter API client
 let twitterClient = null;
@@ -93,11 +101,8 @@ if (process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET) {
 // Session configuration
 const localSession = new LocalSession({ database: 'sessions.json' });
 
-// Register session middleware
-bot.use(localSession.middleware());
-
 // Configure session and scenes
-bot.use(session());
+bot.use(localSession.middleware());
 
 const stage = new Scenes.Stage([
   projectRegistrationScene,
