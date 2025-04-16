@@ -35,3 +35,12 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd bot && node index.js"
+
+[[workflows.workflow]]
+name = "Frontend Dev"
+author = 39354119
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
