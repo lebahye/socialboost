@@ -6,6 +6,9 @@ const Campaign = require('../models/Campaign');
  * Handler for /start command
  */
 const startHandler = async (ctx) => {
+  console.log('Start command received from:', ctx.from.id);
+  try {
+    await ctx.reply('Welcome to SocialBoost! 🚀\n\nI can help you manage your social media campaigns.\n\nUse /help to see available commands.');
   const user = ctx.state.user;
 
   // Check if this is a referral start
