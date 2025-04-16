@@ -111,12 +111,30 @@ bot.use(userMiddleware);
 bot.use(authMiddleware);
 
 // Basic commands (available to all users)
-bot.command('start', startHandler);
-bot.command('help', helpHandler);
-bot.command('status', statusHandler);
-bot.command('link', linkSocialHandler);
-bot.command('verify', verifyAccountHandler);
-bot.command('unlink', unlinkAccountHandler);
+bot.command('start', async (ctx) => {
+  console.log('Start command received');
+  await startHandler(ctx);
+});
+bot.command('help', async (ctx) => {
+  console.log('Help command received');
+  await helpHandler(ctx);
+});
+bot.command('status', async (ctx) => {
+  console.log('Status command received');
+  await statusHandler(ctx);
+});
+bot.command('link', async (ctx) => {
+  console.log('Link command received');
+  await linkSocialHandler(ctx);
+});
+bot.command('verify', async (ctx) => {
+  console.log('Verify command received');
+  await verifyAccountHandler(ctx);
+});
+bot.command('unlink', async (ctx) => {
+  console.log('Unlink command received');
+  await unlinkAccountHandler(ctx);
+});
 
 // Project owner commands
 bot.command('newproject', projectOwnerMiddleware, newProjectHandler);
@@ -151,8 +169,20 @@ bot.on('text', textHandler);
 
 // Error handling
 bot.catch((err, ctx) => {
-  console.error(`Error for ${ctx.updateType}`, err);
+  console.error('Bot error:', err);
+  console.error('Context:', {
+    update: ctx.update,
+    updateType: ctx.updateType,
+    chat: ctx.chat,
+    from: ctx.from
+  });
   ctx.reply('An error occurred. Please try again later or contact support.');
+});
+
+// Add debug logging
+bot.use((ctx, next) => {
+  console.log('Received update:', ctx.update);
+  return next();
 });
 
 // Initialize services with bot instance
