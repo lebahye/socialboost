@@ -1,3 +1,4 @@
+
 const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
@@ -11,10 +12,16 @@ const pool = new Pool({
 
 async function setupDatabase() {
   try {
-    // Read schema file
-    const schema = fs.readFileSync(path.join(__dirname, 'models', 'schema.sql'), 'utf8');
+    // Drop existing tables in correct order
+    await pool.query(`
+      DROP TABLE IF EXISTS campaigns CASCADE;
+      DROP TABLE IF EXISTS projects CASCADE;
+      DROP TABLE IF EXISTS users CASCADE;
+      DROP TABLE IF EXISTS analytics CASCADE;
+    `);
 
-    // Execute schema
+    // Read and execute schema
+    const schema = fs.readFileSync(path.join(__dirname, 'models', 'schema.sql'), 'utf8');
     await pool.query(schema);
 
     console.log('Database setup completed successfully');
