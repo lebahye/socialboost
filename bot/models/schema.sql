@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS projects (
   id SERIAL PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
   description TEXT,
-  category VARCHAR(20) NOT NULL CHECK (category IN ('DeFi', 'NFT', 'GameFi', 'Web3', 'Other')),
+  category TEXT NOT NULL,
   owner_id TEXT NOT NULL REFERENCES users(telegram_id),
   subscription JSONB DEFAULT '{"isActive": true, "campaignsRemaining": 3}',
   social_accounts JSONB DEFAULT '{"x": null, "discord": null}',
