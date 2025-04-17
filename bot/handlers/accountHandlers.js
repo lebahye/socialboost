@@ -54,7 +54,7 @@ const linkXAccountCallback = async (ctx) => {
   }
 
   // Update user state
-  const result = await pool.query(
+  const updateResult = await pool.query(
     'UPDATE users SET current_state = $1 WHERE telegram_id = $2 RETURNING *',
     ['awaiting_x_username', telegramId]
   );
