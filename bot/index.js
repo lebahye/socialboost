@@ -57,24 +57,22 @@ const verificationService = require('./services/verification');
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
-// Connect to database if REPLIT_MONGO_URL is provided
-if (process.env.REPLIT_MONGO_URL) {
-  mongoose.connect(process.env.REPLIT_MONGO_URL, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    serverSelectionTimeoutMS: 5000,
-    socketTimeoutMS: 45000,
-  })
-  .then(() => {
-    console.log('Connected to MongoDB');
-  })
-  .catch(err => {
-    console.error('Error connecting to MongoDB:', err);
-    console.log('Running in limited mode without database persistence');
-  });
-} else {
-  console.error('REPLIT_MONGO_URL not found in environment variables');
-}
+// Connect to database
+const MONGO_URL = process.env.REPLIT_MONGO_URL || 'mongodb://localhost:27017/socialboost';
+mongoose.connect(MONGO_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+  serverSelectionTimeoutMS: 30000,
+  socketTimeoutMS: 45000,
+  family: 4
+})
+.then(() => {
+  console.log('Connected to MongoDB');
+})
+.catch(err => {
+  console.error('Error connecting to MongoDB:', err);
+  console.log('Running in limited mode without database persistence');
+});
 
 // Handle MongoDB connection errors
 mongoose.connection.on('error', err => {
