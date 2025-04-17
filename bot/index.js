@@ -18,25 +18,41 @@ const pool = new Pool({
   connectionTimeoutMillis: 2000,
   ssl: {
     rejectUnauthorized: false
-  }
+  },
+  keepAlive: true,
+  keepAliveInitialDelayMillis: 10000
 });
+
+let isConnected = false;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 5;
 
 // Handle pool errors
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
-  // Attempt to reconnect
-  setTimeout(connectDatabase, 5000);
+  if (!isConnected) {
+    setTimeout(connectDatabase, 5000);
+  }
 });
 
 // Test and maintain database connection
 async function connectDatabase() {
+  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+    console.error('Max reconnection attempts reached. Please check database configuration.');
+    return;
+  }
+
   try {
     const client = await pool.connect();
+    await client.query('SELECT 1'); // Test query
     console.log('Connected to PostgreSQL database');
+    isConnected = true;
+    reconnectAttempts = 0;
     client.release();
   } catch (err) {
     console.error('Error connecting to PostgreSQL:', err);
-    // Retry connection after 5 seconds
+    isConnected = false;
+    reconnectAttempts++;
     setTimeout(connectDatabase, 5000);
   }
 }
