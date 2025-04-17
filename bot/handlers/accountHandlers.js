@@ -39,8 +39,18 @@ const linkSocialHandler = async (ctx) => {
   );
 
   // Register callback handlers
-  ctx.telegram.bot.action('link_x', linkXAccountCallback);
-  ctx.telegram.bot.action('link_discord', linkDiscordCallback);
+  ctx.reply(
+    'Which social media account would you like to link?\n\n' +
+    'Choose from the options below:',
+    {
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: 'X (Twitter)', callback_data: 'link_x' }],
+          [{ text: 'Discord', callback_data: 'link_discord' }]
+        ]
+      }
+    }
+  );
 };
 
 /**
