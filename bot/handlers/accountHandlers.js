@@ -53,8 +53,7 @@ const linkXAccountCallback = async (ctx) => {
     return ctx.reply('Please start the bot first with /start');
   }
 
-  // Get user from database
-  const telegramId = ctx.from.id.toString();
+  // Update user state
   const result = await pool.query(
     'UPDATE users SET current_state = $1 WHERE telegram_id = $2 RETURNING *',
     ['awaiting_x_username', telegramId]
