@@ -90,28 +90,10 @@ bot.use(localSession.middleware());
 
 // Import all handlers (only once)
 const { startHandler, helpHandler, statusHandler } = require('./handlers/basicHandlers');
-const { linkSocialHandler, verifyAccountHandler, unlinkAccountHandler } = require('./handlers/accountHandlers');
-const { newProjectHandler, listProjectsHandler, projectHandler } = require('./handlers/projectHandlers');
-const { newCampaignHandler, listCampaignsHandler, manageCampaignHandler, checkHandler, remindHandler } = require('./handlers/campaignHandlers');
-const { analyticsHandler, exportHandler } = require('./handlers/analyticsHandlers');
-
-// Register all command handlers
+// Register basic command handlers
 bot.command('start', startHandler);
 bot.command('help', helpHandler);
 bot.command('status', statusHandler);
-bot.command('link', linkSocialHandler);
-bot.command('verify', verifyAccountHandler);
-bot.command('unlink', unlinkAccountHandler);
-bot.command('newproject', newProjectHandler);
-bot.command('myprojects', listProjectsHandler);
-bot.command('project', projectHandler);
-bot.command('newcampaign', newCampaignHandler);
-bot.command('campaigns', listCampaignsHandler);
-bot.command('campaign', manageCampaignHandler);
-bot.command('check', checkHandler);
-bot.command('remind', remindHandler);
-bot.command('analytics', analyticsHandler);
-bot.command('export', exportHandler);
 
 // Error handling
 bot.catch((err, ctx) => {
