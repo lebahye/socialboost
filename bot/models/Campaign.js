@@ -35,22 +35,24 @@ class Campaign {
       targetParticipants,
       createdBy,
       status,
-      isPrivate
+      isPrivate,
+      rewards = []
     } = campaignData;
 
     const query = `
       INSERT INTO campaigns (
         name, description, project_name, x_post_url, 
         start_date, end_date, target_participants, 
-        created_by, status, private
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        created_by, status, private, rewards
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *
     `;
     
     const values = [
       name, description, projectName, xPostUrl,
       startDate, endDate, targetParticipants,
-      createdBy, status || 'draft', isPrivate || false
+      createdBy, status || 'draft', isPrivate || false,
+      JSON.stringify(rewards)
     ];
 
     const { rows } = await pool.query(query, values);

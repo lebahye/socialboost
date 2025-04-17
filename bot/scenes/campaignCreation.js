@@ -465,7 +465,7 @@ const campaignCreationScene = new Scenes.WizardScene(
           projectName: project.name,
           xPostUrl: ctx.wizard.state.campaignData.xPostUrl,
           xPostId: ctx.wizard.state.campaignData.xPostId,
-          telegramChannelUrl: project.socialAccounts.telegram.channelUrl,
+          telegramChannelUrl: project.socialAccounts?.telegram?.channelUrl || null,
           startDate: ctx.wizard.state.campaignData.startDate,
           endDate: ctx.wizard.state.campaignData.endDate,
           targetParticipants: ctx.wizard.state.campaignData.targetParticipants,
