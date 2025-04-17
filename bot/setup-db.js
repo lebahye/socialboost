@@ -1,13 +1,23 @@
 
 const { Pool } = require('pg');
-require('dotenv').config();
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 async function setupDatabase() {
   try {
+    // Drop existing tables first to ensure clean setup
+    await pool.query(`
+      DROP TABLE IF EXISTS campaign_participants CASCADE;
+      DROP TABLE IF EXISTS campaigns CASCADE;
+      DROP TABLE IF EXISTS projects CASCADE;
+      DROP TABLE IF EXISTS users CASCADE;
+    `);
+
     // Create users table with all required columns
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
