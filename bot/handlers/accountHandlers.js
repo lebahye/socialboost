@@ -53,9 +53,16 @@ const linkXAccountCallback = async (ctx) => {
     return ctx.reply('Please start the bot first with /start');
   }
 
-  // Set user state for capturing username
-  user.currentState = 'awaiting_x_username';
-  await user.save();
+  // Get user from database
+  const telegramId = ctx.from.id.toString();
+  const result = await pool.query(
+    'UPDATE users SET current_state = $1 WHERE telegram_id = $2 RETURNING *',
+    ['awaiting_x_username', telegramId]
+  );
+
+  if (!result.rows[0]) {
+    return ctx.reply('Please start the bot first with /start');
+  }
 
   await ctx.editMessageText(
     '📱 *Linking your X (Twitter) account*\n\n' +
@@ -69,16 +76,15 @@ const linkXAccountCallback = async (ctx) => {
  * Callback handler for linking Discord account
  */
 const linkDiscordCallback = async (ctx) => {
-  const telegramId = ctx.from.id;
-  let user = await User.findOne({ telegramId });
+  const telegramId = ctx.from.id.toString();
+  const result = await pool.query(
+    'UPDATE users SET current_state = $1 WHERE telegram_id = $2 RETURNING *',
+    ['awaiting_discord_username', telegramId]
+  );
 
-  if (!user) {
-    user = new User({ telegramId });
+  if (!result.rows[0]) {
+    return ctx.reply('Please start the bot first with /start');
   }
-
-  // Set user state for capturing username
-  user.currentState = 'awaiting_discord_username';
-  await user.save();
 
   await ctx.editMessageText(
     '📱 *Linking your Discord account*\n\n' +
