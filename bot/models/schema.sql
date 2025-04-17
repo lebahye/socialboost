@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
   join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   is_project_owner BOOLEAN DEFAULT false,
   is_verified BOOLEAN DEFAULT false,
-  credits INTEGER DEFAULT 0
+  credits INTEGER DEFAULT 0,
+  current_state TEXT
 );
 
 CREATE TABLE IF NOT EXISTS campaigns (
