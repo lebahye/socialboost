@@ -88,6 +88,21 @@ if (process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET) {
 const localSession = new LocalSession({ database: 'sessions.json' });
 bot.use(localSession.middleware());
 
+// User state middleware
+bot.use(async (ctx, next) => {
+  // Initialize user state if not exists
+  if (!ctx.state) {
+    ctx.state = {};
+  }
+  if (!ctx.state.user) {
+    ctx.state.user = {
+      currentState: null,
+      socialAccounts: []
+    };
+  }
+  await next();
+});
+
 // Import all handlers
 const { startHandler, helpHandler, statusHandler } = require('./handlers/basicHandlers');
 const { linkSocialHandler, verifyAccountHandler, unlinkAccountHandler, linkXAccountCallback, linkDiscordCallback } = require('./handlers/accountHandlers');
