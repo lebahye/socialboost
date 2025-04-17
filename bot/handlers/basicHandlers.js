@@ -1,8 +1,8 @@
+
 const { Composer } = require('telegraf');
 const User = require('../models/User');
 const Campaign = require('../models/Campaign');
 
-// Ensure this is the only declaration of startHandler
 const startHandler = async (ctx) => {
   console.log('Start command received from:', ctx.from.id);
   try {
@@ -166,37 +166,6 @@ const statusHandler = async (ctx) => {
   } catch (error) {
     console.error('Error in statusHandler:', error);
     await ctx.reply('An error occurred while fetching your status. Please try again.');
-  }
-};
-
-const startHandler = async (ctx) => {
-  try {
-    await ctx.reply(
-      'Welcome to SocialBoost Bot! 🚀\n\n' +
-      'I can help you manage your social media campaigns and grow your audience.\n\n' +
-      'Use /help to see available commands.'
-    );
-  } catch (err) {
-    console.error('Error in start handler:', err);
-    await ctx.reply('An error occurred. Please try again.');
-  }
-};
-
-const helpHandler = async (ctx) => {
-  try {
-    await ctx.reply(
-      '📚 Available Commands:\n\n' +
-      '/start - Start the bot\n' +
-      '/help - Show this help message\n' +
-      '/status - Check your current status\n' +
-      '/newproject - Create a new project\n' +
-      '/myprojects - List your projects\n' +
-      '/campaigns - View available campaigns\n' +
-      '/link - Link your social media accounts'
-    );
-  } catch (err) {
-    console.error('Error in help handler:', err);
-    await ctx.reply('An error occurred. Please try again.');
   }
 };
 
