@@ -112,10 +112,15 @@ const processXUsername = async (ctx) => {
 
   try {
     // Check if username already exists in system for another user
-    const User = require('../models/User');
-    const existingUser = await User.findByPlatformUsername('x', xUsername);
+    const telegramId = ctx.from.id.toString();
+    const existingUser = await pool.query(
+      'SELECT * FROM users WHERE social_accounts->\'x\'->\'username\' = $1 AND telegram_id != $2',
+      [xUsername, telegramId]
+    );
 
-    if (existingUser && existingUser.telegramId !== user.telegramId) {
+    const userExists = existingUser.rows.length > 0;
+
+    if (userExists) {
       await ctx.reply(
         'This X account is already linked to another user. Please use a different account or contact support if you believe this is an error.'
       );

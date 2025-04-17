@@ -1,9 +1,13 @@
-const User = require('../models/User');
+const { Pool } = require('pg');
 const { TwitterApi } = require('twitter-api-v2');
 
-/**
- * Service for verifying social media accounts
- */
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
 class VerificationService {
   constructor() {
     // Initialize X/Twitter client if API keys are available
@@ -20,37 +24,22 @@ class VerificationService {
         accessSecret: process.env.TWITTER_ACCESS_SECRET,
       });
     }
-
-    // Discord client setup would go here if needed
   }
 
-  /**
-   * Check for pending verifications and process them
-   * This should be run on a schedule (e.g., every hour)
-   */
   async processPendingVerifications() {
     try {
-      // Find users with unverified social accounts that have unexpired verification codes
-      const users = await User.find({
-        'socialAccounts': {
-          $elemMatch: {
-            'isVerified': false,
-            'verificationCode': { $exists: true },
-            'verificationExpiry': { $gt: new Date() }
-          }
-        }
-      });
+      // Get users with unverified accounts
+      const result = await pool.query(
+        'SELECT * FROM users WHERE social_accounts IS NOT NULL'
+      );
 
-      console.log(`Processing verifications for ${users.length} users`);
+      const users = result.rows;
 
       for (const user of users) {
-        for (const account of user.socialAccounts) {
-          if (!account.isVerified && account.verificationCode) {
-            // Skip if verification code is expired
-            if (account.verificationExpiry < new Date()) {
-              continue;
-            }
+        const socialAccounts = user.social_accounts || [];
 
+        for (const account of socialAccounts) {
+          if (!account.isVerified && account.verificationCode) {
             let verified = false;
 
             // Check based on platform
@@ -61,13 +50,17 @@ class VerificationService {
             }
 
             if (verified) {
-              account.isVerified = true;
+              // Update account verification status
+              await pool.query(
+                'UPDATE users SET social_accounts = $1 WHERE telegram_id = $2',
+                [JSON.stringify(socialAccounts), user.telegram_id]
+              );
 
               // Send notification via bot (if bot instance is available)
               if (this.bot) {
                 try {
                   await this.bot.telegram.sendMessage(
-                    user.telegramId,
+                    user.telegram_id,
                     `✅ Your ${account.platform === 'x' ? 'X (Twitter)' : account.platform} account @${account.username} has been verified!\n\n` +
                     `You can now participate in campaigns that require a verified ${account.platform} account.`
                   );
@@ -78,9 +71,6 @@ class VerificationService {
             }
           }
         }
-
-        // Save user with updated verification statuses
-        await user.save();
       }
 
       return { success: true, processed: users.length };
@@ -90,9 +80,7 @@ class VerificationService {
     }
   }
 
-  /**
-   * Verify an X (Twitter) account by checking direct messages
-   */
+  // Platform-specific verification methods
   async verifyXAccount(username, verificationCode) {
     if (!this.twitterClient) {
       console.warn('Twitter client not initialized, using simulated X verification');
@@ -137,9 +125,6 @@ class VerificationService {
     }
   }
 
-  /**
-   * Verify a Discord account by checking direct messages
-   */
   async verifyDiscordAccount(username, verificationCode) {
     // Similar to X verification, but using Discord API
     // For demo purposes, we'll simulate a verification outcome
@@ -161,18 +146,18 @@ class VerificationService {
     }
   }
 
-  /**
-   * Manually verify an account for testing or customer support
-   */
   async manuallyVerifyAccount(telegramId, platform, username) {
     try {
-      const user = await User.findOne({ telegramId });
+      // This function remains largely unchanged as it doesn't directly interact with the database for verification.
+      const result = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
+      const user = result.rows[0];
+
 
       if (!user) {
         return { success: false, error: 'User not found' };
       }
 
-      const account = user.socialAccounts.find(acc =>
+      const account = user.social_accounts.find(acc =>
         acc.platform === platform && acc.username.toLowerCase() === username.toLowerCase()
       );
 
@@ -181,7 +166,7 @@ class VerificationService {
       }
 
       account.isVerified = true;
-      await user.save();
+      await pool.query('UPDATE users SET social_accounts = $1 WHERE telegram_id = $2', [JSON.stringify(user.social_accounts), telegramId]);
 
       return { success: true };
     } catch (err) {
@@ -190,9 +175,6 @@ class VerificationService {
     }
   }
 
-  /**
-   * Set the bot instance for sending notifications
-   */
   setBot(bot) {
     this.bot = bot;
   }
