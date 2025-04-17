@@ -1,17 +1,16 @@
-
 CREATE TABLE IF NOT EXISTS users (
   telegram_id TEXT PRIMARY KEY,
   username TEXT,
   first_name TEXT,
   last_name TEXT,
+  language_code TEXT,
   join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  is_project_owner BOOLEAN DEFAULT false,
-  is_verified BOOLEAN DEFAULT false,
-  credits INTEGER DEFAULT 0,
-  current_state TEXT DEFAULT NULL,
-  last_command TEXT DEFAULT NULL,
-  language_code TEXT DEFAULT 'en',
+  is_project_owner BOOLEAN DEFAULT FALSE,
   social_accounts JSONB DEFAULT '[]',
+  current_state TEXT,
+  credits INTEGER DEFAULT 0,
+  is_verified BOOLEAN DEFAULT false,
+  last_command TEXT DEFAULT NULL,
   settings JSONB DEFAULT '{}'::jsonb
 );
 
