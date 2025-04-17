@@ -73,22 +73,27 @@ const projectOwnerMiddleware = async (ctx, next) => {
       }
     }
 
-  // Check if user is a project owner
-  if (!ctx.state.user.isProjectOwner) {
-    const projects = await Project.findByTelegramId(ctx.from.id);
+    // Check if user is a project owner
+    if (!ctx.state.user.isProjectOwner) {
+      const projects = await Project.findByTelegramId(ctx.from.id);
 
-    if (projects && projects.length > 0) {
-      // User has projects, but isProjectOwner flag is not set
-      ctx.state.user.isProjectOwner = true;
-      await ctx.state.user.save();
-    } else {
-      // User is not a project owner
-      await ctx.reply('This command is only available to project owners. Please create a project first using /newproject command.');
-      return;
+      if (projects && projects.length > 0) {
+        // User has projects, but isProjectOwner flag is not set
+        ctx.state.user.isProjectOwner = true;
+        await ctx.state.user.save();
+      } else {
+        // User is not a project owner
+        await ctx.reply('This command is only available to project owners. Please create a project first using /newproject command.');
+        return;
+      }
     }
-  }
 
-  return next();
+    return next();
+  } catch (err) {
+    console.error('Error in project owner middleware:', err);
+    await ctx.reply('An error occurred while checking project ownership. Please try again.');
+    return;
+  }
 };
 
 /**
