@@ -9,7 +9,10 @@ CREATE TABLE IF NOT EXISTS users (
   is_verified BOOLEAN DEFAULT false,
   credits INTEGER DEFAULT 0,
   current_state TEXT DEFAULT NULL,
-  social_accounts JSONB DEFAULT '[]'::jsonb
+  last_command TEXT DEFAULT NULL,
+  language_code TEXT DEFAULT 'en',
+  social_accounts JSONB DEFAULT '[]'::jsonb,
+  settings JSONB DEFAULT '{}'::jsonb
 );
 
 CREATE TABLE IF NOT EXISTS projects (
