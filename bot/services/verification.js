@@ -1,15 +1,14 @@
 const { Pool } = require('pg');
 const { TwitterApi } = require('twitter-api-v2');
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
-
 class VerificationService {
   constructor() {
+    this.pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false
+      }
+    });
     // Initialize X/Twitter client if API keys are available
     if (
       process.env.TWITTER_API_KEY &&
@@ -26,10 +25,43 @@ class VerificationService {
     }
   }
 
+  async updateUserState(telegramId, state) {
+    const query = `
+      UPDATE users 
+      SET current_state = $1 
+      WHERE telegram_id = $2
+    `;
+    await this.pool.query(query, [state, telegramId.toString()]);
+  }
+
+  async verifyAccount(telegramId, platform, username) {
+    try {
+      const updateQuery = `
+        UPDATE users 
+        SET social_accounts = social_accounts || $1::jsonb,
+            is_verified = true,
+            current_state = NULL
+        WHERE telegram_id = $2
+      `;
+
+      const account = {
+        platform,
+        username,
+        verified_at: new Date().toISOString()
+      };
+
+      await this.pool.query(updateQuery, [JSON.stringify([account]), telegramId.toString()]);
+      return true;
+    } catch (error) {
+      console.error('Verification error:', error);
+      return false;
+    }
+  }
+
   async processPendingVerifications() {
     try {
       // Get users with unverified accounts
-      const result = await pool.query(
+      const result = await this.pool.query(
         'SELECT * FROM users WHERE social_accounts IS NOT NULL'
       );
 
@@ -40,22 +72,10 @@ class VerificationService {
 
         for (const account of socialAccounts) {
           if (!account.isVerified && account.verificationCode) {
-            let verified = false;
-
-            // Check based on platform
-            if (account.platform === 'x') {
-              verified = await this.verifyXAccount(account.username, account.verificationCode);
-            } else if (account.platform === 'discord') {
-              verified = await this.verifyDiscordAccount(account.username, account.verificationCode);
-            }
+            //simplified verification using the new function
+            const verified = await this.verifyAccount(user.telegram_id, account.platform, account.username);
 
             if (verified) {
-              // Update account verification status
-              await pool.query(
-                'UPDATE users SET social_accounts = $1 WHERE telegram_id = $2',
-                [JSON.stringify(socialAccounts), user.telegram_id]
-              );
-
               // Send notification via bot (if bot instance is available)
               if (this.bot) {
                 try {
@@ -80,76 +100,11 @@ class VerificationService {
     }
   }
 
-  // Platform-specific verification methods
-  async verifyXAccount(username, verificationCode) {
-    if (!this.twitterClient) {
-      console.warn('Twitter client not initialized, using simulated X verification');
-      // In demo mode without API keys, automatically verify
-      console.log(`Auto-verified X account: @${username} with code ${verificationCode} (demo mode)`);
-      return true;
-    }
-
-    try {
-      // Get direct messages - in real implementation, this would need proper
-      // authentication and permissions to read DMs from the verification account
-      /*
-      In a real implementation, you would:
-      1. Use the Twitter API to fetch DMs to your verification bot account
-      2. Check if there's a DM from the user with matching username
-      3. Check if the DM contains the verification code
-
-      Example (pseudo-code):
-      const messages = await this.twitterClient.v2.listDirectMessages();
-      const verificationMessage = messages.find(msg =>
-        msg.senderUsername.toLowerCase() === username.toLowerCase() &&
-        msg.text.includes(verificationCode)
-      );
-      return !!verificationMessage;
-
-      For demo purposes, we'll simulate a random verification outcome
-      */
-
-      // Simulated verification (70% chance of success)
-      const isVerified = Math.random() > 0.3;
-
-      if (isVerified) {
-        console.log(`Verified X account: @${username} with code ${verificationCode}`);
-      } else {
-        console.log(`Could not verify X account: @${username} with code ${verificationCode}`);
-      }
-
-      return isVerified;
-    } catch (err) {
-      console.error('Error verifying X account:', err);
-      return false;
-    }
-  }
-
-  async verifyDiscordAccount(username, verificationCode) {
-    // Similar to X verification, but using Discord API
-    // For demo purposes, we'll simulate a verification outcome
-
-    try {
-      // Simulated verification (70% chance of success)
-      const isVerified = Math.random() > 0.3;
-
-      if (isVerified) {
-        console.log(`Verified Discord account: ${username} with code ${verificationCode}`);
-      } else {
-        console.log(`Could not verify Discord account: ${username} with code ${verificationCode}`);
-      }
-
-      return isVerified;
-    } catch (err) {
-      console.error('Error verifying Discord account:', err);
-      return false;
-    }
-  }
 
   async manuallyVerifyAccount(telegramId, platform, username) {
     try {
       // This function remains largely unchanged as it doesn't directly interact with the database for verification.
-      const result = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
+      const result = await this.pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
       const user = result.rows[0];
 
 
@@ -166,7 +121,7 @@ class VerificationService {
       }
 
       account.isVerified = true;
-      await pool.query('UPDATE users SET social_accounts = $1 WHERE telegram_id = $2', [JSON.stringify(user.social_accounts), telegramId]);
+      await this.pool.query('UPDATE users SET social_accounts = $1 WHERE telegram_id = $2', [JSON.stringify(user.social_accounts), telegramId]);
 
       return { success: true };
     } catch (err) {
