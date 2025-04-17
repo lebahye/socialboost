@@ -1,6 +1,20 @@
 
 const { Telegraf, Scenes, session } = require('telegraf');
 const LocalSession = require('telegraf-session-local');
+
+const { Scenes: { Stage } } = require('telegraf');
+const projectRegistrationScene = require('./scenes/projectRegistration');
+const campaignCreationScene = require('./scenes/campaignCreation');
+
+// Initialize stage with scenes
+const stage = new Stage([
+  projectRegistrationScene,
+  campaignCreationScene
+]);
+
+// Register stage middleware
+bot.use(stage.middleware());
+
 const { Pool } = require('pg');
 const { TwitterApi } = require('twitter-api-v2');
 require('dotenv').config();
