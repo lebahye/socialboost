@@ -1,4 +1,3 @@
-
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
@@ -9,7 +8,6 @@ CREATE TABLE IF NOT EXISTS users (
   language TEXT DEFAULT 'en',
   is_project_owner BOOLEAN DEFAULT false,
   is_verified BOOLEAN DEFAULT false,
-  current_state TEXT,
   social_accounts JSONB DEFAULT '[]',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -21,8 +19,8 @@ CREATE TABLE IF NOT EXISTS projects (
   description TEXT,
   category TEXT NOT NULL,
   owner_id TEXT NOT NULL REFERENCES users(telegram_id),
-  subscription JSONB DEFAULT '{"isActive": false, "campaignsRemaining": 0}',
-  social_accounts JSONB DEFAULT '{}',
+  subscription JSONB DEFAULT '{"isActive": true, "campaignsRemaining": 3}',
+  social_accounts JSONB DEFAULT '{"x": null, "discord": null}',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -39,10 +37,7 @@ CREATE TABLE IF NOT EXISTS campaigns (
   target_participants INTEGER DEFAULT 0,
   current_participants INTEGER DEFAULT 0,
   rewards JSONB DEFAULT '[]',
-  created_by TEXT REFERENCES users(telegram_id),
   status TEXT DEFAULT 'draft',
-  reminders JSONB DEFAULT '[]',
-  private BOOLEAN DEFAULT false,
   tags TEXT[],
   stats JSONB DEFAULT '{"engagement": {"likes": 0, "retweets": 0, "comments": 0}}',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
