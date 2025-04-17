@@ -102,6 +102,10 @@ bot.command('status', statusHandler);
 bot.command('link', linkSocialHandler);
 bot.command('verify', verifyAccountHandler);
 bot.command('unlink', unlinkAccountHandler);
+
+// Register callback handlers for social media linking
+bot.action('link_x', linkXAccountCallback);
+bot.action('link_discord', linkDiscordCallback);
 bot.command('newproject', newProjectHandler);
 bot.command('myprojects', listProjectsHandler);
 bot.command('project', manageProjectHandler);
