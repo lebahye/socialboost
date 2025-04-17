@@ -88,7 +88,7 @@ if (process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET) {
 const localSession = new LocalSession({ database: 'sessions.json' });
 bot.use(localSession.middleware());
 
-// Import all handlers
+// Import all handlers (only once)
 const { startHandler, helpHandler, statusHandler } = require('./handlers/basicHandlers');
 const { linkSocialHandler, verifyAccountHandler, unlinkAccountHandler } = require('./handlers/accountHandlers');
 const { newProjectHandler, listProjectsHandler, projectHandler } = require('./handlers/projectHandlers');
