@@ -1,0 +1,53 @@
+Twitter API client initialized
+Connected to PostgreSQL database
+Bot error: TypeError: Cannot read properties of undefined (reading 'enter')
+    at newProjectHandler (/home/runner/workspace/bot/handlers/projectHandlers.js:9:20)
+    at /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:397:28
+    at /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:165:111
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+Error in listProjectsHandler: error: column "ownerid" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Project.find (/home/runner/workspace/bot/models/Project.js:17:22)
+    at async listProjectsHandler (/home/runner/workspace/bot/handlers/projectHandlers.js:87:22)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21 {
+  length: 171,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: 'Perhaps you meant to reference the column "projects.owner_id".',
+  position: '30',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3729',
+  routine: 'errorMissingColumn'
+}
+Bot error: TypeError: Cannot read properties of undefined (reading 'enter')
+    at newCampaignHandler (/home/runner/workspace/bot/handlers/campaignHandlers.js:13:20)
+    at /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:397:28
+    at /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:165:111
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
