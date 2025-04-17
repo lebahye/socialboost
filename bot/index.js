@@ -58,8 +58,9 @@ const verificationService = require('./services/verification');
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
 // Connect to database if MongoDB URI is provided
-if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI, {
+if (process.env.REPLIT_DB_URL) {
+  const mongoUri = process.env.REPLIT_DB_URL;
+  mongoose.connect(mongoUri, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000,
