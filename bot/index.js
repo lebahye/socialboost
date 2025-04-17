@@ -88,12 +88,26 @@ if (process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET) {
 const localSession = new LocalSession({ database: 'sessions.json' });
 bot.use(localSession.middleware());
 
-// Import all handlers (only once)
+// Import all handlers
 const { startHandler, helpHandler, statusHandler } = require('./handlers/basicHandlers');
-// Register basic command handlers
+const { linkSocialHandler, verifyAccountHandler, unlinkAccountHandler } = require('./handlers/accountHandlers');
+const { newProjectHandler, listProjectsHandler, manageProjectHandler } = require('./handlers/projectHandlers');
+const { newCampaignHandler, listCampaignsHandler, manageCampaignHandler } = require('./handlers/campaignHandlers');
+const { analyticsHandler, exportDataHandler } = require('./handlers/analyticsHandlers');
+
+// Register all command handlers
 bot.command('start', startHandler);
 bot.command('help', helpHandler);
 bot.command('status', statusHandler);
+bot.command('link', linkSocialHandler);
+bot.command('verify', verifyAccountHandler);
+bot.command('unlink', unlinkAccountHandler);
+bot.command('newproject', newProjectHandler);
+bot.command('myprojects', listProjectsHandler);
+bot.command('project', manageProjectHandler);
+bot.command('newcampaign', newCampaignHandler);
+bot.command('campaigns', listCampaignsHandler);
+bot.command('campaign', manageCampaignHandler);
 
 // Error handling
 bot.catch((err, ctx) => {
