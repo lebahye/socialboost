@@ -257,138 +257,190 @@ const processDiscordUsername = async (ctx) => {
  * Handler for /verify command to check verification status
  */
 const verifyAccountHandler = async (ctx) => {
-  const user = ctx.state.user;
-
-  if (!user.socialAccounts || user.socialAccounts.length === 0) {
-    await ctx.reply(
-      'You don\'t have any social accounts linked yet.\n\n' +
-      'Use /link to connect your social media accounts.'
+  try {
+    const userId = ctx.from.id.toString();
+    const result = await pool.query(
+      'SELECT * FROM users WHERE telegram_id = $1',
+      [userId]
     );
-    return;
-  }
 
-  // Get unverified accounts
-  const unverifiedAccounts = user.socialAccounts.filter(acc => !acc.isVerified);
-
-  if (unverifiedAccounts.length === 0) {
-    await ctx.reply(
-      '✅ All your social accounts are verified!\n\n' +
-      'You can now participate in campaigns.'
-    );
-    return;
-  }
-
-  // For each unverified account, check if verification code is expired
-  let message = '*Unverified Accounts:*\n\n';
-
-  unverifiedAccounts.forEach(account => {
-    const platformName = account.platform === 'x' ? 'X (Twitter)' : account.platform;
-    message += `• *${platformName}:* @${account.username}\n`;
-
-    // Check if verification code is expired
-    if (account.verificationExpiry && account.verificationExpiry < new Date()) {
-      message += '  ⚠️ Verification code expired. Use /link to generate a new one.\n';
-    } else {
-      message += `  📝 Verification code: \`${account.verificationCode}\`\n`;
-
-      if (account.platform === 'x') {
-        message += '  📨 Send this code to @ProjectVerifierBot on X\n';
-      } else if (account.platform === 'discord') {
-        message += '  📨 Send this code to @VerifyBot on our Discord server\n';
-      }
+    if (!result.rows[0]) {
+      return ctx.reply('Please start the bot first with /start');
     }
 
-    message += '\n';
-  });
+    const user = result.rows[0];
+    const socialAccounts = user.social_accounts || [];
 
-  message += 'Once verified, you\'ll be able to participate in campaigns.';
+    if (!socialAccounts.length) {
+      await ctx.reply(
+        'You don\'t have any social accounts linked yet.\n\n' +
+        'Use /link to connect your social media accounts.'
+      );
+      return;
+    }
 
-  await ctx.replyWithMarkdown(message);
+    // Get unverified accounts
+    const unverifiedAccounts = socialAccounts.filter(acc => !acc.is_verified);
+
+    if (unverifiedAccounts.length === 0) {
+      await ctx.reply(
+        '✅ All your social accounts are verified!\n\n' +
+        'You can now participate in campaigns.'
+      );
+      return;
+    }
+
+    // For each unverified account, check if verification code is expired
+    let message = '*Unverified Accounts:*\n\n';
+
+    unverifiedAccounts.forEach(account => {
+      const platformName = account.platform === 'x' ? 'X (Twitter)' : account.platform;
+      message += `• *${platformName}:* @${account.username}\n`;
+
+      // Check if verification code is expired
+      const verificationExpiry = new Date(account.verification_expiry);
+      if (verificationExpiry && verificationExpiry < new Date()) {
+        message += '  ⚠️ Verification code expired. Use /link to generate a new one.\n';
+      } else {
+        message += `  📝 Verification code: \`${account.verification_code}\`\n`;
+
+        if (account.platform === 'x') {
+          message += '  📨 Send this code to @ProjectVerifierBot on X\n';
+        } else if (account.platform === 'discord') {
+          message += '  📨 Send this code to @VerifyBot on our Discord server\n';
+        }
+      }
+
+      message += '\n';
+    });
+
+    message += 'Once verified, you\'ll be able to participate in campaigns.';
+
+    await ctx.replyWithMarkdown(message);
+  } catch (error) {
+    console.error('Error in verifyAccountHandler:', error);
+    await ctx.reply('An error occurred while checking verification status. Please try again.');
+  }
 };
 
 /**
  * Handler for /unlink command to remove a linked account
  */
 const unlinkAccountHandler = async (ctx) => {
-  const user = ctx.state.user;
-
-  if (!user.socialAccounts || user.socialAccounts.length === 0) {
-    await ctx.reply(
-      'You don\'t have any social accounts linked to unlink.\n\n' +
-      'Use /link to connect social media accounts.'
+  try {
+    const userId = ctx.from.id.toString();
+    const result = await pool.query(
+      'SELECT * FROM users WHERE telegram_id = $1',
+      [userId]
     );
-    return;
-  }
 
-  // Create inline keyboard with accounts to unlink
-  const inlineKeyboard = user.socialAccounts.map(account => {
-    const platformName = account.platform === 'x' ? 'X (Twitter)' : account.platform;
-    const verifiedStatus = account.isVerified ? '✅' : '❌';
-
-    return [{
-      text: `${platformName}: @${account.username} ${verifiedStatus}`,
-      callback_data: `unlink_${account.platform}_${account.username}`
-    }];
-  });
-
-  // Add cancel button
-  inlineKeyboard.push([{ text: 'Cancel', callback_data: 'unlink_cancel' }]);
-
-  await ctx.reply(
-    'Which social media account would you like to unlink?\n\n' +
-    'WARNING: Unlinking a verified account will require you to verify again if you want to re-link it.',
-    {
-      reply_markup: {
-        inline_keyboard: inlineKeyboard
-      }
+    if (!result.rows[0]) {
+      return ctx.reply('Please start the bot first with /start');
     }
-  );
+
+    const user = result.rows[0];
+    const socialAccounts = user.social_accounts || [];
+
+    if (!socialAccounts.length) {
+      await ctx.reply(
+        'You don\'t have any social accounts linked to unlink.\n\n' +
+        'Use /link to connect social media accounts.'
+      );
+      return;
+    }
+
+    // Create inline keyboard with accounts to unlink
+    const inlineKeyboard = socialAccounts.map(account => {
+      const platformName = account.platform === 'x' ? 'X (Twitter)' : account.platform;
+      const verifiedStatus = account.is_verified ? '✅' : '❌';
+
+      return [{
+        text: `${platformName}: @${account.username} ${verifiedStatus}`,
+        callback_data: `unlink_${account.platform}_${account.username}`
+      }];
+    });
+
+    // Add cancel button
+    inlineKeyboard.push([{ text: 'Cancel', callback_data: 'unlink_cancel' }]);
+
+    await ctx.reply(
+      'Which social media account would you like to unlink?\n\n' +
+      'WARNING: Unlinking a verified account will require you to verify again if you want to re-link it.',
+      {
+        reply_markup: {
+          inline_keyboard: inlineKeyboard
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Error in unlinkAccountHandler:', error);
+    await ctx.reply('An error occurred while preparing unlink options. Please try again.');
+  }
 };
 
 /**
  * Callback handler for unlinking accounts
  */
 const unlinkAccountCallback = async (ctx) => {
-  const data = ctx.callbackQuery.data;
+  try {
+    const data = ctx.callbackQuery.data;
 
-  // Check if cancel was clicked
-  if (data === 'unlink_cancel') {
-    await ctx.editMessageText('Operation cancelled. Your accounts remain linked.');
-    return;
+    // Check if cancel was clicked
+    if (data === 'unlink_cancel') {
+      await ctx.editMessageText('Operation cancelled. Your accounts remain linked.');
+      return;
+    }
+
+    const parts = data.split('_');
+
+    if (parts.length < 3) {
+      await ctx.editMessageText('Invalid selection. Please try again using the /unlink command.');
+      return;
+    }
+
+    const platform = parts[1];
+    const username = parts.slice(2).join('_'); // In case username has underscores
+
+    const userId = ctx.from.id.toString();
+    const result = await pool.query(
+      'SELECT * FROM users WHERE telegram_id = $1',
+      [userId]
+    );
+
+    if (!result.rows[0]) {
+      await ctx.editMessageText('User not found. Please start the bot with /start');
+      return;
+    }
+
+    const user = result.rows[0];
+    const socialAccounts = user.social_accounts || [];
+
+    // Find account to remove
+    const updatedAccounts = socialAccounts.filter(acc =>
+      !(acc.platform === platform && acc.username === username)
+    );
+
+    if (updatedAccounts.length === socialAccounts.length) {
+      await ctx.editMessageText('Account not found. It may have already been removed.');
+      return;
+    }
+
+    // Update user's social accounts
+    await pool.query(
+      'UPDATE users SET social_accounts = $1 WHERE telegram_id = $2',
+      [JSON.stringify(updatedAccounts), userId]
+    );
+
+    const platformName = platform === 'x' ? 'X (Twitter)' : platform;
+
+    await ctx.editMessageText(
+      `✅ Your ${platformName} account @${username} has been unlinked.\n\n` +
+      `You can use /link at any time to connect a social media account.`
+    );
+  } catch (error) {
+    console.error('Error in unlinkAccountCallback:', error);
+    await ctx.editMessageText('An error occurred while unlinking the account. Please try again.');
   }
-
-  const parts = data.split('_');
-
-  if (parts.length < 3) {
-    await ctx.editMessageText('Invalid selection. Please try again using the /unlink command.');
-    return;
-  }
-
-  const platform = parts[1];
-  const username = parts.slice(2).join('_'); // In case username has underscores
-
-  const user = ctx.state.user;
-
-  // Find account index
-  const accountIndex = user.socialAccounts.findIndex(acc =>
-    acc.platform === platform && acc.username === username
-  );
-
-  if (accountIndex === -1) {
-    await ctx.editMessageText('Account not found. It may have already been removed.');
-    return;
-  }
-
-  // Remove account
-  user.socialAccounts.splice(accountIndex, 1);
-  await user.save();
-
-  const platformName = platform === 'x' ? 'X (Twitter)' : platform;
-
-  await ctx.editMessageText(
-    `✅ Your ${platformName} account @${username} has been unlinked.\n\n` +
-    `You can use /link at any time to connect a social media account.`
-  );
 };
 
 /**
