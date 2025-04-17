@@ -91,10 +91,29 @@ if (process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET) {
 const localSession = new LocalSession({ database: 'sessions.json' });
 bot.use(localSession.middleware());
 
-// Register basic command handlers
+// Import all handlers
+const { startHandler, helpHandler, statusHandler } = require('./handlers/basicHandlers');
+const { linkAccountHandler, verifyAccountHandler, unlinkAccountHandler } = require('./handlers/accountHandlers');
+const { newProjectHandler, listProjectsHandler, projectHandler } = require('./handlers/projectHandlers');
+const { newCampaignHandler, listCampaignsHandler, campaignHandler, checkHandler, remindHandler } = require('./handlers/campaignHandlers');
+const { analyticsHandler } = require('./handlers/analyticsHandlers');
+
+// Register all command handlers
 bot.command('start', startHandler);
 bot.command('help', helpHandler);
 bot.command('status', statusHandler);
+bot.command('link', linkAccountHandler);
+bot.command('verify', verifyAccountHandler);
+bot.command('unlink', unlinkAccountHandler);
+bot.command('newproject', newProjectHandler);
+bot.command('myprojects', listProjectsHandler);
+bot.command('project', projectHandler);
+bot.command('newcampaign', newCampaignHandler);
+bot.command('campaigns', listCampaignsHandler);
+bot.command('campaign', campaignHandler);
+bot.command('check', checkHandler);
+bot.command('remind', remindHandler);
+bot.command('analytics', analyticsHandler);
 
 // Error handling
 bot.catch((err, ctx) => {
