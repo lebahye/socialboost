@@ -35,7 +35,7 @@ class Campaign {
       targetParticipants,
       createdBy,
       status,
-      private
+      isPrivate
     } = campaignData;
 
     const query = `
@@ -50,7 +50,7 @@ class Campaign {
     const values = [
       name, description, projectName, xPostUrl,
       startDate, endDate, targetParticipants,
-      createdBy, status || 'draft', private || false
+      createdBy, status || 'draft', isPrivate || false
     ];
 
     const { rows } = await pool.query(query, values);
