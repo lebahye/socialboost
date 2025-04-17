@@ -11,7 +11,7 @@ const campaignCreationScene = new Scenes.WizardScene(
     const user = { telegramId: ctx.from.id.toString() };
 
     // Check if user has any projects
-    const projects = await Project.find({ 'owners.telegramId': user.telegramId });
+    const projects = await Project.findByTelegramId(user.telegramId);
 
     if (!projects || projects.length === 0) {
       await ctx.reply(

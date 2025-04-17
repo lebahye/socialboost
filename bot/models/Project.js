@@ -40,11 +40,11 @@ class Project {
   static async save(projectData) {
     const { name, description, ownerId } = projectData;
     const query = `
-      INSERT INTO projects (name, description, owner_id, status, created_at, updated_at)
-      VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      INSERT INTO projects (name, description, owner_id)
+      VALUES ($1, $2, $3)
       RETURNING *
     `;
-    const values = [name, description, ownerId, 'active'];
+    const values = [name, description, ownerId];
     const { rows } = await pool.query(query, values);
     return rows[0];
   }
