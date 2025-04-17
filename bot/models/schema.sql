@@ -6,15 +6,12 @@ CREATE TABLE IF NOT EXISTS users (
   username TEXT,
   first_name TEXT,
   last_name TEXT,
-  language_code TEXT DEFAULT 'en',
-  join_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  language TEXT DEFAULT 'en',
   is_project_owner BOOLEAN DEFAULT false,
+  is_verified BOOLEAN DEFAULT false,
   current_state TEXT,
   social_accounts JSONB DEFAULT '[]',
-  is_verified BOOLEAN DEFAULT false,
-  referral_code TEXT UNIQUE,
-  referred_by TEXT,
-  credits INTEGER DEFAULT 0
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Projects table
@@ -23,8 +20,10 @@ CREATE TABLE IF NOT EXISTS projects (
   name TEXT NOT NULL,
   description TEXT,
   owner_id TEXT NOT NULL REFERENCES users(telegram_id),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  subscription JSONB DEFAULT '{"isActive": false, "campaignsRemaining": 0}',
+  category TEXT,
+  social_accounts JSONB DEFAULT '{}',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Campaigns table
@@ -33,32 +32,44 @@ CREATE TABLE IF NOT EXISTS campaigns (
   name TEXT NOT NULL,
   description TEXT,
   project_id INTEGER REFERENCES projects(id),
+  project_name TEXT NOT NULL,
   x_post_url TEXT,
-  discord_post_url TEXT,
-  start_date TIMESTAMP,
+  x_post_id TEXT,
+  telegram_channel_url TEXT,
+  start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   end_date TIMESTAMP,
-  target_participants INTEGER,
-  reward_amount INTEGER,
+  target_participants INTEGER DEFAULT 0,
+  current_participants INTEGER DEFAULT 0,
+  rewards JSONB DEFAULT '[]',
+  created_by TEXT REFERENCES users(telegram_id),
   status TEXT DEFAULT 'draft',
-  requirements JSONB DEFAULT '{}',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  reminders JSONB DEFAULT '[]',
+  private BOOLEAN DEFAULT false,
+  tags TEXT[],
+  last_checked TIMESTAMP,
+  participants JSONB DEFAULT '[]',
+  stats JSONB DEFAULT '{"engagement": {"likes": 0, "retweets": 0, "comments": 0}}',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Participations table
-CREATE TABLE IF NOT EXISTS participations (
+-- Campaign Participants table
+CREATE TABLE IF NOT EXISTS campaign_participants (
+  id SERIAL PRIMARY KEY,
+  campaign_id INTEGER REFERENCES campaigns(id),
+  user_id TEXT REFERENCES users(telegram_id),
+  status TEXT DEFAULT 'joined',
+  participated BOOLEAN DEFAULT false,
+  participated_at TIMESTAMP,
+  rewards_claimed JSONB DEFAULT '[]',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Verification Codes table
+CREATE TABLE IF NOT EXISTS verification_codes (
   id SERIAL PRIMARY KEY,
   user_id TEXT REFERENCES users(telegram_id),
-  campaign_id INTEGER REFERENCES campaigns(id),
-  status TEXT DEFAULT 'pending',
-  verification_data JSONB DEFAULT '{}',
-  completed_at TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE(user_id, campaign_id)
+  platform TEXT NOT NULL,
+  code TEXT NOT NULL,
+  expires_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- Create indexes
-CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id);
-CREATE INDEX IF NOT EXISTS idx_projects_owner_id ON projects(owner_id);
-CREATE INDEX IF NOT EXISTS idx_campaigns_project_id ON campaigns(project_id);
-CREATE INDEX IF NOT EXISTS idx_participations_user_campaign ON participations(user_id, campaign_id);
