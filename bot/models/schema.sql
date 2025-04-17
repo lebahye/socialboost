@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS projects (
   id SERIAL PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
+  category TEXT NOT NULL,
   owner_id TEXT NOT NULL REFERENCES users(telegram_id),
   subscription JSONB DEFAULT '{"isActive": false, "campaignsRemaining": 0}',
   category TEXT,
