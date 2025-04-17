@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   current_state TEXT DEFAULT NULL,
   last_command TEXT DEFAULT NULL,
   language_code TEXT DEFAULT 'en',
-  social_accounts JSONB DEFAULT '[]'::jsonb,
+  social_accounts JSONB DEFAULT '[]',
   settings JSONB DEFAULT '{}'::jsonb
 );
 
