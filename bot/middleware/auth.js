@@ -62,15 +62,16 @@ const userMiddleware = async (ctx, next) => {
  * Middleware to check if user is a project owner
  */
 const projectOwnerMiddleware = async (ctx, next) => {
-  // Check if user middleware has run and user exists
-  if (!ctx.state.user) {
-    await userMiddleware(ctx, () => {});
-
+  try {
+    // Check if user middleware has run and user exists
     if (!ctx.state.user) {
-      await ctx.reply('You need to start a conversation with the bot first. Please use /start command.');
-      return;
+      await userMiddleware(ctx, () => {});
+
+      if (!ctx.state.user) {
+        await ctx.reply('Please start a conversation with /start first.');
+        return;
+      }
     }
-  }
 
   // Check if user is a project owner
   if (!ctx.state.user.isProjectOwner) {

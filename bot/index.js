@@ -59,21 +59,21 @@ const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
 // Connect to database if MongoDB URI is provided
 if (process.env.MONGODB_URI) {
-  // Remove port number if present in mongodb+srv:// URI
-  const mongoUri = process.env.MONGODB_URI.includes('mongodb+srv://')
-    ? process.env.MONGODB_URI.split(':').slice(0, -1).join(':')
-    : process.env.MONGODB_URI;
-    
-  mongoose.connect(mongoUri)
-    .then(() => {
-      console.log('Connected to MongoDB');
-    })
-    .catch(err => {
-      console.error('Error connecting to MongoDB:', err);
-      console.log('Running in limited mode without database persistence');
-    });
+  mongoose.connect(process.env.MONGODB_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 5000,
+    socketTimeoutMS: 45000,
+  })
+  .then(() => {
+    console.log('Connected to MongoDB');
+  })
+  .catch(err => {
+    console.error('Error connecting to MongoDB:', err);
+    console.log('Running in limited mode without database persistence');
+  });
 } else {
-  console.log('No MongoDB URI provided, running in limited mode without database persistence');
+  console.error('MONGODB_URI not found in environment variables');
 }
 
 // Handle MongoDB connection errors
