@@ -57,10 +57,9 @@ const verificationService = require('./services/verification');
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
-// Connect to database if MongoDB URI is provided
-if (process.env.REPLIT_DB_URL) {
-  const mongoUri = process.env.REPLIT_DB_URL;
-  mongoose.connect(mongoUri, {
+// Connect to database if REPLIT_MONGO_URL is provided
+if (process.env.REPLIT_MONGO_URL) {
+  mongoose.connect(process.env.REPLIT_MONGO_URL, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     serverSelectionTimeoutMS: 5000,
@@ -74,7 +73,7 @@ if (process.env.REPLIT_DB_URL) {
     console.log('Running in limited mode without database persistence');
   });
 } else {
-  console.error('MONGODB_URI not found in environment variables');
+  console.error('REPLIT_MONGO_URL not found in environment variables');
 }
 
 // Handle MongoDB connection errors
