@@ -10,19 +10,32 @@ const { startHandler, helpHandler, statusHandler } = require('./handlers/basicHa
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
-// Initialize database pool
+// Initialize database pool with reconnection settings
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL
+  connectionString: process.env.DATABASE_URL,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 });
 
-// Test database connection
-pool.connect()
-  .then(() => {
+// Handle pool errors
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+});
+
+// Test and maintain database connection
+async function connectDatabase() {
+  try {
+    await pool.connect();
     console.log('Connected to PostgreSQL database');
-  })
-  .catch(err => {
+  } catch (err) {
     console.error('Error connecting to PostgreSQL:', err);
-  });
+    // Retry connection after 5 seconds
+    setTimeout(connectDatabase, 5000);
+  }
+}
+
+connectDatabase();
 
 // Initialize Twitter API client if credentials exist
 let twitterClient = null;
