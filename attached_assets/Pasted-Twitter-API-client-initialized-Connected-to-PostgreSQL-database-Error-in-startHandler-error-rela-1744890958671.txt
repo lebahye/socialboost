@@ -1,0 +1,90 @@
+Twitter API client initialized
+Connected to PostgreSQL database
+Error in startHandler: error: relation "users" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async startHandler (/home/runner/workspace/bot/handlers/basicHandlers.js:9:20)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async /home/runner/workspace/bot/node_modules/telegraf-session-local/lib/session.js:174:7
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21 {
+  length: 104,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '13',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+Error in helpHandler: error: relation "users" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async helpHandler (/home/runner/workspace/bot/handlers/basicHandlers.js:23:20)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17) {
+  length: 104,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '30',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+Error in statusHandler: error: relation "users" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async statusHandler (/home/runner/workspace/bot/handlers/basicHandlers.js:48:20)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17) {
+  length: 104,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '15',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+Bot started in polling mode (development)
