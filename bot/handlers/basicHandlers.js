@@ -67,7 +67,7 @@ const statusHandler = async (ctx) => {
     const user = result.rows[0];
     let statusMessage = `*📊 Your Account Status*\n\n`;
     statusMessage += `*User:* ${user.username || ctx.from.username || 'No username'}\n`;
-    statusMessage += `*Joined:* ${new Date(user.join_date).toDateString()}\n`;
+    statusMessage += `*Joined:* ${new Date(user.created_at).toDateString()}\n`;
     statusMessage += `*Account Type:* ${user.is_project_owner ? 'Project Owner' : 'Participant'}\n`;
 
     await ctx.replyWithMarkdown(statusMessage);
