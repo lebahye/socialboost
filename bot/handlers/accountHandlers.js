@@ -1,5 +1,6 @@
 const { Composer } = require('telegraf');
 const crypto = require('crypto');
+const User = require('../models/User');
 
 /**
  * Handler for /link command
