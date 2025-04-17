@@ -16,18 +16,24 @@ const pool = new Pool({
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 // Handle pool errors
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
+  // Attempt to reconnect
+  setTimeout(connectDatabase, 5000);
 });
 
 // Test and maintain database connection
 async function connectDatabase() {
   try {
-    await pool.connect();
+    const client = await pool.connect();
     console.log('Connected to PostgreSQL database');
+    client.release();
   } catch (err) {
     console.error('Error connecting to PostgreSQL:', err);
     // Retry connection after 5 seconds
@@ -35,7 +41,19 @@ async function connectDatabase() {
   }
 }
 
+// Initial connection
 connectDatabase();
+
+// Ping database every 30 seconds to keep connection alive
+setInterval(async () => {
+  try {
+    const client = await pool.connect();
+    await client.query('SELECT 1');
+    client.release();
+  } catch (err) {
+    console.error('Ping failed:', err);
+  }
+}, 30000);
 
 // Initialize Twitter API client if credentials exist
 let twitterClient = null;
