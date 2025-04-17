@@ -7,10 +7,30 @@ const startHandler = async (ctx) => {
   try {
     const userId = ctx.from.id.toString();
     const result = await pool.query(
-      'INSERT INTO users (telegram_id, username, first_name, last_name) VALUES ($1, $2, $3, $4) ON CONFLICT (telegram_id) DO NOTHING RETURNING *',
+      `INSERT INTO users (
+        telegram_id, 
+        username, 
+        first_name, 
+        last_name, 
+        is_project_owner,
+        is_verified,
+        credits,
+        social_accounts
+      ) VALUES ($1, $2, $3, $4, false, false, 0, '[]')
+      ON CONFLICT (telegram_id) 
+      DO UPDATE SET 
+        username = $2,
+        first_name = $3,
+        last_name = $4
+      RETURNING *`,
       [userId, ctx.from.username, ctx.from.first_name, ctx.from.last_name]
     );
-    await ctx.reply('Welcome! Use /help to see available commands.');
+    
+    if (result.rows[0]) {
+      await ctx.reply('Welcome! Use /help to see available commands.');
+    } else {
+      throw new Error('User registration failed');
+    }
   } catch (error) {
     console.error('Error in startHandler:', error);
     await ctx.reply('An error occurred. Please try again.');
