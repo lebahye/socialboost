@@ -239,7 +239,7 @@ if (isDevelopment) {
   });
 
   // Start server
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`Bot webhook server started on port ${PORT}`);
     console.log(`Webhook URL: ${WEBHOOK_URL}/bot${process.env.TELEGRAM_BOT_TOKEN}`);
   });
