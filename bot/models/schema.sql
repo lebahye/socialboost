@@ -1,3 +1,4 @@
+
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
@@ -15,9 +16,9 @@ CREATE TABLE IF NOT EXISTS users (
 -- Projects table
 CREATE TABLE IF NOT EXISTS projects (
   id SERIAL PRIMARY KEY,
-  name TEXT NOT NULL,
+  name VARCHAR(50) NOT NULL,
   description TEXT,
-  category TEXT NOT NULL,
+  category VARCHAR(20) NOT NULL CHECK (category IN ('DeFi', 'NFT', 'GameFi', 'Web3', 'Other')),
   owner_id TEXT NOT NULL REFERENCES users(telegram_id),
   subscription JSONB DEFAULT '{"isActive": true, "campaignsRemaining": 3}',
   social_accounts JSONB DEFAULT '{"x": null, "discord": null}',
@@ -38,8 +39,6 @@ CREATE TABLE IF NOT EXISTS campaigns (
   current_participants INTEGER DEFAULT 0,
   rewards JSONB DEFAULT '[]',
   status TEXT DEFAULT 'draft',
-  tags TEXT[],
-  stats JSONB DEFAULT '{"engagement": {"likes": 0, "retweets": 0, "comments": 0}}',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
