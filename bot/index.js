@@ -59,7 +59,12 @@ const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
 // Connect to database if MongoDB URI is provided
 if (process.env.MONGODB_URI) {
-  mongoose.connect(process.env.MONGODB_URI)
+  // Remove port number if present in mongodb+srv:// URI
+  const mongoUri = process.env.MONGODB_URI.includes('mongodb+srv://')
+    ? process.env.MONGODB_URI.split(':').slice(0, -1).join(':')
+    : process.env.MONGODB_URI;
+    
+  mongoose.connect(mongoUri)
     .then(() => {
       console.log('Connected to MongoDB');
     })
