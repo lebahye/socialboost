@@ -1,11 +1,9 @@
+
 const { Telegraf, Scenes, session } = require('telegraf');
 const LocalSession = require('telegraf-session-local');
 const { Pool } = require('pg');
 const { TwitterApi } = require('twitter-api-v2');
 require('dotenv').config();
-
-// Import handlers
-const { startHandler, helpHandler, statusHandler } = require('./handlers/basicHandlers');
 
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
@@ -23,11 +21,11 @@ const pool = new Pool({
   keepAliveInitialDelayMillis: 10000
 });
 
+// Database connection management
 let isConnected = false;
 let reconnectAttempts = 0;
 const MAX_RECONNECT_ATTEMPTS = 5;
 
-// Handle pool errors
 pool.on('error', (err) => {
   console.error('Unexpected error on idle client', err);
   if (!isConnected) {
@@ -35,7 +33,6 @@ pool.on('error', (err) => {
   }
 });
 
-// Test and maintain database connection
 async function connectDatabase() {
   if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
     console.error('Max reconnection attempts reached. Please check database configuration.');
@@ -44,7 +41,7 @@ async function connectDatabase() {
 
   try {
     const client = await pool.connect();
-    await client.query('SELECT 1'); // Test query
+    await client.query('SELECT 1');
     console.log('Connected to PostgreSQL database');
     isConnected = true;
     reconnectAttempts = 0;
@@ -60,7 +57,7 @@ async function connectDatabase() {
 // Initial connection
 connectDatabase();
 
-// Ping database every 30 seconds to keep connection alive
+// Ping database to keep connection alive
 setInterval(async () => {
   try {
     const client = await pool.connect();
@@ -93,16 +90,16 @@ bot.use(localSession.middleware());
 
 // Import all handlers
 const { startHandler, helpHandler, statusHandler } = require('./handlers/basicHandlers');
-const { linkAccountHandler, verifyAccountHandler, unlinkAccountHandler } = require('./handlers/accountHandlers');
+const { linkSocialHandler, verifyAccountHandler, unlinkAccountHandler } = require('./handlers/accountHandlers');
 const { newProjectHandler, listProjectsHandler, projectHandler } = require('./handlers/projectHandlers');
-const { newCampaignHandler, listCampaignsHandler, campaignHandler, checkHandler, remindHandler } = require('./handlers/campaignHandlers');
-const { analyticsHandler } = require('./handlers/analyticsHandlers');
+const { newCampaignHandler, listCampaignsHandler, manageCampaignHandler, checkHandler, remindHandler } = require('./handlers/campaignHandlers');
+const { analyticsHandler, exportHandler } = require('./handlers/analyticsHandlers');
 
 // Register all command handlers
 bot.command('start', startHandler);
 bot.command('help', helpHandler);
 bot.command('status', statusHandler);
-bot.command('link', linkAccountHandler);
+bot.command('link', linkSocialHandler);
 bot.command('verify', verifyAccountHandler);
 bot.command('unlink', unlinkAccountHandler);
 bot.command('newproject', newProjectHandler);
@@ -110,10 +107,11 @@ bot.command('myprojects', listProjectsHandler);
 bot.command('project', projectHandler);
 bot.command('newcampaign', newCampaignHandler);
 bot.command('campaigns', listCampaignsHandler);
-bot.command('campaign', campaignHandler);
+bot.command('campaign', manageCampaignHandler);
 bot.command('check', checkHandler);
 bot.command('remind', remindHandler);
 bot.command('analytics', analyticsHandler);
+bot.command('export', exportHandler);
 
 // Error handling
 bot.catch((err, ctx) => {
