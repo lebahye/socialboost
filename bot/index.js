@@ -90,7 +90,7 @@ bot.use(localSession.middleware());
 
 // Import all handlers
 const { startHandler, helpHandler, statusHandler } = require('./handlers/basicHandlers');
-const { linkSocialHandler, verifyAccountHandler, unlinkAccountHandler } = require('./handlers/accountHandlers');
+const { linkSocialHandler, verifyAccountHandler, unlinkAccountHandler, linkXAccountCallback, linkDiscordCallback } = require('./handlers/accountHandlers');
 const { newProjectHandler, listProjectsHandler, manageProjectHandler } = require('./handlers/projectHandlers');
 const { newCampaignHandler, listCampaignsHandler, manageCampaignHandler } = require('./handlers/campaignHandlers');
 const { analyticsHandler, exportDataHandler } = require('./handlers/analyticsHandlers');
