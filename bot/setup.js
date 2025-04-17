@@ -10,6 +10,8 @@ const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 const crypto = require('crypto');
+const { Pool } = require('pg'); // Added for database connection
+const fsPromises = require('fs').promises; // Added for async file reading
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -37,6 +39,7 @@ TWITTER_ACCESS_SECRET=
 NODE_ENV=development
 WEBHOOK_URL=
 PORT=3000
+DATABASE_URL= // Added for database URL
 `;
 
   fs.writeFileSync(envFilePath, envTemplate);
@@ -104,6 +107,11 @@ async function runSetupWizard() {
       question: 'Enter port number for the bot (default: 3000):',
       required: false,
       default: '3000'
+    },
+    {
+      key: 'DATABASE_URL', // Added for database URL
+      question: 'Enter your PostgreSQL Database URL:',
+      required: true
     }
   ];
 
@@ -124,6 +132,37 @@ async function runSetupWizard() {
       updateEnvValue(q.key, valueToSet);
     }
   }
+
+  async function initializeDatabase() {
+    const pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false
+      }
+    });
+
+    try {
+      // Read schema file
+      const schemaSQL = await fsPromises.readFile(
+        path.join(__dirname, 'models', 'schema.sql'),
+        'utf8'
+      );
+
+      // Execute schema
+      const client = await pool.connect();
+      try {
+        await client.query(schemaSQL);
+        console.log('Database schema initialized successfully');
+      } finally {
+        client.release();
+      }
+    } catch (err) {
+      console.error('Error initializing database:', err);
+      process.exit(1);
+    }
+  }
+
+  await initializeDatabase(); // Call the database initialization function
 
   console.log('\nSetup completed successfully!');
   console.log('\nTo start the bot:');

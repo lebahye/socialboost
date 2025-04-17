@@ -14,15 +14,13 @@ const pool = new Pool({
  * Starts the process of linking a social media account
  */
 const linkSocialHandler = async (ctx) => {
-  const userId = ctx.from.id.toString();
-  const result = await pool.query(
-    'SELECT * FROM users WHERE telegram_id = $1',
-    [userId]
-  );
+  try {
+    const userId = ctx.from.id.toString();
+    const user = await User.findOne({ telegram_id: userId });
 
-  if (!result.rows[0]) {
-    return ctx.reply('Please start the bot first with /start');
-  }
+    if (!user) {
+      return ctx.reply('Please start the bot first with /start');
+    }
 
   // Send menu of platforms to link
   await ctx.reply(
