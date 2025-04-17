@@ -8,7 +8,7 @@ const campaignCreationScene = new Scenes.WizardScene(
   'CAMPAIGN_CREATION',
   // Step 1: Select project or start over if no projects
   async (ctx) => {
-    const user = ctx.state.user;
+    const user = { telegramId: ctx.from.id.toString() };
 
     // Check if user has any projects
     const projects = await Project.find({ 'owners.telegramId': user.telegramId });

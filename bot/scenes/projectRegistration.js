@@ -30,7 +30,7 @@ const projectRegistrationScene = new Scenes.WizardScene(
 
     try {
       ctx.wizard.state.projectData.description = ctx.message.text;
-      const project = await Project.create(ctx.wizard.state.projectData); // Use create instead of save
+      const project = await Project.save(ctx.wizard.state.projectData);
 
       await ctx.reply(
         `✅ Project created successfully!\n\n` +
