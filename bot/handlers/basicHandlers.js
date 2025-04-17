@@ -1,14 +1,14 @@
-
 const { Composer } = require('telegraf');
 const User = require('../models/User');
 const Campaign = require('../models/Campaign');
 
+// Ensure this is the only declaration of startHandler
 const startHandler = async (ctx) => {
   console.log('Start command received from:', ctx.from.id);
   try {
     const user = ctx.state.user;
     let referralCode = null;
-    
+
     if (ctx.startPayload && ctx.startPayload.length > 0) {
       referralCode = ctx.startPayload;
     }
@@ -104,20 +104,20 @@ const statusHandler = async (ctx) => {
   try {
     const user = ctx.state.user;
     let statusMessage = `*📊 Your Account Status*\n\n`;
-    
+
     statusMessage += `*User:* ${user.username || 'No username'}\n`;
     statusMessage += `*Joined:* ${user.joinDate.toDateString()}\n`;
 
     if (user.isProjectOwner) {
       statusMessage += `*Account Type:* Project Owner`;
-      
+
       if (user.isPremium) {
         statusMessage += ` (Premium)\n`;
         statusMessage += `*Premium Until:* ${user.premiumUntil.toDateString()}\n`;
       } else {
         statusMessage += ` (Standard)\n`;
       }
-      
+
       statusMessage += `*Projects:* ${user.projects.length}\n`;
     } else {
       statusMessage += `*Account Type:* Participant\n`;
