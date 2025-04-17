@@ -1,5 +1,5 @@
 const Project = require('../models/Project');
-const User = require('../models/User');
+const Campaign = require('../models/Campaign');
 
 /**
  * Handler for creating a new project
@@ -10,105 +10,78 @@ const newProjectHandler = async (ctx) => {
 };
 
 /**
- * Handler for managing an existing project
- */
-const manageProjectHandler = async (ctx) => {
-  const userId = ctx.from.id.toString();
-
-  try {
-    // Find projects owned by this user
-    const projects = await Project.find({ ownerId: userId });
-
-    if (!projects || projects.length === 0) {
-      return ctx.reply('You don\'t have any projects yet. Use /newproject to create one.');
-    }
-
-    // Parse project ID if provided
-    const args = ctx.message.text.split(' ');
-
-    if (args.length < 2) {
-      // No project ID provided, list the user's projects
-      const projectsList = projects.map((p, i) =>
-        `${i+1}. ${p.name} (ID: ${p._id})`
-      ).join('\n');
-
-      return ctx.reply(
-        'Your projects:\n\n' +
-        projectsList +
-        '\n\nTo manage a specific project, use "/project [ID]"'
-      );
-    }
-
-    // Find the specific project
-    const projectId = args[1];
-    const project = await Project.findOne({
-      _id: projectId,
-      ownerId: userId
-    });
-
-    if (!project) {
-      return ctx.reply('Project not found or you don\'t have permission to manage it.');
-    }
-
-    // Show project details and management options
-    const message = `
-Project: ${project.name}
-Description: ${project.description}
-Created: ${project.createdAt.toDateString()}
-Website: ${project.website || 'Not set'}
-
-What would you like to do with this project?
-    `;
-
-    return ctx.reply(message, {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: '📝 Edit Details', callback_data: `edit_project_${project._id}` }],
-          [{ text: '📊 View Analytics', callback_data: `project_analytics_${project._id}` }],
-          [{ text: '📣 Create Campaign', callback_data: `create_campaign_${project._id}` }],
-          [{ text: '🗂 Manage Campaigns', callback_data: `list_campaigns_${project._id}` }]
-        ]
-      }
-    });
-
-  } catch (error) {
-    console.error('Error in manageProjectHandler:', error);
-    return ctx.reply('An error occurred while managing your project. Please try again later.');
-  }
-};
-
-/**
  * Handler for listing all projects
  */
 const listProjectsHandler = async (ctx) => {
-  const userId = ctx.from.id.toString();
-
   try {
-    const projects = await Project.find({ ownerId: userId });
+    const projects = await Project.findByTelegramId(ctx.from.id.toString());
 
     if (!projects || projects.length === 0) {
       return ctx.reply('You don\'t have any projects yet. Use /newproject to create one.');
     }
 
-    const projectsList = projects.map((p, i) => {
-      const campaignCount = p.campaigns ? p.campaigns.length : 0;
-      return `${i+1}. ${p.name}\n   Campaigns: ${campaignCount}\n   ID: ${p._id}`;
-    }).join('\n\n');
+    const projectList = await Promise.all(projects.map(async (project) => {
+      const campaigns = await Campaign.find({ projectId: project.id });
+      return `📂 *${project.name}*\n` +
+             `Description: ${project.description}\n` +
+             `Campaigns: ${campaigns.length}\n` +
+             `Created: ${new Date(project.created_at).toLocaleDateString()}\n`;
+    }));
 
-    return ctx.reply(
-      '📋 Your Projects:\n\n' +
-      projectsList +
-      '\n\nTo manage a project, use "/project [ID]"'
+    await ctx.replyWithMarkdown(
+      '*Your Projects:*\n\n' + projectList.join('\n')
     );
-
   } catch (error) {
     console.error('Error in listProjectsHandler:', error);
-    return ctx.reply('An error occurred while listing your projects. Please try again later.');
+    await ctx.reply('An error occurred while fetching your projects.');
+  }
+};
+
+const manageProjectHandler = async (ctx) => {
+  try {
+    const projectId = ctx.message.text.split(' ')[1];
+    if (!projectId) {
+      return ctx.reply('Please provide a project ID: /project <id>');
+    }
+
+    const project = await Project.findOne({ id: projectId });
+    if (!project) {
+      return ctx.reply('Project not found.');
+    }
+
+    if (project.owner_id !== ctx.from.id.toString()) {
+      return ctx.reply('You don\'t have permission to manage this project.');
+    }
+
+    const campaigns = await Campaign.find({ projectId });
+
+    const stats = {
+      activeCampaigns: campaigns.filter(c => c.status === 'active').length,
+      totalParticipants: campaigns.reduce((sum, c) => sum + (c.participants || 0), 0),
+      averageEngagement: campaigns.length ? 
+        (campaigns.reduce((sum, c) => sum + (c.engagement_rate || 0), 0) / campaigns.length).toFixed(2) + '%' : 
+        'N/A'
+    };
+
+    await ctx.replyWithMarkdown(
+      `*Project: ${project.name}*\n\n` +
+      `📊 *Statistics:*\n` +
+      `Active Campaigns: ${stats.activeCampaigns}\n` +
+      `Total Participants: ${stats.totalParticipants}\n` +
+      `Average Engagement: ${stats.averageEngagement}\n\n` +
+      `Use these commands to manage:\n` +
+      `/newcampaign - Create new campaign\n` +
+      `/campaigns - List all campaigns\n` +
+      `/analytics ${projectId} - View detailed analytics`
+    );
+  } catch (error) {
+    console.error('Error in manageProjectHandler:', error);
+    await ctx.reply('An error occurred while managing the project.');
   }
 };
 
 module.exports = {
   newProjectHandler,
-  manageProjectHandler,
-  listProjectsHandler
+  listProjectsHandler,
+  manageProjectHandler
 };
