@@ -37,6 +37,10 @@ const linkSocialHandler = async (ctx) => {
       }
     }
   );
+
+  // Register callback handlers
+  ctx.telegram.bot.action('link_x', linkXAccountCallback);
+  ctx.telegram.bot.action('link_discord', linkDiscordCallback);
 };
 
 /**
