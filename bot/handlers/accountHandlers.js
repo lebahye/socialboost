@@ -1,13 +1,28 @@
 const { Composer } = require('telegraf');
 const crypto = require('crypto');
-const User = require('../models/User');
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 /**
  * Handler for /link command
  * Starts the process of linking a social media account
  */
 const linkSocialHandler = async (ctx) => {
-  const user = ctx.state.user;
+  const userId = ctx.from.id.toString();
+  const result = await pool.query(
+    'SELECT * FROM users WHERE telegram_id = $1',
+    [userId]
+  );
+
+  if (!result.rows[0]) {
+    return ctx.reply('Please start the bot first with /start');
+  }
 
   // Send menu of platforms to link
   await ctx.reply(
@@ -28,11 +43,14 @@ const linkSocialHandler = async (ctx) => {
  * Callback handler for linking X (Twitter) account
  */
 const linkXAccountCallback = async (ctx) => {
-  const telegramId = ctx.from.id;
-  let user = await User.findOne({ telegramId });
+  const telegramId = ctx.from.id.toString();
+  const result = await pool.query(
+    'SELECT * FROM users WHERE telegram_id = $1',
+    [telegramId]
+  );
 
-  if (!user) {
-    user = new User({ telegramId });
+  if (!result.rows[0]) {
+    return ctx.reply('Please start the bot first with /start');
   }
 
   // Set user state for capturing username
