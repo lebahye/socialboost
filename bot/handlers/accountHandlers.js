@@ -24,6 +24,12 @@ const linkSocialHandler = async (ctx) => {
     return ctx.reply('Please start the bot first with /start');
   }
 
+  // Update user state to indicate they are in the linking process
+  await pool.query(
+    'UPDATE users SET current_state = $1 WHERE telegram_id = $2',
+    ['choosing_platform', userId]
+  );
+
   // Send menu of platforms to link
   await ctx.reply(
     'Which social media account would you like to link?\n\n' +
