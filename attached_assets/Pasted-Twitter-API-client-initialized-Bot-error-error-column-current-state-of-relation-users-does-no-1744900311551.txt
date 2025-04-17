@@ -1,0 +1,58 @@
+Twitter API client initialized
+Bot error: error: column "current_state" of relation "users" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async linkXAccountCallback (/home/runner/workspace/bot/handlers/accountHandlers.js:57:24)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17) {
+  length: 133,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '18',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'analyze.c',
+  line: '2527',
+  routine: 'transformUpdateTargetList'
+}
+Bot error: error: column "current_state" of relation "users" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async linkDiscordCallback (/home/runner/workspace/bot/handlers/accountHandlers.js:79:18)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17) {
+  length: 133,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '18',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'analyze.c',
+  line: '2527',
+  routine: 'transformUpdateTargetList'
