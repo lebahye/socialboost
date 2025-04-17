@@ -1,0 +1,40 @@
+Connected to PostgreSQL database
+Bot error: TypeError: Cannot read properties of undefined (reading 'action')
+    at linkSocialHandler (/home/runner/workspace/bot/handlers/accountHandlers.js:42:20)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+Error creating project: error: column "category" of relation "projects" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Project.create (/home/runner/workspace/bot/models/Project.js:23:22)
+    at async /home/runner/workspace/bot/scenes/projectRegistration.js:96:23
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17) {
+  length: 129,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: undefined,
+  position: '59',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_target.c',
+  line: '1066',
+  routine: 'checkInsertTargets'
