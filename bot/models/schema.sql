@@ -1,4 +1,3 @@
-
 CREATE TABLE IF NOT EXISTS users (
   telegram_id TEXT PRIMARY KEY,
   username TEXT,
