@@ -32,10 +32,8 @@ CREATE TABLE IF NOT EXISTS campaigns (
   name TEXT NOT NULL,
   description TEXT,
   project_id INTEGER REFERENCES projects(id),
-  project_name TEXT NOT NULL,
   x_post_url TEXT,
-  x_post_id TEXT,
-  telegram_channel_url TEXT,
+  discord_url TEXT,
   start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   end_date TIMESTAMP,
   target_participants INTEGER DEFAULT 0,
@@ -46,8 +44,6 @@ CREATE TABLE IF NOT EXISTS campaigns (
   reminders JSONB DEFAULT '[]',
   private BOOLEAN DEFAULT false,
   tags TEXT[],
-  last_checked TIMESTAMP,
-  participants JSONB DEFAULT '[]',
   stats JSONB DEFAULT '{"engagement": {"likes": 0, "retweets": 0, "comments": 0}}',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
