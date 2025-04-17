@@ -1,4 +1,3 @@
-
 const { Pool } = require('pg');
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL
@@ -83,3 +82,31 @@ module.exports = {
   helpHandler,
   statusHandler
 };
+
+// Assuming 'bot' and 'connectDatabase' are defined elsewhere in your project.
+bot.catch(async (err, ctx) => {
+  console.error('Bot error:', err);
+
+  // Log error details
+  const errorDetails = {
+    message: err.message,
+    timestamp: new Date(),
+    user: ctx.from,
+    chat: ctx.chat,
+    update: ctx.update
+  };
+
+  console.error('Error details:', errorDetails);
+
+  // Attempt database reconnection if needed
+  if (err.message.includes('database')) {
+    try {
+      await connectDatabase();
+    } catch (dbErr) {
+      console.error('Database reconnection failed:', dbErr);
+    }
+  }
+
+  // Send appropriate error message
+  await ctx.reply('An error occurred. Our team has been notified and is working on it. Please try again in a few moments.');
+});

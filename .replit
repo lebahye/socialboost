@@ -12,7 +12,7 @@ localPort = 3000
 externalPort = 80
 
 [workflows]
-runButton = "Bot Dev"
+runButton = "Full Stack Dev"
 
 [[workflows.workflow]]
 name = "Dev"
@@ -53,3 +53,16 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd bot && node index.js"
+
+[[workflows.workflow]]
+name = "Full Stack Dev"
+author = 39354119
+mode = "parallel"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd bot && npm run dev"
