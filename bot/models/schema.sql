@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS users (
   is_project_owner BOOLEAN DEFAULT false,
   is_verified BOOLEAN DEFAULT false,
   credits INTEGER DEFAULT 0,
-  current_state TEXT DEFAULT NULL
+  current_state TEXT DEFAULT NULL,
+  social_accounts JSONB DEFAULT '[]'::jsonb
 );
 
 CREATE TABLE IF NOT EXISTS campaigns (
