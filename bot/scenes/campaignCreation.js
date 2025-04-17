@@ -458,29 +458,19 @@ const campaignCreationScene = new Scenes.WizardScene(
         const project = ctx.wizard.state.selectedProject;
 
         // Create campaign
-        const campaign = new Campaign({
+        const savedCampaign = await Campaign.save({
           name: ctx.wizard.state.campaignData.name,
           description: ctx.wizard.state.campaignData.description,
-          projectId: project._id,
           projectName: project.name,
           xPostUrl: ctx.wizard.state.campaignData.xPostUrl,
-          xPostId: ctx.wizard.state.campaignData.xPostId,
-          telegramChannelUrl: project.socialAccounts?.telegram?.channelUrl || null,
           startDate: ctx.wizard.state.campaignData.startDate,
           endDate: ctx.wizard.state.campaignData.endDate,
           targetParticipants: ctx.wizard.state.campaignData.targetParticipants,
-          currentParticipants: 0,
-          rewards: ctx.wizard.state.campaignData.rewards,
-          createdBy: ctx.from.id,
+          createdBy: ctx.from.id.toString(),
           status: 'active',
-          reminders: ctx.wizard.state.campaignData.reminders,
-          private: ctx.wizard.state.campaignData.private,
-          tags: project.category,
-          lastChecked: new Date()
+          isPrivate: ctx.wizard.state.campaignData.private,
+          rewards: ctx.wizard.state.campaignData.rewards
         });
-
-        // Save campaign
-        const savedCampaign = await campaign.save();
 
         // Update project
         project.campaigns.push(savedCampaign._id);
