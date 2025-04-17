@@ -27,7 +27,12 @@ const linkSocialHandler = async (ctx) => {
  * Callback handler for linking X (Twitter) account
  */
 const linkXAccountCallback = async (ctx) => {
-  const user = ctx.state.user;
+  const telegramId = ctx.from.id;
+  let user = await User.findOne({ telegramId });
+
+  if (!user) {
+    user = new User({ telegramId });
+  }
 
   // Set user state for capturing username
   user.currentState = 'awaiting_x_username';
@@ -45,7 +50,12 @@ const linkXAccountCallback = async (ctx) => {
  * Callback handler for linking Discord account
  */
 const linkDiscordCallback = async (ctx) => {
-  const user = ctx.state.user;
+  const telegramId = ctx.from.id;
+  let user = await User.findOne({ telegramId });
+
+  if (!user) {
+    user = new User({ telegramId });
+  }
 
   // Set user state for capturing username
   user.currentState = 'awaiting_discord_username';
