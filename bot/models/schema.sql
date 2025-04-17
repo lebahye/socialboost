@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS campaigns (
   name TEXT NOT NULL,
   description TEXT,
   project_id INTEGER REFERENCES projects(id),
+  project_name TEXT NOT NULL,
   x_post_url TEXT,
   discord_url TEXT,
   start_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -43,6 +44,9 @@ CREATE TABLE IF NOT EXISTS campaigns (
   rewards JSONB DEFAULT '[]',
   settings JSONB DEFAULT '{}',
   status TEXT DEFAULT 'draft',
+  private BOOLEAN DEFAULT false,
+  created_by TEXT REFERENCES users(telegram_id),
+  participants JSONB DEFAULT '[]',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
