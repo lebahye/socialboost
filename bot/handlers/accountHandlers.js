@@ -1,6 +1,7 @@
 const { Composer } = require('telegraf');
 const crypto = require('crypto');
 const { Pool } = require('pg');
+const User = require('../models/User');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -22,33 +23,23 @@ const linkSocialHandler = async (ctx) => {
       return ctx.reply('Please start the bot first with /start');
     }
 
-  // Send menu of platforms to link
-  await ctx.reply(
-    'Which social media account would you like to link?\n\n' +
-    'Choose from the options below:',
-    {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: 'X (Twitter)', callback_data: 'link_x' }],
-          [{ text: 'Discord', callback_data: 'link_discord' }]
-        ]
+    // Send menu of platforms to link
+    await ctx.reply(
+      'Which social media account would you like to link?\n\n' +
+      'Choose from the options below:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: 'X (Twitter)', callback_data: 'link_x' }],
+            [{ text: 'Discord', callback_data: 'link_discord' }]
+          ]
+        }
       }
-    }
-  );
-
-  // Register callback handlers
-  ctx.reply(
-    'Which social media account would you like to link?\n\n' +
-    'Choose from the options below:',
-    {
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: 'X (Twitter)', callback_data: 'link_x' }],
-          [{ text: 'Discord', callback_data: 'link_discord' }]
-        ]
-      }
-    }
-  );
+    );
+  } catch (error) {
+    console.error('Error in linkSocialHandler:', error);
+    await ctx.reply('An error occurred while processing your request. Please try again.');
+  }
 };
 
 /**
