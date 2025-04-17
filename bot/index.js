@@ -1,26 +1,28 @@
 
 const { Telegraf, Scenes, session } = require('telegraf');
 const LocalSession = require('telegraf-session-local');
-
-const { Scenes: { Stage } } = require('telegraf');
-const projectRegistrationScene = require('./scenes/projectRegistration');
-const campaignCreationScene = require('./scenes/campaignCreation');
-
-// Initialize stage with scenes
-const stage = new Stage([
-  projectRegistrationScene,
-  campaignCreationScene
-]);
-
-// Register stage middleware
-bot.use(stage.middleware());
-
 const { Pool } = require('pg');
 const { TwitterApi } = require('twitter-api-v2');
 require('dotenv').config();
 
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+
+// Import scenes
+const projectRegistrationScene = require('./scenes/projectRegistration');
+const campaignCreationScene = require('./scenes/campaignCreation');
+
+// Initialize stage with scenes
+const stage = new Scenes.Stage([
+  projectRegistrationScene,
+  campaignCreationScene
+]);
+
+// Set up session handling
+bot.use(session());
+
+// Register stage middleware
+bot.use(stage.middleware());
 
 // Initialize database pool with reconnection settings
 const pool = new Pool({

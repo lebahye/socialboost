@@ -543,6 +543,4 @@ function formatRewardType(type) {
   }
 }
 
-module.exports = {
-  campaignCreationScene
-};
+module.exports = campaignCreationScene;

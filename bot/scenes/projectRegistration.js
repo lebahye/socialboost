@@ -291,6 +291,4 @@ projectRegistrationScene.on('text', (ctx) => {
   return ctx.wizard.steps[ctx.wizard.cursor](ctx);
 });
 
-module.exports = {
-  projectRegistrationScene
-};
+module.exports = projectRegistrationScene;
