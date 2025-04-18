@@ -189,7 +189,7 @@ class SchedulerService {
       }
 
       // Save updated campaign
-      await campaign.save();
+      await Campaign.update(campaign.id, campaign);
 
       return { success: true };
     } catch (err) {

@@ -465,9 +465,10 @@ const campaignCreationScene = new Scenes.WizardScene(
         const project = ctx.wizard.state.selectedProject;
 
         // Create campaign
-        const savedCampaign = await Campaign.save({
+        const savedCampaign = await Campaign.create({
           name: ctx.wizard.state.campaignData.name,
           description: ctx.wizard.state.campaignData.description,
+          projectId: project.id,
           projectName: project.name,
           xPostUrl: ctx.wizard.state.campaignData.xPostUrl,
           startDate: ctx.wizard.state.campaignData.startDate,
