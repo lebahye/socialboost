@@ -1,8 +1,15 @@
 const { Scenes } = require('telegraf');
-const mongoose = require('mongoose');
+const { Pool } = require('pg');
 const Campaign = require('../models/Campaign');
 const Project = require('../models/Project');
 const User = require('../models/User');
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 const campaignCreationScene = new Scenes.WizardScene(
   'CAMPAIGN_CREATION',
