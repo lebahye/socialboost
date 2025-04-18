@@ -43,6 +43,33 @@ export - Export project or campaign data
 
 ### Configuration
 
+new
+campaign - Manage a specific campaign
+postcampaign - Post campaign to project's Telegram channel
+check - Check participation in a campaign
+remind - Send reminders to participants
+analytics - Show analytics for projects/campaigns
+export - Export project or campaign data
+```
+
+### How it Works
+
+1. **Campaign Creation**: Project owners create campaigns using `/newcampaign`
+2. **Channel Distribution**: Campaigns can be posted directly to Telegram channels using `/postcampaign`
+3. **User Participation**: Users can join campaigns by clicking links in the channel post
+4. **Verification**: The bot verifies participation in X (Twitter) posts
+5. **Reminders**: Automated reminders are sent to participants who haven't engaged yet
+
+### Deep Link Integration
+
+The bot supports deep links for:
+- Viewing campaign details
+- Joining campaigns directly
+- Subscribing to campaign notifications
+
+Example: `https://t.me/your_bot?start=join_123` will automatically join the user to campaign ID 123.
+
+
 1. Edit the `.env` file in the bot directory
 2. Add your valid Telegram Bot token:
 ```

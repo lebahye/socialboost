@@ -317,6 +317,174 @@ const campaignCreationScene = new Scenes.WizardScene(
           'Please provide a description of this reward.\n\n' +
           'Example: "Access to exclusive Discord channel" or "Featured on our Twitter page"',
           { parse_mode: 'Markdown' }
+
+// Add step to ask if user wants to post to channel
+campaignCreationScene.action('finish_campaign', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    
+    // Store campaign in database
+    const campaignData = ctx.scene.state;
+    const campaign = await Campaign.create(campaignData);
+    
+    await ctx.reply('🎉 Campaign created successfully!');
+    
+    // Ask if user wants to post to channel
+    await ctx.reply(
+      'Would you like to post this campaign to your project\'s Telegram channel?',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: 'Yes, post to channel', callback_data: `post_to_channel_${campaign.id}` }],
+            [{ text: 'No, I\'ll do it later', callback_data: 'skip_channel_post' }]
+          ]
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Error creating campaign:', error);
+    await ctx.reply('An error occurred while creating the campaign. Please try again.');
+    await ctx.scene.leave();
+  }
+});
+
+// Handle post to channel response
+campaignCreationScene.action(/post_to_channel_(.+)/, async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    const campaignId = ctx.match[1];
+    
+    // Ask for channel username
+    await ctx.reply(
+      'Please enter the username of your Telegram channel (including the @ symbol).\n\n' +
+      'Make sure the bot is added as an admin to your channel with posting permissions.',
+      {
+        reply_markup: { remove_keyboard: true }
+      }
+    );
+    
+    // Set state to wait for channel name
+    ctx.scene.state.waitingForChannel = true;
+    ctx.scene.state.campaignId = campaignId;
+    
+  } catch (error) {
+    console.error('Error in post to channel action:', error);
+    await ctx.reply('An error occurred. Please try posting manually using /postcampaign command.');
+    await ctx.scene.leave();
+  }
+});
+
+// Skip channel post
+campaignCreationScene.action('skip_channel_post', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+    await ctx.reply(
+      'You can post your campaign later using the /postcampaign command.\n\n' +
+      'Format: /postcampaign [campaign_id] [channel_username]'
+    );
+    await ctx.scene.leave();
+  } catch (error) {
+    console.error('Error in skip channel post action:', error);
+    await ctx.scene.leave();
+  }
+});
+
+// Handle channel username input
+campaignCreationScene.on('text', async (ctx) => {
+  if (!ctx.scene.state.waitingForChannel) return;
+  
+  try {
+    const channelUsername = ctx.message.text.trim();
+    
+    if (!channelUsername.startsWith('@')) {
+      await ctx.reply('Channel username must start with @. Please try again.');
+      return;
+    }
+    
+    // Try to post to channel
+    const campaignId = ctx.scene.state.campaignId;
+    const campaign = await Campaign.findById(campaignId);
+    
+    if (!campaign) {
+      await ctx.reply('Campaign not found. Please try again later.');
+      await ctx.scene.leave();
+      return;
+    }
+    
+    // Prepare campaign message for the channel
+    let messageText = `🚀 *New Campaign: ${campaign.name}*\n\n`;
+    messageText += `*Project:* ${campaign.project_name}\n`;
+    messageText += `*Status:* Active\n`;
+    messageText += `*Ends:* ${new Date(campaign.end_date).toDateString()}\n\n`;
+    messageText += `*Description:*\n${campaign.description}\n\n`;
+    messageText += `*X Post:* [View Post](${campaign.x_post_url})\n\n`;
+    
+    // Show rewards
+    let rewards = [];
+    try {
+      rewards = JSON.parse(campaign.rewards);
+    } catch (e) {
+      rewards = [];
+    }
+    
+    if (rewards.length > 0) {
+      messageText += `*Rewards:*\n`;
+      rewards.forEach((reward, index) => {
+        messageText += `${index + 1}. *${reward.type || 'Reward'}:* ${reward.description || ''}\n`;
+      });
+    }
+    
+    // Create inline keyboard for channel post
+    const inlineKeyboard = [
+      [{ text: 'View Campaign Details', url: `https://t.me/${ctx.botInfo.username}?start=campaign_${campaign.id}` }],
+      [{ text: 'Join Campaign', url: `https://t.me/${ctx.botInfo.username}?start=join_${campaign.id}` }],
+      [{ text: 'Get Campaign Notifications', url: `https://t.me/${ctx.botInfo.username}?start=notify_${campaign.id}` }]
+    ];
+    
+    // Post message to the channel
+    try {
+      await ctx.telegram.sendMessage(channelUsername, messageText, {
+        parse_mode: 'Markdown',
+        disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: inlineKeyboard
+        }
+      });
+      
+      // Update campaign with channel information
+      let postedToChannels = [];
+      if (campaign.posted_to_channels) {
+        try {
+          postedToChannels = JSON.parse(campaign.posted_to_channels);
+        } catch (e) {
+          postedToChannels = [];
+        }
+      }
+      
+      postedToChannels.push({
+        channelUsername: channelUsername,
+        postedAt: new Date()
+      });
+      
+      await pool.query(
+        'UPDATE campaigns SET posted_to_channels = $1 WHERE id = $2',
+        [JSON.stringify(postedToChannels), campaignId]
+      );
+      
+      await ctx.reply(`Campaign has been successfully posted to ${channelUsername}!`);
+    } catch (error) {
+      console.error('Error posting to channel:', error);
+      await ctx.reply(`Error posting to channel: ${error.message}. Make sure the bot is an admin in the channel with posting permissions.`);
+    }
+    
+    await ctx.scene.leave();
+  } catch (error) {
+    console.error('Error in channel post handler:', error);
+    await ctx.reply('An error occurred while posting to the channel. Please try again later using the /postcampaign command.');
+    await ctx.scene.leave();
+  }
+});
+
         );
 
         ctx.wizard.state.collectingRewardDescription = true;

@@ -3,9 +3,30 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL
 });
 
+const processDeepLink = async (ctx) => {
+  // Implement deep link processing logic here.  This would involve extracting
+  // information from ctx.startPayload and potentially updating user data or
+  // directing them to a specific part of the bot's functionality.
+  // This is a placeholder and needs to be implemented based on your deep link strategy.
+  console.log("Deep link payload received:", ctx.startPayload);
+  await ctx.reply("Deep link processed.  Further implementation required.");
+  return true;
+};
+
+
 const startHandler = async (ctx) => {
   try {
-    const userId = ctx.from.id.toString();
+    // Check for deep linking payload
+    if (ctx.startPayload && await processDeepLink(ctx)) {
+      return; // Deep link was processed
+    }
+
+    // Get user info from Telegram
+    const telegramId = ctx.from.id.toString();
+    const username = ctx.from.username || '';
+    const firstName = ctx.from.first_name || '';
+    const lastName = ctx.from.last_name || '';
+
     const result = await pool.query(
       `INSERT INTO users (
         telegram_id, 
@@ -23,9 +44,9 @@ const startHandler = async (ctx) => {
         first_name = $3,
         last_name = $4
       RETURNING *`,
-      [userId, ctx.from.username, ctx.from.first_name, ctx.from.last_name]
+      [telegramId, username, firstName, lastName]
     );
-    
+
     if (result.rows[0]) {
       await ctx.reply('Welcome! Use /help to see available commands.');
     } else {
@@ -102,4 +123,3 @@ module.exports = {
   helpHandler,
   statusHandler
 };
-

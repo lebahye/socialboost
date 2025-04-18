@@ -393,6 +393,116 @@ const joinCampaignCallback = async (ctx) => {
   } catch (err) {
     console.error('Error joining campaign:', err);
     await ctx.answerCbQuery('An error occurred. Please try again later.');
+
+/**
+ * Function to post a campaign to a project's Telegram channel
+ * This allows project owners to share campaigns directly with their followers
+ */
+const postCampaignToChannelHandler = async (ctx) => {
+  try {
+    // Extract campaign ID from command
+    const text = ctx.message.text.trim();
+    const parts = text.split(' ');
+
+    if (parts.length !== 3) {
+      await ctx.reply(
+        'Please specify which campaign to post and to which channel.\n\n' +
+        'Usage: /postcampaign [campaign_id] [channel_username]\n\n' +
+        'Example: /postcampaign 123 @myprojectchannel'
+      );
+      return;
+    }
+
+    const campaignId = parts[1];
+    const channelUsername = parts[2];
+    
+    // Verify the user has permission to manage this campaign
+    const user = ctx.state.user || await User.findOne({ telegramId: ctx.from.id.toString() });
+    if (!user) {
+      await ctx.reply('Please start the bot first with /start');
+      return;
+    }
+
+    // Get campaign
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) {
+      await ctx.reply('Campaign not found.');
+      return;
+    }
+
+    // Check if user is the owner of the campaign
+    const project = await Project.findOne({
+      _id: campaign.projectId,
+      'owners.telegramId': user.telegramId
+    });
+
+    if (!project) {
+      await ctx.reply('You do not have permission to post this campaign.');
+      return;
+    }
+
+    // Prepare campaign message for the channel
+    let messageText = `🚀 *New Campaign: ${campaign.name}*\n\n`;
+    messageText += `*Project:* ${campaign.projectName}\n`;
+    messageText += `*Status:* ${formatStatus(campaign.status)}\n`;
+    messageText += `*Ends:* ${formatDate(campaign.endDate)}\n\n`;
+    messageText += `*Description:*\n${campaign.description}\n\n`;
+    messageText += `*X Post:* [View Post](${campaign.xPostUrl})\n\n`;
+
+    // Show rewards
+    messageText += `*Rewards:*\n`;
+    campaign.rewards.forEach((reward, index) => {
+      messageText += `${index + 1}. *${formatRewardType(reward.type)}:* ${reward.description}\n`;
+      if (reward.requirements) {
+        messageText += `   Requirements: ${reward.requirements}\n`;
+      }
+    });
+
+    // Create inline keyboard for channel post
+    const inlineKeyboard = [
+      [{ text: 'View Campaign Details', url: `https://t.me/${ctx.botInfo.username}?start=campaign_${campaign._id}` }],
+      [{ text: 'Join Campaign', url: `https://t.me/${ctx.botInfo.username}?start=join_${campaign._id}` }],
+      [{ text: 'Get Campaign Notifications', url: `https://t.me/${ctx.botInfo.username}?start=notify_${campaign._id}` }]
+    ];
+
+    // Post message to the channel
+    try {
+      await ctx.telegram.sendMessage(channelUsername, messageText, {
+        parse_mode: 'Markdown',
+        disable_web_page_preview: true,
+        reply_markup: {
+          inline_keyboard: inlineKeyboard
+        }
+      });
+      
+      // Update campaign with channel information
+      campaign.postedToChannels = campaign.postedToChannels || [];
+      campaign.postedToChannels.push({
+        channelUsername: channelUsername,
+        postedAt: new Date()
+      });
+      
+      await campaign.save();
+      
+      await ctx.reply(`Campaign has been successfully posted to ${channelUsername}!`);
+    } catch (error) {
+      console.error('Error posting to channel:', error);
+      await ctx.reply(`Error posting to channel: ${error.message}. Make sure the bot is an admin in the channel with posting permissions.`);
+    }
+  } catch (err) {
+    console.error('Error in postCampaignToChannel handler:', err);
+    await ctx.reply('An error occurred while posting the campaign. Please try again later.');
+  }
+};
+
+module.exports = {
+  newCampaignHandler,
+  listCampaignsHandler,
+  manageCampaignHandler,
+  joinCampaignCallback,
+  postCampaignToChannelHandler
+};
+
   }
 };
 

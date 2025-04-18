@@ -37,6 +37,28 @@ console.log('/help - Show available commands');
 console.log('/status - Check your current status');
 console.log('/link - Link social media accounts');
 console.log('/verify - Verify linked accounts');
+
+// Display available commands
+console.log("\nTelegram Bot Commands in Code:");
+console.log("/start - Begin interaction with the bot");
+console.log("/help - Show available commands");
+console.log("/status - Check your current status");
+console.log("/link - Link social media accounts");
+console.log("/verify - Verify linked accounts");
+console.log("/unlink - Unlink social media accounts");
+console.log("/newproject - Create a new project");
+console.log("/myprojects - List your projects");
+console.log("/project - Manage a specific project");
+console.log("/newcampaign - Create a new campaign");
+console.log("/campaigns - List available campaigns");
+console.log("/campaign - Manage a specific campaign");
+console.log("/postcampaign - Post campaign to project's TG channel");
+console.log("/check - Check participation in a campaign");
+console.log("/remind - Send reminders to participants");
+console.log("/analytics - Show analytics for projects/campaigns");
+console.log("/export - Export project or campaign data");
+console.log("--------------------------");
+
 console.log('/unlink - Unlink social media accounts');
 console.log('/newproject - Create a new project');
 console.log('/myprojects - List your projects');

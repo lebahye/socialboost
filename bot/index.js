@@ -62,7 +62,7 @@ bot.use(async (ctx, next) => {
 const { startHandler, helpHandler, statusHandler } = require('./handlers/basicHandlers');
 const { linkSocialHandler, verifyAccountHandler, unlinkAccountHandler } = require('./handlers/accountHandlers');
 const { newProjectHandler, listProjectsHandler, manageProjectHandler } = require('./handlers/projectHandlers');
-const { newCampaignHandler, listCampaignsHandler, manageCampaignHandler } = require('./handlers/campaignHandlers');
+const { newCampaignHandler, listCampaignsHandler, manageCampaignHandler, postCampaignToChannelHandler } = require('./handlers/campaignHandlers');
 const { analyticsHandler, exportDataHandler } = require('./handlers/analyticsHandlers');
 
 // Register command handlers
@@ -78,6 +78,7 @@ bot.command('project', manageProjectHandler);
 bot.command('newcampaign', ctx => ctx.scene.enter('CAMPAIGN_CREATION'));
 bot.command('campaigns', listCampaignsHandler);
 bot.command('campaign', manageCampaignHandler);
+bot.command('postcampaign', postCampaignToChannelHandler);
 bot.command('analytics', analyticsHandler);
 bot.command('export', exportDataHandler);
 

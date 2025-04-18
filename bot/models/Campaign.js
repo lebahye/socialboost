@@ -34,8 +34,9 @@ class Campaign {
       INSERT INTO campaigns (
         name, description, project_id, project_name, x_post_url, 
         start_date, end_date, target_participants, 
-        created_by, status, private, rewards, participants
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        created_by, status, private, rewards, participants,
+        posted_to_channels, notification_subscribers
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING *
     `;
     
@@ -43,7 +44,8 @@ class Campaign {
       name, description, projectId, projectName, safeXPostUrl,
       startDate || new Date(), safeEndDate, safeTargetParticipants,
       createdBy, status || 'active', isPrivate || false,
-      JSON.stringify(rewards || []), JSON.stringify([])
+      JSON.stringify(rewards || []), JSON.stringify([]),
+      JSON.stringify([]), JSON.stringify([])
     ];
 
     const { rows } = await pool.query(query, values);

@@ -142,13 +142,13 @@ const processXUsername = async (ctx) => {
 
     // Update or create the user's social accounts in the database
     const telegramId = ctx.from.id.toString();
-    
+
     // Check if user already has social accounts
     const userResult = await pool.query(
       'SELECT social_accounts FROM users WHERE telegram_id = $1',
       [telegramId]
     );
-    
+
     let socialAccounts = [];
     if (userResult.rows[0] && userResult.rows[0].social_accounts) {
       // Parse existing accounts if they exist
@@ -158,10 +158,10 @@ const processXUsername = async (ctx) => {
         socialAccounts = userResult.rows[0].social_accounts;
       }
     }
-    
+
     // Find existing account or prepare to add new one
     const existingAccountIndex = socialAccounts.findIndex(acc => acc.platform === 'x');
-    
+
     if (existingAccountIndex >= 0) {
       // Update existing account
       socialAccounts[existingAccountIndex].username = xUsername;
@@ -178,7 +178,7 @@ const processXUsername = async (ctx) => {
         verification_expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       });
     }
-    
+
     // Update user with new social accounts
     await pool.query(
       'UPDATE users SET social_accounts = $1, current_state = NULL WHERE telegram_id = $2',
@@ -283,88 +283,88 @@ const processDiscordUsername = async (ctx) => {
  * Handler for /verify command to check verification status
  */
 const verifyAccountHandler = async (ctx) => {
-  try {
-    const userId = ctx.from.id.toString();
-    console.log(`Getting verification status for user: ${userId}`);
-    
-    const result = await pool.query(
-      'SELECT * FROM users WHERE telegram_id = $1',
-      [userId]
-    );
+  // Check if user exists
+  const userId = ctx.from.id.toString();
+  console.log(`Getting verification status for user: ${userId}`);
 
-    if (!result.rows[0]) {
-      return ctx.reply('Please start the bot first with /start');
-    }
+  const result = await pool.query(
+    'SELECT * FROM users WHERE telegram_id = $1',
+    [userId]
+  );
 
-    const user = result.rows[0];
-    
-    // Handle various formats of social_accounts
-    let socialAccounts = [];
-    if (user.social_accounts) {
-      if (typeof user.social_accounts === 'string') {
-        try {
-          socialAccounts = JSON.parse(user.social_accounts);
-        } catch (e) {
-          console.error('Error parsing social accounts:', e);
-          socialAccounts = [];
-        }
-      } else if (Array.isArray(user.social_accounts)) {
-        socialAccounts = user.social_accounts;
-      }
-    }
-    
-    console.log(`User social accounts:`, socialAccounts);
-
-    if (!socialAccounts || !socialAccounts.length) {
-      await ctx.reply(
-        'You don\'t have any social accounts linked yet.\n\n' +
-        'Use /link to connect your social media accounts.'
-      );
-      return;
-    }
-
-    // Get unverified accounts
-    const unverifiedAccounts = socialAccounts.filter(acc => !acc.is_verified);
-
-    if (unverifiedAccounts.length === 0) {
-      await ctx.reply(
-        '✅ All your social accounts are verified!\n\n' +
-        'You can now participate in campaigns.'
-      );
-      return;
-    }
-
-    // For each unverified account, check if verification code is expired
-    let message = '*Unverified Accounts:*\n\n';
-
-    unverifiedAccounts.forEach(account => {
-      const platformName = account.platform === 'x' ? 'X (Twitter)' : account.platform;
-      message += `• *${platformName}:* @${account.username}\n`;
-
-      // Check if verification code is expired
-      const verificationExpiry = new Date(account.verification_expiry);
-      if (verificationExpiry && verificationExpiry < new Date()) {
-        message += '  ⚠️ Verification code expired. Use /link to generate a new one.\n';
-      } else {
-        message += `  📝 Verification code: \`${account.verification_code}\`\n`;
-
-        if (account.platform === 'x') {
-          message += '  📨 Send this code to @ProjectVerifierBot on X\n';
-        } else if (account.platform === 'discord') {
-          message += '  📨 Send this code to @VerifyBot on our Discord server\n';
-        }
-      }
-
-      message += '\n';
-    });
-
-    message += 'Once verified, you\'ll be able to participate in campaigns.';
-
-    await ctx.replyWithMarkdown(message);
-  } catch (error) {
-    console.error('Error in verifyAccountHandler:', error);
-    await ctx.reply('An error occurred while checking verification status. Please try again.');
+  if (!result.rows[0]) {
+    return ctx.reply('Please start the bot first with /start');
   }
+
+  const user = result.rows[0];
+
+  // Handle various formats of social_accounts
+  let socialAccounts = [];
+  if (user.social_accounts) {
+    if (typeof user.social_accounts === 'string') {
+      try {
+        socialAccounts = JSON.parse(user.social_accounts);
+      } catch (e) {
+        console.error('Error parsing social accounts:', e);
+        socialAccounts = [];
+      }
+    } else if (Array.isArray(user.social_accounts)) {
+      socialAccounts = user.social_accounts;
+    }
+  }
+
+  console.log(`User social accounts:`, socialAccounts);
+
+  if (!socialAccounts || !socialAccounts.length) {
+    await ctx.reply(
+      'You don\'t have any social accounts linked yet.\n\n' +
+      'Use /link to connect your social media accounts.'
+    );
+    return;
+  }
+
+  // Get unverified accounts
+  const unverifiedAccounts = socialAccounts.filter(acc => !acc.is_verified);
+
+  if (unverifiedAccounts.length === 0) {
+    await ctx.reply(
+      '✅ All your social accounts are verified!\n\n' +
+      'You can now participate in campaigns.'
+    );
+    return;
+  }
+
+  // For each unverified account, check if verification code is expired
+  let message = '*Unverified Accounts:*\n\n';
+
+  unverifiedAccounts.forEach(account => {
+    const platformName = account.platform === 'x' ? 'X (Twitter)' : account.platform;
+    message += `• *${platformName}:* @${account.username}\n`;
+
+    // Check if verification code is expired
+    const verificationExpiry = new Date(account.verification_expiry);
+    if (verificationExpiry && verificationExpiry < new Date()) {
+      message += '  ⚠️ Verification code expired. Use /link to generate a new one.\n';
+    } else {
+      message += `  📝 Verification code: \`${account.verification_code}\`\n`;
+
+      if (account.platform === 'x') {
+        message += '  📨 Send this code to @ProjectVerifierBot on X\n';
+      } else if (account.platform === 'discord') {
+        message += '  📨 Send this code to @VerifyBot on our Discord server\n';
+      }
+    }
+
+    message += '\n';
+  });
+
+  message += 'Once verified, you\'ll be able to participate in campaigns.';
+
+  await ctx.replyWithMarkdown(message);
+} catch (error) {
+  console.error('Error in verifyAccountHandler:', error);
+  await ctx.reply('An error occurred while checking verification status. Please try again.');
+}
 };
 
 /**
