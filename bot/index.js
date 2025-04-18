@@ -106,7 +106,14 @@ bot.command('unlink', unlinkAccountHandler || (async (ctx) => await ctx.reply('U
 bot.command('newproject', ctx => ctx.scene.enter('projectRegistration'));
 bot.command('myprojects', listProjectsHandler || (async (ctx) => await ctx.reply('Project listing is not available')));
 bot.command('project', manageProjectHandler || (async (ctx) => await ctx.reply('Project management is not available')));
-bot.command('newcampaign', ctx => ctx.scene.enter('campaignCreation'));
+// Import the scene
+const campaignCreationScene = require('./scenes/campaignCreation');
+
+// Create stage and register scene
+const stage = new Scenes.Stage([campaignCreationScene]);
+bot.use(stage.middleware());
+
+bot.command('newcampaign', ctx => ctx.scene.enter('CAMPAIGN_CREATION'));
 bot.command('campaigns', listCampaignsHandler || (async (ctx) => await ctx.reply('Campaign listing is not available')));
 bot.command('campaign', manageCampaignHandler || (async (ctx) => await ctx.reply('Campaign management is not available')));
 bot.command('postcampaign', postCampaignToChannelHandler || (async (ctx) => await ctx.reply('Campaign posting is not available')));
