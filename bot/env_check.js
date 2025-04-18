@@ -14,12 +14,12 @@ if (!token) {
   console.log('✅ TELEGRAM_BOT_TOKEN:', token.substring(0, 10) + '...');
 }
 
-// Check MongoDB URI
-const mongoUri = process.env.MONGODB_URI;
-if (!mongoUri) {
-  console.log('❌ MONGODB_URI: Not set');
+// Check PostgreSQL Database URL
+const dbUrl = process.env.DATABASE_URL;
+if (!dbUrl) {
+  console.log('❌ DATABASE_URL: Not set');
 } else {
-  console.log('✅ MONGODB_URI:', mongoUri.substring(0, 20) + '...');
+  console.log('✅ DATABASE_URL:', dbUrl.substring(0, 20) + '...');
 }
 
 // Twitter API credentials

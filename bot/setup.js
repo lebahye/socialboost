@@ -87,11 +87,7 @@ async function runSetupWizard() {
       question: 'Enter your Telegram Bot Token (from BotFather):',
       required: true
     },
-    {
-      key: 'MONGODB_URI',
-      question: 'Enter your MongoDB Connection URI:',
-      required: true
-    },
+    
     {
       key: 'TWITTER_API_KEY',
       question: 'Enter your Twitter/X API Key (optional, press Enter to skip):',
