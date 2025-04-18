@@ -68,35 +68,36 @@ const newProjectHandler = async (ctx) => {
  * Handler for listing all projects
  */
 const listProjectsHandler = async (ctx) => {
+  if (!ctx.from) {
+    return ctx.reply('User information not available. Please try again.');
+  }
+
+  const userId = ctx.from.id.toString();
+
   try {
-    const client = await pool.connect();
-    try {
-      const { rows: projects } = await client.query(
-        'SELECT * FROM projects WHERE owner_id = $1',
-        [ctx.from.id.toString()]
-      );
+    const { rows: projects } = await pool.query(
+      'SELECT * FROM projects WHERE owner_id = $1',
+      [userId]
+    );
 
-      if (!projects || projects.length === 0) {
-        return ctx.reply('You don\'t have any projects yet. Use /newproject to create one.');
-      }
-
-      const projectList = await Promise.all(projects.map(async (project) => {
-        const { rows: campaigns } = await client.query(
-          'SELECT * FROM campaigns WHERE project_id = $1',
-          [project.id]
-        );
-        return `📂 *${project.name}*\n` +
-               `Description: ${project.description}\n` +
-               `Campaigns: ${campaigns.length}\n` +
-               `Created: ${new Date(project.created_at).toLocaleDateString()}\n`;
-      }));
-
-      await ctx.replyWithMarkdown(
-        '*Your Projects:*\n\n' + projectList.join('\n')
-      );
-    } finally {
-      client.release();
+    if (!projects || projects.length === 0) {
+      return ctx.reply('You don\'t have any projects yet. Use /newproject to create one.');
     }
+
+    const projectList = await Promise.all(projects.map(async (project) => {
+      const { rows: campaigns } = await pool.query(
+        'SELECT * FROM campaigns WHERE project_id = $1',
+        [project.id]
+      );
+      return `📂 *${project.name}*\n` +
+             `Description: ${project.description}\n` +
+             `Campaigns: ${campaigns.length}\n` +
+             `Created: ${new Date(project.created_at).toLocaleDateString()}\n`;
+    }));
+
+    await ctx.replyWithMarkdown(
+      '*Your Projects:*\n\n' + projectList.join('\n')
+    );
   } catch (error) {
     console.error('Error in listProjectsHandler:', error);
     await ctx.reply('An error occurred while fetching your projects.');

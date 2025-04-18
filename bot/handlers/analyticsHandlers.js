@@ -12,6 +12,10 @@ const pool = new Pool({
  * Handler for viewing analytics for projects and campaigns
  */
 const analyticsHandler = async (ctx) => {
+  if (!ctx.from) {
+    return ctx.reply('User information not available. Please try again.');
+  }
+  
   const userId = ctx.from.id.toString();
 
   try {
@@ -108,19 +112,24 @@ const analyticsHandler = async (ctx) => {
           JSON.parse(campaign.participants).length : 
           campaign.participants.length) : 0;
 
-      if (campaign.stats && typeof campaign.stats === 'string') {
-        const stats = JSON.parse(campaign.stats);
-        if (stats.engagement) {
+      try {
+        if (campaign.stats && typeof campaign.stats === 'string') {
+          const stats = JSON.parse(campaign.stats);
+          if (stats && stats.engagement) {
+            totalEngagement +=
+              (stats.engagement.likes || 0) +
+              (stats.engagement.retweets || 0) +
+              (stats.engagement.comments || 0);
+          }
+        } else if (campaign.stats && campaign.stats.engagement) {
           totalEngagement +=
-            (stats.engagement.likes || 0) +
-            (stats.engagement.retweets || 0) +
-            (stats.engagement.comments || 0);
+            (campaign.stats.engagement.likes || 0) +
+            (campaign.stats.engagement.retweets || 0) +
+            (campaign.stats.engagement.comments || 0);
         }
-      } else if (campaign.stats && campaign.stats.engagement) {
-        totalEngagement +=
-          (campaign.stats.engagement.likes || 0) +
-          (campaign.stats.engagement.retweets || 0) +
-          (campaign.stats.engagement.comments || 0);
+      } catch (statsError) {
+        console.error('Error parsing campaign stats:', statsError);
+        // Continue with other campaigns instead of breaking
       }
     }
 
