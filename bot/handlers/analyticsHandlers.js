@@ -1,6 +1,14 @@
+const { Pool } = require('pg');
 const Project = require('../models/Project');
 const Campaign = require('../models/Campaign');
 const User = require('../models/User');
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
 
 /**
  * Handler for viewing analytics for projects and campaigns
