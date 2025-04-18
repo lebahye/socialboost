@@ -14,7 +14,10 @@ const analyticsHandler = async (ctx) => {
 
     if (args.length < 2) {
       // No specific project - show overall stats
-      const projects = await Project.find({ ownerId: userId });
+      const { rows: projects } = await pool.query(
+        'SELECT * FROM projects WHERE owner_id = $1',
+        [userId]
+      );
 
       if (!projects || projects.length === 0) {
         return ctx.reply('You don\'t have any projects yet. Use /newproject to create one first.');

@@ -65,14 +65,20 @@ const newProjectHandler = async (ctx) => {
  */
 const listProjectsHandler = async (ctx) => {
   try {
-    const projects = await Project.findByTelegramId(ctx.from.id.toString());
+    const { rows: projects } = await pool.query(
+      'SELECT * FROM projects WHERE owner_id = $1',
+      [ctx.from.id.toString()]
+    );
 
     if (!projects || projects.length === 0) {
       return ctx.reply('You don\'t have any projects yet. Use /newproject to create one.');
     }
 
     const projectList = await Promise.all(projects.map(async (project) => {
-      const campaigns = await Campaign.find({ projectId: project.id });
+      const { rows: campaigns } = await pool.query(
+        'SELECT * FROM campaigns WHERE project_id = $1',
+        [project.id]
+      );
       return `📂 *${project.name}*\n` +
              `Description: ${project.description}\n` +
              `Campaigns: ${campaigns.length}\n` +

@@ -18,14 +18,23 @@ const newCampaignHandler = async (ctx) => {
  * Shows available campaigns to users
  */
 const listCampaignsHandler = async (ctx) => {
-  const user = ctx.state.user;
-
   try {
+    // Get user info from database
+    const { rows: [user] } = await pool.query(
+      'SELECT * FROM users WHERE telegram_id = $1',
+      [ctx.from.id.toString()]
+    );
+
+    if (!user) {
+      await ctx.reply('Please start the bot first with /start');
+      return;
+    }
+
     let campaigns;
     let messageText;
 
     // Different behavior for project owners vs regular users
-    if (user.isProjectOwner) {
+    if (user.is_project_owner) {
       // For project owners: show their own projects' campaigns
       const projects = await Project.find({ 'owners.telegramId': user.telegramId });
       const projectIds = projects.map(p => p._id);
