@@ -1,3 +1,56 @@
+
+const cron = require('node-cron');
+const { Pool } = require('pg');
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+/**
+ * Send payment reminders to project owners with expiring premium
+ */
+async function sendPaymentReminders(bot) {
+  try {
+    // Find projects with premium expiring in 3 days
+    const result = await pool.query(`
+      SELECT u.telegram_id, u.premium_until 
+      FROM users u 
+      WHERE u.is_project_owner = true 
+      AND u.premium_until IS NOT NULL
+      AND u.premium_until BETWEEN NOW() AND NOW() + INTERVAL '3 days'
+    `);
+    
+    for (const user of result.rows) {
+      const daysLeft = Math.ceil((new Date(user.premium_until) - new Date()) / (1000 * 60 * 60 * 24));
+      
+      await bot.telegram.sendMessage(
+        user.telegram_id,
+        `⚠️ *Premium Expiring Soon*\n\nYour premium subscription will expire in ${daysLeft} days. Renew now to continue enjoying premium benefits and avoid interruption to your campaigns.\n\nUse /premium to renew.`,
+        { parse_mode: 'Markdown' }
+      );
+    }
+  } catch (error) {
+    console.error('Error sending payment reminders:', error);
+  }
+}
+
+/**
+ * Initialize all scheduled tasks
+ */
+function initializeScheduler(bot) {
+  // Run payment reminders daily at 9 AM
+  cron.schedule('0 9 * * *', () => {
+    sendPaymentReminders(bot);
+  });
+}
+
+module.exports = {
+  initializeScheduler
+};
+
 const cron = require('node-cron');
 const Campaign = require('../models/Campaign');
 const User = require('../models/User');

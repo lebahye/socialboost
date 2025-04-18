@@ -6,6 +6,12 @@ require('dotenv').config();
 // Initialize bot
 const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
+// Use session middleware
+const LocalSession = require('telegraf-session-local');
+
+// Import scheduler
+const { initializeScheduler } = require('./services/scheduler');
+
 // Initialize database pool
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -170,14 +176,16 @@ async function connectDatabase() {
 // Initial connection
 connectDatabase();
 
-// Start bot
-bot.launch()
-  .then(() => {
-    console.log('Bot started successfully');
-  })
-  .catch(err => {
-    console.error('Error starting bot:', err);
-  });
+// Launch bot
+bot.launch().then(() => {
+  console.log('Bot started');
+
+  // Initialize scheduled tasks
+  initializeScheduler(bot);
+  console.log('Scheduler initialized');
+}).catch(err => {
+  console.error('Bot error:', err);
+});
 
 // Enable graceful stop
 process.once('SIGINT', () => bot.stop('SIGINT'));

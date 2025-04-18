@@ -1,3 +1,78 @@
+
+const { Pool } = require('pg');
+const { calculateProjectVerificationFee } = require('../utils/monetization');
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+/**
+ * Handler for verifying projects (paid service)
+ */
+const verifyProjectHandler = async (ctx) => {
+  try {
+    // Check if user exists and is a project owner
+    const telegramId = ctx.from.id.toString();
+    const result = await pool.query(
+      'SELECT * FROM users WHERE telegram_id = $1 AND is_project_owner = true',
+      [telegramId]
+    );
+
+    if (!result.rows[0]) {
+      return ctx.reply('You need to be registered as a project owner to verify a project. Use /start to register.');
+    }
+
+    const projectResult = await pool.query(
+      'SELECT * FROM projects WHERE owner_id = $1',
+      [result.rows[0].id]
+    );
+
+    if (!projectResult.rows[0]) {
+      return ctx.reply('You need to create a project first. Use /newproject to create one.');
+    }
+
+    const project = projectResult.rows[0];
+    
+    if (project.is_verified) {
+      return ctx.reply('This project is already verified! ✅');
+    }
+
+    // Calculate verification fee
+    const verificationFee = calculateProjectVerificationFee();
+    
+    await ctx.reply(
+      `🔍 *Project Verification*\n\n` +
+      `Verifying your project gives it a trusted badge and priority in listings.\n\n` +
+      `Benefits:\n` +
+      `• Verified badge on all campaigns\n` +
+      `• Higher visibility in campaign listings\n` +
+      `• Access to premium campaign templates\n` +
+      `• Priority support\n\n` +
+      `The verification fee is $${verificationFee}.\n\n` +
+      `Would you like to proceed with verification?`,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '✅ Verify Project ($' + verificationFee + ')', callback_data: `verify_project_${project.id}` }],
+            [{ text: 'Cancel', callback_data: 'cancel' }]
+          ]
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Error in verify project handler:', error);
+    await ctx.reply('An error occurred. Please try again later.');
+  }
+};
+
+module.exports = {
+  verifyProjectHandler
+};
+
 const { Composer } = require('telegraf');
 const { Pool } = require('pg');
 const Project = require('../models/Project');

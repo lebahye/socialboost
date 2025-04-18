@@ -79,6 +79,30 @@ export function calculateSubscriptionEndDate(planId: string, startDate = new Dat
     endDate.setFullYear(endDate.getFullYear() + 1);
   }
 
+
+/**
+ * Calculate campaign creation fee
+ */
+export function calculateCampaignFee(campaignType: 'basic' | 'featured' | 'viral', duration: number): number {
+  const baseFees = {
+    basic: 10, // $10 base fee
+    featured: 25, // $25 base fee
+    viral: 50 // $50 base fee
+  };
+  
+  // Longer campaigns cost more (additional $2 per day after 7 days)
+  const extraDaysFee = Math.max(0, duration - 7) * 2;
+  
+  return baseFees[campaignType] + extraDaysFee;
+}
+
+/**
+ * Calculate project verification fee
+ */
+export function calculateProjectVerificationFee(): number {
+  return 50; // $50 one-time fee for project verification
+}
+
   return endDate;
 }
 
