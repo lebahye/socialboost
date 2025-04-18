@@ -74,7 +74,6 @@ const { registerPaymentHandlers } = require('./handlers/paymentHandlers');
 const { paymentService } = require('./services/paymentService');
 const { referralHandler, referralStatsHandler, processReferral } = require('./handlers/referralHandlers');
 const { achievementsHandler, checkAchievements, notifyAchievements } = require('./handlers/achievementHandlers');
-const { userStatsHandler } = require('./handlers/analyticsHandlers');
 
 // Register command handlers
 bot.command('start', async (ctx) => {
@@ -209,7 +208,7 @@ bot.launch().then(() => {
   // Initialize scheduled tasks
   initializeScheduler(bot);
   console.log('Scheduler initialized');
-  
+
   // Start webhook server for payment processing
   if (process.env.ENABLE_WEBHOOKS === 'true') {
     startWebhookServer();
