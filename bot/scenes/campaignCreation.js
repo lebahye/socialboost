@@ -493,19 +493,23 @@ const campaignCreationScene = new Scenes.WizardScene(
           WHERE id = $1
         `, [project.id]);
 
-        // Success message
+        const durationDays = Math.ceil((savedCampaign.endDate - savedCampaign.startDate) / (1000 * 60 * 60 * 24));
+        const rewardsText = savedCampaign.rewards.map((reward, index) =>
+          `${index + 1}. ${formatRewardType(reward.type)}: ${reward.description}`
+        ).join('\n');
+
+        // Display completion message
         await ctx.reply(
-          '🎉 *Campaign Created Successfully!*\n\n' +
-          `*Campaign Name:* ${savedCampaign.name}\n` +
-          `*Project:* ${project.name}\n` +
-          `*Duration:* ${Math.ceil((savedCampaign.endDate - savedCampaign.startDate) / (1000 * 60 * 60 * 24))} days\n` +
-          `*Status:* ${savedCampaign.private ? 'Private' : 'Public'}\n` +
-          `*Target:* ${savedCampaign.targetParticipants} participants\n\n` +
-          `*X Post:* ${savedCampaign.xPostUrl}\n\n` +
-          `*Rewards:*\n${savedCampaign.rewards.map((reward, index) =>
-            `${index + 1}. ${formatRewardType(reward.type)}: ${reward.description}`
-          ).join('\n')}\n\n` +
-          'Your campaign is now active! Use /campaigns to view all your campaigns.',
+          `🎉 *Campaign Created Successfully!*\n\n` +
+          `Campaign Name: ${savedCampaign.name}\n` +
+          `Project: ${savedCampaign.projectName}\n` +
+          `Duration: ${durationDays} days\n` +
+          `Status: ${savedCampaign.isPrivate ? 'Private' : 'Public'}\n` +
+          `Target: ${savedCampaign.targetParticipants || 'undefined'} participants\n\n` +
+          `X Post: ${savedCampaign.xPostUrl || 'undefined'}\n\n` +
+          `Rewards:\n` +
+          rewardsText + '\n\n' +
+          `Your campaign is now active! Use /campaigns to view all your campaigns.`,
           { parse_mode: 'Markdown' }
         );
 

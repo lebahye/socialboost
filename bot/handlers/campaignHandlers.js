@@ -37,95 +37,56 @@ const listCampaignsHandler = async (ctx) => {
       return;
     }
 
-    let campaigns;
-    let messageText;
+    // Get all campaigns from database
+    const { rows: allCampaigns } = await pool.query(`
+      SELECT * FROM campaigns 
+      WHERE created_by = $1 OR private = false
+    `, [user.telegramId]);
 
-    // Different behavior for project owners vs regular users
-    if (user.is_project_owner) {
-      // For project owners: show their own projects' campaigns
-      const projects = await Project.find({ 'owners.telegramId': user.telegramId });
-      const projectIds = projects.map(p => p._id);
-
-      campaigns = await Campaign.find({
-        projectId: { $in: projectIds },
-        status: { $in: ['active', 'draft'] }
-      }).sort({ createdAt: -1 });
-
-      if (campaigns.length === 0) {
-        messageText = "You don't have any active campaigns. Use /newcampaign to create one.";
-        await ctx.reply(messageText);
-        return;
-      }
-
-      messageText = '*Your Campaigns:*\n\n';
-
-      campaigns.forEach((campaign, index) => {
-        const project = projects.find(p => p._id.toString() === campaign.projectId.toString());
-        const projectName = project ? project.name : 'Unknown Project';
-
-        messageText += `${index + 1}. *${campaign.name}*\n`;
-        messageText += `   Project: ${projectName}\n`;
-        messageText += `   Status: ${formatStatus(campaign.status)}\n`;
-        messageText += `   Participants: ${campaign.currentParticipants}/${campaign.targetParticipants}\n`;
-        messageText += `   Ends: ${formatDate(campaign.endDate)}\n\n`;
-      });
-
-      messageText += 'To view details or manage a specific campaign, use:\n/campaign [number]';
-
-    } else {
-      // For regular users: show campaigns they can participate in
-
-      // Get campaigns that are:
-      // 1. Active
-      // 2. Not expired
-      // 3. Either public OR the user is already a participant
-      campaigns = await Campaign.find({
-        status: 'active',
-        endDate: { $gt: new Date() },
-        $or: [
-          { private: false },
-          { 'participants.telegramId': user.telegramId }
-        ]
-      }).sort({ endDate: 1 }); // Sort by end date, soonest first
-
-      if (campaigns.length === 0) {
-        messageText = "There are no active campaigns available right now. Check back later!";
-        await ctx.reply(messageText);
-        return;
-      }
-
-      messageText = '*Available Campaigns:*\n\n';
-
-      campaigns.forEach((campaign, index) => {
-        // Check if user is already participating
-        const isParticipant = campaign.participants.some(p => p.telegramId === user.telegramId);
-        const hasParticipated = isParticipant && campaign.participants.find(
-          p => p.telegramId === user.telegramId
-        )?.participated;
-
-        messageText += `${index + 1}. *${campaign.name}*\n`;
-        messageText += `   Project: ${campaign.projectName}\n`;
-
-        if (hasParticipated) {
-          messageText += `   Status: ✅ You've participated\n`;
-        } else if (isParticipant) {
-          messageText += `   Status: 🔔 You're invited but haven't participated yet\n`;
-        } else {
-          messageText += `   Status: Open for participation\n`;
-        }
-
-        messageText += `   Rewards: ${campaign.rewards.length} reward type${campaign.rewards.length !== 1 ? 's' : ''}\n`;
-        messageText += `   Ends: ${formatDate(campaign.endDate)}\n\n`;
-      });
-
-      messageText += 'To view details or participate in a specific campaign, use:\n/campaign [number]';
+    if (!allCampaigns || allCampaigns.length === 0) {
+      await ctx.reply('No campaigns found. You can create a new campaign with /newcampaign');
+      return;
     }
 
-    // Store campaigns in session for reference when user selects one
-    ctx.session.listedCampaigns = campaigns.map(c => c._id.toString());
+    let userCampaigns = [];
+    let otherCampaigns = [];
 
-    await ctx.replyWithMarkdown(messageText);
+    // Separate user's own campaigns from others
+    allCampaigns.forEach(campaign => {
+      if (campaign.created_by.toString() === user.telegramId.toString()) {
+        userCampaigns.push(campaign);
+      } else {
+        otherCampaigns.push(campaign);
+      }
+    });
 
+    // First show user's own campaigns
+    if (userCampaigns.length > 0) {
+      let message = '🚀 *Your Campaigns*\n\n';
+
+      userCampaigns.forEach((campaign, index) => {
+        const status = campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1);
+        message += `${index + 1}. *${campaign.name}* (${status})\n`;
+        message += `   Project: ${campaign.project_name}\n`;
+        message += `   ID: \`${campaign.id}\`\n\n`;
+      });
+
+      await ctx.replyWithMarkdown(message);
+    }
+
+    // Then show other campaigns
+    if (otherCampaigns.length > 0) {
+      let message = '📢 *Available Campaigns*\n\n';
+
+      otherCampaigns.forEach((campaign, index) => {
+        const status = campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1);
+        message += `${index + 1}. *${campaign.name}* (${status})\n`;
+        message += `   Project: ${campaign.project_name}\n`;
+        message += `   ID: \`${campaign.id}\`\n\n`;
+      });
+
+      await ctx.replyWithMarkdown(message);
+    }
   } catch (err) {
     console.error('Error listing campaigns:', err);
     await ctx.reply('An error occurred while retrieving campaigns. Please try again later.');

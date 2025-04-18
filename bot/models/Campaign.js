@@ -25,20 +25,25 @@ class Campaign {
       rewards = []
     } = campaignData;
 
+    // Set default values for any missing fields
+    const safeEndDate = endDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Default 7 days
+    const safeXPostUrl = xPostUrl || 'undefined';
+    const safeTargetParticipants = targetParticipants || 0;
+
     const query = `
       INSERT INTO campaigns (
         name, description, project_id, project_name, x_post_url, 
         start_date, end_date, target_participants, 
-        created_by, status, private, rewards
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        created_by, status, private, rewards, participants
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *
     `;
     
     const values = [
-      name, description, projectId, projectName, xPostUrl,
-      startDate, endDate, targetParticipants,
-      createdBy, status || 'draft', isPrivate || false,
-      JSON.stringify(rewards)
+      name, description, projectId, projectName, safeXPostUrl,
+      startDate || new Date(), safeEndDate, safeTargetParticipants,
+      createdBy, status || 'active', isPrivate || false,
+      JSON.stringify(rewards || []), JSON.stringify([])
     ];
 
     const { rows } = await pool.query(query, values);
