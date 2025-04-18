@@ -11,7 +11,7 @@ const pool = new Pool({
 });
 
 async function setupDatabase() {
-  console.log('Setting up database...');
+  console.log("Setting up database...");
   
   try {
     // Create users table
@@ -19,14 +19,17 @@ async function setupDatabase() {
       CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         telegram_id TEXT UNIQUE NOT NULL,
-        telegram_username TEXT,
+        username TEXT,
         first_name TEXT,
         last_name TEXT,
+        language TEXT DEFAULT 'en',
+        is_project_owner BOOLEAN DEFAULT false,
+        is_verified BOOLEAN DEFAULT false,
+        credits INTEGER DEFAULT 0,
+        social_accounts JSONB DEFAULT '[]',
         verification_code TEXT,
-        is_verified BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
     `);
 
     // Create projects table
@@ -35,51 +38,42 @@ async function setupDatabase() {
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
         description TEXT,
-        logo_url TEXT,
         owner_id TEXT NOT NULL,
         category TEXT,
         website TEXT,
-        verified BOOLEAN DEFAULT FALSE,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
+        subscription JSONB DEFAULT '{"isActive": true, "campaignsRemaining": 3}',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
     `);
 
     // Create campaigns table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS campaigns (
         id SERIAL PRIMARY KEY,
-        project_id INTEGER REFERENCES projects(id),
         name TEXT NOT NULL,
         description TEXT,
-        platform TEXT,
-        post_url TEXT,
+        project_id INTEGER REFERENCES projects(id),
+        project_name TEXT,
+        x_post_url TEXT,
         start_date TIMESTAMP,
         end_date TIMESTAMP,
+        target_participants INTEGER,
+        participants JSONB DEFAULT '[]',
+        stats JSONB DEFAULT '{}',
+        created_by TEXT,
         status TEXT DEFAULT 'draft',
-        reward_type TEXT,
-        reward_amount TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-    `);
-
-    // Create participants table
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS participants (
-        id SERIAL PRIMARY KEY,
-        campaign_id INTEGER REFERENCES campaigns(id),
-        user_id TEXT REFERENCES users(telegram_id),
-        participated BOOLEAN DEFAULT FALSE,
-        participation_date TIMESTAMP,
+        private BOOLEAN DEFAULT false,
+        rewards JSONB DEFAULT '[]',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
+      )
     `);
 
-    console.log('Database setup completed successfully');
+    console.log("Database setup completed successfully");
   } catch (error) {
-    console.error('Database setup error:', error);
+    console.error("Error setting up database:", error);
+    process.exit(1);
   } finally {
+    // Close pool
     await pool.end();
   }
 }
