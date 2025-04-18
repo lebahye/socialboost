@@ -99,14 +99,14 @@ bot.command('start', async (ctx) => {
 });
 bot.command('help', helpHandler);
 bot.command('status', statusHandler);
-bot.command('tutorial', tutorialHandler);
+bot.command('tutorial', async (ctx) => await tutorialHandler(ctx));
 bot.command('link', linkSocialHandler);
 bot.command('verify', verifyAccountHandler);
 bot.command('unlink', unlinkAccountHandler);
 bot.command('newproject', ctx => ctx.scene.enter('projectRegistration'));
 bot.command('myprojects', listProjectsHandler);
 bot.command('project', manageProjectHandler);
-bot.command('newcampaign', ctx => ctx.scene.enter('CAMPAIGN_CREATION'));
+bot.command('newcampaign', ctx => ctx.scene.enter('campaignCreation'));
 bot.command('campaigns', listCampaignsHandler);
 bot.command('campaign', manageCampaignHandler);
 bot.command('postcampaign', postCampaignToChannelHandler);
