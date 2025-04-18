@@ -472,9 +472,11 @@ const campaignCreationScene = new Scenes.WizardScene(
           rewards: ctx.wizard.state.campaignData.rewards
         });
 
-        // Update project
-        project.campaigns.push(savedCampaign._id);
-        project.subscription.campaignsRemaining -= 1;
+        // Update subscription only
+        await pool.query(
+          'UPDATE projects SET campaigns_remaining = campaigns_remaining - 1 WHERE id = $1',
+          [project.id]
+        );
 
         // Update stats
         project.stats.totalCampaigns += 1;
