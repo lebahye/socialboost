@@ -183,3 +183,39 @@ class VerificationService {
 }
 
 module.exports = new VerificationService();
+const { TwitterApi } = require('twitter-api-v2');
+
+async function verifyXPostEngagement(postId, userXHandle) {
+  const client = new TwitterApi(process.env.TWITTER_BEARER_TOKEN);
+  
+  try {
+    // Get post details
+    const tweet = await client.v2.singleTweet(postId, {
+      expansions: ['author_id'],
+      'tweet.fields': ['public_metrics']
+    });
+
+    // Get user interactions
+    const userLiked = await client.v2.tweetLikedBy(postId).data.some(
+      user => user.username === userXHandle
+    );
+    
+    const userRetweeted = await client.v2.tweetRetweetedBy(postId).data.some(
+      user => user.username === userXHandle
+    );
+
+    return {
+      verified: userLiked || userRetweeted,
+      metrics: tweet.data.public_metrics,
+      interactions: {
+        liked: userLiked,
+        retweeted: userRetweeted
+      }
+    };
+  } catch (err) {
+    console.error('Error verifying X post engagement:', err);
+    return { verified: false, error: err.message };
+  }
+}
+
+module.exports = { verifyXPostEngagement };

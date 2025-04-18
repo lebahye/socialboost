@@ -259,11 +259,42 @@ async function showCampaignDetailsForOwner(ctx, campaign, project) {
 /**
  * Helper function to show campaign details for participants
  */
+const { verifyXPostEngagement } = require('../services/verification');
+
 async function showCampaignDetailsForParticipant(ctx, campaign, user) {
   // Check if user is already a participant
   const participantData = campaign.participants.find(p => p.telegramId === user.telegramId);
   const isParticipant = !!participantData;
   const hasParticipated = isParticipant && participantData.participated;
+
+  // Verify X post engagement if user has connected account
+  if (isParticipant && !hasParticipated && user.social_accounts) {
+    const xAccount = user.social_accounts.find(acc => acc.platform === 'x' && acc.verified);
+    if (xAccount) {
+      const postId = campaign.xPostUrl.split('/').pop();
+      const verification = await verifyXPostEngagement(postId, xAccount.username);
+      
+      if (verification.verified) {
+        // Update participation status
+        await Campaign.update(campaign.id, {
+          participants: campaign.participants.map(p => 
+            p.telegramId === user.telegramId 
+              ? {...p, participated: true, participationDate: new Date()}
+              : p
+          ),
+          stats: {
+            ...campaign.stats,
+            participationRate: ((campaign.stats.participationRate || 0) + 1),
+            engagement: verification.metrics
+          }
+        });
+        
+        // Refresh campaign data
+        campaign = await Campaign.findById(campaign.id);
+        hasParticipated = true;
+      }
+    }
+  }
 
   // Create inline keyboard for participant options
   const inlineKeyboard = [];
