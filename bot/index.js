@@ -104,14 +104,7 @@ bot.command('stats', userStatsHandler);
 bot.command('export', exportDataHandler);
 bot.command('referral', referralHandler);
 bot.command('referralstats', referralStatsHandler);
-bot.command('achievements', async (ctx) => {
-  try {
-    await achievementHandlers.achievementsHandler(ctx);
-  } catch (error) {
-    console.error('Error in achievements command:', error);
-    await ctx.reply('An error occurred while fetching your achievements. Please try again later.');
-  }
-});
+bot.command('achievements', achievementsHandler);
 
 // Register monetization handlers
 registerPaymentHandlers(bot);
