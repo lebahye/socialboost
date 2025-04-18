@@ -65,25 +65,25 @@ const helpHandler = async (ctx) => {
     const isProjectOwner = result.rows[0]?.is_project_owner || false;
 
     let helpMessage = `📚 *Bot Commands & Help* 📚\n\n`;
-    
+
     helpMessage += `🔹 *Getting Started:*\n`;
     helpMessage += `/start - Start the bot\n`;
     helpMessage += `/help - Show this help message\n`;
     helpMessage += `/tutorial - View interactive tutorial\n`;
     helpMessage += `/status - Check your account status\n\n`;
-    
+
     helpMessage += `🔹 *Account Management:*\n`;
     helpMessage += `/link - Link social media accounts\n`;
     helpMessage += `/verify - Verify linked accounts\n`;
     helpMessage += `/unlink - Unlink social media accounts\n\n`;
-    
+
     helpMessage += `🔹 *Campaigns & Rewards:*\n`;
     helpMessage += `/campaigns - List available campaigns\n`;
     helpMessage += `/stats - View your participation stats\n`;
     helpMessage += `/achievements - View your achievements\n`;
     helpMessage += `/referral - Get your referral link\n`;
     helpMessage += `/referralstats - Check your referrals\n\n`;
-    
+
     helpMessage += `🔹 *Monetization:*\n`;
     helpMessage += `/premium - View premium plans\n`;
     helpMessage += `/cashout - Cash out your credits\n\n`;
@@ -124,7 +124,7 @@ const statusHandler = async (ctx) => {
     statusMessage += `*User:* ${user.username || ctx.from.username || 'No username'}\n`;
     statusMessage += `*Joined:* ${new Date(user.created_at).toDateString()}\n`;
     statusMessage += `*Account Type:* ${user.is_project_owner ? 'Project Owner' : 'Participant'}\n`;
-    
+
     await ctx.replyWithMarkdown(statusMessage);
   } catch (error) {
     console.error('Error in statusHandler:', error);
@@ -156,7 +156,7 @@ const tutorialHandler = async (ctx) => {
         parse_mode: 'Markdown'
       }
     ];
-    
+
     // Send messages with a delay between each
     for (let i = 0; i < messages.length; i++) {
       setTimeout(() => {
@@ -169,25 +169,10 @@ const tutorialHandler = async (ctx) => {
   }
 };
 
-// Tutorial handler
-const tutorialHandler = async (ctx) => {
-  try {
-    await ctx.reply('Welcome to the tutorial! Here\'s how to use this bot:');
-    await ctx.reply('1. Link your social accounts with /link');
-    await ctx.reply('2. Browse available campaigns with /campaigns');
-    await ctx.reply('3. Check your stats with /stats');
-    await ctx.reply('4. Earn rewards and achievements!');
-  } catch (error) {
-    console.error('Error in tutorialHandler:', error);
-    await ctx.reply('An error occurred while showing the tutorial. Please try again.');
-  }
-};
 
 module.exports = {
   startHandler,
   helpHandler,
-  statusHandler,
-  tutorialHandler,
   statusHandler,
   tutorialHandler
 };
