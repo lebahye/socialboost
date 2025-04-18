@@ -1,3 +1,4 @@
+
 const { Pool } = require('pg');
 const { TwitterApi } = require('twitter-api-v2');
 const { Client, Intents } = require('discord.js');
@@ -80,7 +81,7 @@ class VerificationService {
       if (platform === 'twitter' || platform === 'x') {
         verified = await this.verifyXAccount(username, verificationCode);
       } else if (platform === 'discord') {
-        verified = await this.verifyDiscordAccount(username, verificationCode); // Assuming username is discordId here.
+        verified = await this.verifyDiscordAccount(username, verificationCode);
       }
 
       if (verified) {
@@ -149,7 +150,6 @@ class VerificationService {
     }
   }
 
-
   async manuallyVerifyAccount(telegramId, platform, username) {
     try {
       const result = await this.pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
@@ -182,13 +182,17 @@ class VerificationService {
   }
 }
 
-module.exports = new VerificationService();
-const { TwitterApi } = require('twitter-api-v2');
+// Export instance
+const verificationService = new VerificationService();
 
 async function verifyXPostEngagement(postId, userXHandle) {
-  const client = new TwitterApi(process.env.TWITTER_BEARER_TOKEN);
-  
   try {
+    // Use the existing Twitter client from verification service
+    const client = verificationService.twitterClient;
+    if (!client) {
+      throw new Error('Twitter client not initialized');
+    }
+    
     // Get post details
     const tweet = await client.v2.singleTweet(postId, {
       expansions: ['author_id'],
@@ -218,4 +222,7 @@ async function verifyXPostEngagement(postId, userXHandle) {
   }
 }
 
-module.exports = { verifyXPostEngagement };
+module.exports = {
+  verificationService,
+  verifyXPostEngagement
+};

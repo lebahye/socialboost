@@ -1,3 +1,5 @@
+"use client";
+
 import type { User } from './models/user';
 import type { Campaign } from './models/campaign';
 import { type SubscriptionPlan, SUBSCRIPTION_PLANS } from './models/payment';
@@ -18,27 +20,30 @@ export function calculateCreditsForCashout(amountUsd: number): number {
 }
 
 /**
- * Calculate USD value of user credits
+ * Calculate USD value of credits
  */
 export function calculateUsdValueOfCredits(credits: number): number {
-  // Each credit is worth $0.10 USD
-  return credits * 0.10;
+  const conversionRate = 0.01; // 1 credit = $0.01 USD
+  return credits * conversionRate;
 }
 
 /**
- * Calculate commission fee for cashouts
+ * Calculate cashout commission based on amount
  */
 export function calculateCashoutCommission(amount: number): number {
-  // 5% commission fee
-  return amount * 0.05;
+  const baseCommission = 0.05; // 5% base commission
+  const minCommission = 1; // Minimum $1 commission
+
+  const commission = amount * baseCommission;
+  return Math.max(commission, minCommission);
 }
 
 /**
  * Check if user is eligible for cashout
  */
 export function isEligibleForCashout(credits: number): boolean {
-  // Minimum 100 credits ($10) for cashout
-  return credits >= 100;
+  const minCashoutCredits = 1000; // Minimum 1000 credits required
+  return credits >= minCashoutCredits;
 }
 
 /**
@@ -51,9 +56,13 @@ export function calculateCampaignFee(campaignType: 'basic' | 'featured' | 'viral
     viral: 50 // $50 base fee
   };
 
-  // Add $5 per day for campaigns longer than 7 days
-  const extraDaysFee = Math.max(0, duration - 7) * 5;
-  return baseFees[campaignType] + extraDaysFee;
+  const dailyFees = {
+    basic: 2, // $2 per day
+    featured: 5, // $5 per day
+    viral: 10 // $10 per day
+  };
+
+  return baseFees[campaignType] + (dailyFees[campaignType] * duration);
 }
 
 /**
@@ -130,4 +139,16 @@ export function calculateReferralBonus(action: 'signup' | 'campaign_participatio
  */
 export function getReferralCampaignBonus(): number {
   return 10; // 10% of their referrals' campaign rewards
+}
+
+/**
+ * Calculate premium subscription cost
+ */
+export function calculatePremiumCost(plan: 'monthly' | 'yearly'): number {
+  const prices = {
+    monthly: 9.99,
+    yearly: 99.99
+  };
+
+  return prices[plan];
 }
