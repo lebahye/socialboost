@@ -10,6 +10,7 @@
     "format": "bunx biome format --write"
   },
   "dependencies": {
+    "@paypal/checkout-server-sdk": "^1.0.3",
     "@radix-ui/react-dialog": "^1.1.7",
     "@radix-ui/react-progress": "^1.1.3",
     "@radix-ui/react-separator": "^1.1.3",
