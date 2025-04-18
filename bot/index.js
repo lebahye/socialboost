@@ -98,6 +98,53 @@ bot.action(/link_([a-z]+)/, async (ctx) => {
   }
 });
 
+// Test commands (REMOVE IN PRODUCTION)
+bot.command('testverify', async (ctx) => {
+  if (process.env.NODE_ENV !== 'production') {
+    try {
+      const telegramId = ctx.from.id.toString();
+      const result = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
+
+      if (!result.rows[0]) {
+        return ctx.reply('Please start the bot first with /start');
+      }
+
+      const user = result.rows[0];
+      let socialAccounts = [];
+
+      if (user.social_accounts) {
+        if (typeof user.social_accounts === 'string') {
+          socialAccounts = JSON.parse(user.social_accounts);
+        } else {
+          socialAccounts = user.social_accounts;
+        }
+      }
+
+      if (!socialAccounts.length) {
+        return ctx.reply('No accounts to verify. Use /link first.');
+      }
+
+      // Mark all accounts as verified
+      socialAccounts.forEach(acc => {
+        acc.is_verified = true;
+      });
+
+      await pool.query(
+        'UPDATE users SET social_accounts = $1 WHERE telegram_id = $2',
+        [JSON.stringify(socialAccounts), telegramId]
+      );
+
+      await ctx.reply('✅ All your accounts have been verified for testing purposes!');
+    } catch (error) {
+      console.error('Error in test verify:', error);
+      await ctx.reply('An error occurred during test verification.');
+    }
+  } else {
+    await ctx.reply('This command is only available in development mode.');
+  }
+});
+
+
 // Error handling
 bot.catch((err, ctx) => {
   console.error('Bot error:', err);

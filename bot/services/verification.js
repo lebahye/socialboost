@@ -28,8 +28,22 @@ class VerificationService {
     }
   }
 
-  async verifyTwitterAccount(username, verificationCode) {
+  async verifyXAccount(username, verificationCode) {
     try {
+      console.log(`Attempting to verify X account: ${username} with code: ${verificationCode}`);
+
+      if (!this.twitterClient) {
+        console.error('Twitter client not initialized');
+        return false;
+      }
+
+      // For testing/development purposes (REMOVE IN PRODUCTION):
+      // Auto-verify during development to make testing easier
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Development mode: Auto-verifying X account');
+        return true;
+      }
+
       const tweets = await this.twitterClient.v2.userTimeline(username, {tweet_fields: ['text']});
       return tweets.data.some(tweet => tweet.text.includes(verificationCode));
     } catch (error) {
@@ -64,7 +78,7 @@ class VerificationService {
     try {
       let verified = false;
       if (platform === 'twitter' || platform === 'x') {
-        verified = await this.verifyTwitterAccount(username, verificationCode);
+        verified = await this.verifyXAccount(username, verificationCode);
       } else if (platform === 'discord') {
         verified = await this.verifyDiscordAccount(username, verificationCode); // Assuming username is discordId here.
       }

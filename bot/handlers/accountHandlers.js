@@ -140,27 +140,50 @@ const processXUsername = async (ctx) => {
     // Generate verification code
     const verificationCode = generateVerificationCode();
 
-    // Find existing account or create new one
-    const existingAccount = user.socialAccounts.find(acc => acc.platform === 'x');
-
-    if (existingAccount) {
-      existingAccount.username = xUsername;
-      existingAccount.isVerified = false;
-      existingAccount.verificationCode = verificationCode;
-      existingAccount.verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    // Update or create the user's social accounts in the database
+    const telegramId = ctx.from.id.toString();
+    
+    // Check if user already has social accounts
+    const userResult = await pool.query(
+      'SELECT social_accounts FROM users WHERE telegram_id = $1',
+      [telegramId]
+    );
+    
+    let socialAccounts = [];
+    if (userResult.rows[0] && userResult.rows[0].social_accounts) {
+      // Parse existing accounts if they exist
+      if (typeof userResult.rows[0].social_accounts === 'string') {
+        socialAccounts = JSON.parse(userResult.rows[0].social_accounts);
+      } else {
+        socialAccounts = userResult.rows[0].social_accounts;
+      }
+    }
+    
+    // Find existing account or prepare to add new one
+    const existingAccountIndex = socialAccounts.findIndex(acc => acc.platform === 'x');
+    
+    if (existingAccountIndex >= 0) {
+      // Update existing account
+      socialAccounts[existingAccountIndex].username = xUsername;
+      socialAccounts[existingAccountIndex].is_verified = false;
+      socialAccounts[existingAccountIndex].verification_code = verificationCode;
+      socialAccounts[existingAccountIndex].verification_expiry = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
     } else {
-      user.socialAccounts.push({
+      // Add new account
+      socialAccounts.push({
         platform: 'x',
         username: xUsername,
-        isVerified: false,
-        verificationCode: verificationCode,
-        verificationExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+        is_verified: false,
+        verification_code: verificationCode,
+        verification_expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
       });
     }
-
-    // Reset user state
-    user.currentState = null;
-    await user.save();
+    
+    // Update user with new social accounts
+    await pool.query(
+      'UPDATE users SET social_accounts = $1, current_state = NULL WHERE telegram_id = $2',
+      [JSON.stringify(socialAccounts), telegramId]
+    );
 
     // Send verification instructions
     await ctx.reply(
@@ -262,6 +285,8 @@ const processDiscordUsername = async (ctx) => {
 const verifyAccountHandler = async (ctx) => {
   try {
     const userId = ctx.from.id.toString();
+    console.log(`Getting verification status for user: ${userId}`);
+    
     const result = await pool.query(
       'SELECT * FROM users WHERE telegram_id = $1',
       [userId]
@@ -272,9 +297,25 @@ const verifyAccountHandler = async (ctx) => {
     }
 
     const user = result.rows[0];
-    const socialAccounts = user.social_accounts || [];
+    
+    // Handle various formats of social_accounts
+    let socialAccounts = [];
+    if (user.social_accounts) {
+      if (typeof user.social_accounts === 'string') {
+        try {
+          socialAccounts = JSON.parse(user.social_accounts);
+        } catch (e) {
+          console.error('Error parsing social accounts:', e);
+          socialAccounts = [];
+        }
+      } else if (Array.isArray(user.social_accounts)) {
+        socialAccounts = user.social_accounts;
+      }
+    }
+    
+    console.log(`User social accounts:`, socialAccounts);
 
-    if (!socialAccounts.length) {
+    if (!socialAccounts || !socialAccounts.length) {
       await ctx.reply(
         'You don\'t have any social accounts linked yet.\n\n' +
         'Use /link to connect your social media accounts.'
