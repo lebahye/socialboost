@@ -74,9 +74,6 @@ const { registerPaymentHandlers } = require('./handlers/paymentHandlers');
 const { paymentService } = require('./services/paymentService');
 const { referralHandler, referralStatsHandler, processReferral } = require('./handlers/referralHandlers');
 const { achievementsHandler, checkAchievements, notifyAchievements } = require('./handlers/achievementHandlers');
-
-// Import new handlers
-const { referralHandler, referralStatsHandler, processReferral } = require('./handlers/referralHandlers');
 const { userStatsHandler } = require('./handlers/analyticsHandlers');
 
 // Register command handlers
