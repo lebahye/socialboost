@@ -175,7 +175,4 @@ module.exports = {
   helpHandler,
   statusHandler,
   tutorialHandler
-};,
-  statusHandler,
-  tutorialHandler
 };

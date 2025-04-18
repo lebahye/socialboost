@@ -1,3 +1,4 @@
+
 import type { User } from './models/user';
 import type { Campaign } from './models/campaign';
 import { type SubscriptionPlan, SUBSCRIPTION_PLANS } from './models/payment';
@@ -78,7 +79,9 @@ export function calculateSubscriptionEndDate(planId: string, startDate = new Dat
   } else if (plan?.interval === 'yearly') {
     endDate.setFullYear(endDate.getFullYear() + 1);
   }
-
+  
+  return endDate;
+}
 
 /**
  * Calculate campaign creation fee
@@ -101,9 +104,6 @@ export function calculateCampaignFee(campaignType: 'basic' | 'featured' | 'viral
  */
 export function calculateProjectVerificationFee(): number {
   return 50; // $50 one-time fee for project verification
-}
-
-  return endDate;
 }
 
 /**
