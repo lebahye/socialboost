@@ -104,19 +104,10 @@ bot.command('export', exportDataHandler);
 bot.command('referral', referralHandler);
 bot.command('referralstats', referralStatsHandler);
 // Ensure the handler is properly defined before using it
-bot.command('achievements', async (ctx) => {
-  try {
-    if (typeof achievementsHandler === 'function') {
-      await achievementsHandler(ctx);
-    } else {
-      await ctx.reply('This feature is currently under maintenance. Please try again later.');
-      console.log('Warning: achievementsHandler is not properly defined');
-    }
-  } catch (error) {
-    console.error('Error in achievements command:', error);
-    await ctx.reply('An error occurred while accessing achievements. Please try again later.');
-  }
-});
+bot.command('achievements', achievementsHandler || (async (ctx) => {
+  await ctx.reply('Achievements feature is currently under maintenance. Please try again later.');
+  console.log('Warning: achievementsHandler is not properly defined');
+}));
 
 // Register monetization handlers
 registerPaymentHandlers(bot);
