@@ -317,6 +317,7 @@ const campaignCreationScene = new Scenes.WizardScene(
           'Please provide a description of this reward.\n\n' +
           'Example: "Access to exclusive Discord channel" or "Featured on our Twitter page"',
           { parse_mode: 'Markdown' }
+        )
 
 // Add step to ask if user wants to post to channel
 campaignCreationScene.action('finish_campaign', async (ctx) => {
