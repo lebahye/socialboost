@@ -74,7 +74,6 @@ module.exports = {
 };
 
 const { Composer } = require('telegraf');
-const { Pool } = require('pg');
 const Project = require('../models/Project');
 const Campaign = require('../models/Campaign');
 
