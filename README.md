@@ -55,7 +55,7 @@ See the [bot README](/bot/README.md) for detailed instructions.
 
 ## Technology Stack
 
-- **Bot**: Node.js, Telegraf.js, MongoDB, Mongoose
+- **Bot**: Node.js, Telegraf.js, PostgreSQL
 - **Web Dashboard**: Next.js, React, Tailwind CSS, ShadcnUI
 - **Integrations**: Twitter API, Discord API
 

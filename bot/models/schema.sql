@@ -30,6 +30,26 @@ CREATE TABLE IF NOT EXISTS projects (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Campaigns table
+CREATE TABLE IF NOT EXISTS campaigns (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(50) NOT NULL,
+  description TEXT,
+  project_id INTEGER REFERENCES projects(id) ON DELETE CASCADE,
+  project_name VARCHAR(50),
+  x_post_url TEXT,
+  start_date TIMESTAMP,
+  end_date TIMESTAMP,
+  target_participants INTEGER DEFAULT 0,
+  created_by TEXT REFERENCES users(telegram_id),
+  status TEXT DEFAULT 'draft',
+  private BOOLEAN DEFAULT false,
+  rewards JSONB DEFAULT '[]',
+  participants JSONB DEFAULT '[]',
+  stats JSONB DEFAULT '{"engagement": {"likes": 0, "retweets": 0, "comments": 0}}',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Campaigns table with complete tracking
 CREATE TABLE IF NOT EXISTS campaigns (
   id SERIAL PRIMARY KEY,

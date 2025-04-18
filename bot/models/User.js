@@ -69,6 +69,31 @@ class User {
     const { rows } = await pool.query(query, [state, telegramId]);
     return rows[0];
   }
+
+  static async setVerificationCode(telegramId, code) {
+    const query = `
+      UPDATE users 
+      SET verification_code = $1,
+          verification_expiry = NOW() + INTERVAL '30 minutes'
+      WHERE telegram_id = $2
+      RETURNING *
+    `;
+    
+    const { rows } = await pool.query(query, [code, telegramId]);
+    return rows[0];
+  }
+
+  static async verifyCode(telegramId, code) {
+    const query = `
+      SELECT * FROM users 
+      WHERE telegram_id = $1 
+      AND verification_code = $2 
+      AND verification_expiry > NOW()
+    `;
+    
+    const { rows } = await pool.query(query, [telegramId, code]);
+    return rows.length > 0;
+  }
 }
 
 module.exports = User;
