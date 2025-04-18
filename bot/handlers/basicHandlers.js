@@ -169,9 +169,25 @@ const tutorialHandler = async (ctx) => {
   }
 };
 
+// Tutorial handler
+const tutorialHandler = async (ctx) => {
+  try {
+    await ctx.reply('Welcome to the tutorial! Here\'s how to use this bot:');
+    await ctx.reply('1. Link your social accounts with /link');
+    await ctx.reply('2. Browse available campaigns with /campaigns');
+    await ctx.reply('3. Check your stats with /stats');
+    await ctx.reply('4. Earn rewards and achievements!');
+  } catch (error) {
+    console.error('Error in tutorialHandler:', error);
+    await ctx.reply('An error occurred while showing the tutorial. Please try again.');
+  }
+};
+
 module.exports = {
   startHandler,
   helpHandler,
+  statusHandler,
+  tutorialHandler,
   statusHandler,
   tutorialHandler
 };
