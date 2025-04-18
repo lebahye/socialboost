@@ -8,9 +8,13 @@ CREATE TABLE IF NOT EXISTS users (
   language TEXT DEFAULT 'en',
   is_project_owner BOOLEAN DEFAULT false,
   is_verified BOOLEAN DEFAULT false,
+  is_premium BOOLEAN DEFAULT false,
   current_state TEXT,
   social_accounts JSONB DEFAULT '[]',
   credits INTEGER DEFAULT 0,
+  achievements JSONB DEFAULT '[]',
+  referral_code TEXT,
+  referred_by TEXT,
   verification_code TEXT,
   verification_expiry TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
