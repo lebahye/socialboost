@@ -319,6 +319,172 @@ const campaignCreationScene = new Scenes.WizardScene(
           { parse_mode: 'Markdown' }
         )
 
+// Add action handlers after the scene definition is complete
+
+        );
+
+        ctx.wizard.state.collectingRewardDescription = true;
+        return;
+      }
+
+      await ctx.answerCbQuery('Invalid selection');
+      return;
+    }
+    
+    // If collecting reward description
+    if (ctx.wizard.state.collectingRewardDescription) {
+      const description = ctx.message.text.trim();
+
+      // Validate description
+      if (description.length < 5 || description.length > 200) {
+        await ctx.reply(
+          '⚠️ Description must be between 5 and 200 characters.\n\n' +
+          'Please try again:'
+        );
+        return;
+      }
+
+      // Store description
+      ctx.wizard.state.currentReward.description = description;
+
+      // Ask if there are any requirements
+      await ctx.reply(
+        'Are there any specific requirements for this reward? (optional)\n\n' +
+        'For example: "Must engage with at least 3 posts" or "Must be among first 100 participants"\n\n' +
+        'Send "skip" if there are no specific requirements.'
+      );
+
+      ctx.wizard.state.collectingRewardDescription = false;
+      ctx.wizard.state.collectingRewardRequirements = true;
+      return;
+    }
+
+    // If collecting reward requirements
+    if (ctx.wizard.state.collectingRewardRequirements) {
+      const requirements = ctx.message.text.trim();
+
+      if (requirements.toLowerCase() !== 'skip') {
+        ctx.wizard.state.currentReward.requirements = requirements;
+      }
+
+      // Add reward to campaign
+      ctx.wizard.state.campaignData.rewards.push(ctx.wizard.state.currentReward);
+
+      // Clear temporary storage
+      ctx.wizard.state.currentReward = null;
+      ctx.wizard.state.collectingRewardRequirements = false;
+
+      // Show updated rewards list
+      const rewardsList = ctx.wizard.state.campaignData.rewards.map((reward, index) =>
+        `${index + 1}. *${formatRewardType(reward.type)}*: ${reward.description}` +
+        (reward.requirements ? `\n   Requirements: ${reward.requirements}` : '')
+      ).join('\n\n');
+
+      // Show rewards and prompt for more
+      const rewardOptions = [
+        [{ text: 'Community Role', callback_data: 'reward_community_role' }],
+        [{ text: 'Exclusive Access', callback_data: 'reward_exclusive_access' }],
+        [{ text: 'Recognition', callback_data: 'reward_recognition' }],
+        [{ text: 'Merchandise', callback_data: 'reward_merchandise' }],
+        [{ text: 'Whitelist Spot', callback_data: 'reward_whitelist' }],
+        [{ text: 'Custom Reward', callback_data: 'reward_custom' }],
+        [{ text: 'Done Adding Rewards', callback_data: 'rewards_done' }]
+      ];
+
+      await ctx.reply(
+        '✅ Reward added!\n\n' +
+        'Current rewards:\n\n' +
+        rewardsList + '\n\n' +
+        'Select another reward type or click "Done Adding Rewards" when finished.',
+        {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: rewardOptions
+          }
+        }
+      );
+
+      return;
+    }
+
+    // If awaiting target participants
+    if (ctx.wizard.state.awaitingTarget) {
+      const targetInput = ctx.message.text.trim();
+      const target = parseInt(targetInput);
+
+      // Validate target
+      if (isNaN(target) || target < 10 || target > 1000) {
+        await ctx.reply(
+          '⚠️ Invalid target. Please enter a number between 10 and 1000.'
+        );
+        return;
+      }
+
+      // Store target
+      ctx.wizard.state.campaignData.targetParticipants = target;
+      ctx.wizard.state.campaignData.currentParticipants = 0;
+
+      // Set default reminders using project settings
+      const defaultPlatforms = ctx.wizard.state.selectedProject.settings.defaultReminderPlatforms || ['telegram'];
+      const defaultInterval = ctx.wizard.state.selectedProject.settings.defaultReminderInterval || 12;
+
+      ctx.wizard.state.campaignData.reminders = {
+        sendAutomatically: true,
+        platforms: {
+          telegram: defaultPlatforms.includes('telegram'),
+          x: defaultPlatforms.includes('x'),
+          discord: defaultPlatforms.includes('discord')
+        },
+        interval: defaultInterval
+      };
+
+      // Ask if campaign should be private
+      await ctx.reply(
+        'Should this campaign be private?\n\n' +
+        'Private campaigns are only visible to invited participants.\n' +
+        'Public campaigns are visible to all users.\n\n' +
+        'Reply with "yes" or "no".'
+      );
+
+      ctx.wizard.state.awaitingTarget = false;
+      ctx.wizard.state.awaitingPrivate = true;
+      return;
+    }
+
+    // If awaiting private setting
+    if (ctx.wizard.state.awaitingPrivate) {
+      const privateInput = ctx.message.text.trim().toLowerCase();
+
+      if (privateInput !== 'yes' && privateInput !== 'no') {
+        await ctx.reply('Please reply with "yes" or "no".');
+        return;
+      }
+
+      // Store private setting
+      ctx.wizard.state.campaignData.private = privateInput === 'yes';
+
+      // Finalize and create campaign
+      try {
+        // Get project details
+        const project = ctx.wizard.state.selectedProject;
+
+        // Create campaign
+        const savedCampaign = await Campaign.create({
+          name: ctx.wizard.state.campaignData.name,
+          description: ctx.wizard.state.campaignData.description,
+          projectId: project.id,
+          projectName: project.name,
+          xPostUrl: ctx.wizard.state.campaignData.xPostUrl,
+          startDate: ctx.wizard.state.campaignData.startDate,
+          endDate: ctx.wizard.state.campaignData.endDate,
+          targetParticipants: ctx.wizard.state.campaignData.targetParticipants,
+          createdBy: ctx.from.id.toString(),
+          status: 'active',
+          isPrivate: ctx.wizard.state.campaignData.private,
+          rewards: ctx.wizard.state.campaignData.rewards
+        });
+
+
 // Add step to ask if user wants to post to channel
 campaignCreationScene.action('finish_campaign', async (ctx) => {
   try {
@@ -485,169 +651,6 @@ campaignCreationScene.on('text', async (ctx) => {
     await ctx.scene.leave();
   }
 });
-
-        );
-
-        ctx.wizard.state.collectingRewardDescription = true;
-        return;
-      }
-
-      await ctx.answerCbQuery('Invalid selection');
-      return;
-    }
-
-    // If collecting reward description
-    if (ctx.wizard.state.collectingRewardDescription) {
-      const description = ctx.message.text.trim();
-
-      // Validate description
-      if (description.length < 5 || description.length > 200) {
-        await ctx.reply(
-          '⚠️ Description must be between 5 and 200 characters.\n\n' +
-          'Please try again:'
-        );
-        return;
-      }
-
-      // Store description
-      ctx.wizard.state.currentReward.description = description;
-
-      // Ask if there are any requirements
-      await ctx.reply(
-        'Are there any specific requirements for this reward? (optional)\n\n' +
-        'For example: "Must engage with at least 3 posts" or "Must be among first 100 participants"\n\n' +
-        'Send "skip" if there are no specific requirements.'
-      );
-
-      ctx.wizard.state.collectingRewardDescription = false;
-      ctx.wizard.state.collectingRewardRequirements = true;
-      return;
-    }
-
-    // If collecting reward requirements
-    if (ctx.wizard.state.collectingRewardRequirements) {
-      const requirements = ctx.message.text.trim();
-
-      if (requirements.toLowerCase() !== 'skip') {
-        ctx.wizard.state.currentReward.requirements = requirements;
-      }
-
-      // Add reward to campaign
-      ctx.wizard.state.campaignData.rewards.push(ctx.wizard.state.currentReward);
-
-      // Clear temporary storage
-      ctx.wizard.state.currentReward = null;
-      ctx.wizard.state.collectingRewardRequirements = false;
-
-      // Show updated rewards list
-      const rewardsList = ctx.wizard.state.campaignData.rewards.map((reward, index) =>
-        `${index + 1}. *${formatRewardType(reward.type)}*: ${reward.description}` +
-        (reward.requirements ? `\n   Requirements: ${reward.requirements}` : '')
-      ).join('\n\n');
-
-      // Show rewards and prompt for more
-      const rewardOptions = [
-        [{ text: 'Community Role', callback_data: 'reward_community_role' }],
-        [{ text: 'Exclusive Access', callback_data: 'reward_exclusive_access' }],
-        [{ text: 'Recognition', callback_data: 'reward_recognition' }],
-        [{ text: 'Merchandise', callback_data: 'reward_merchandise' }],
-        [{ text: 'Whitelist Spot', callback_data: 'reward_whitelist' }],
-        [{ text: 'Custom Reward', callback_data: 'reward_custom' }],
-        [{ text: 'Done Adding Rewards', callback_data: 'rewards_done' }]
-      ];
-
-      await ctx.reply(
-        '✅ Reward added!\n\n' +
-        'Current rewards:\n\n' +
-        rewardsList + '\n\n' +
-        'Select another reward type or click "Done Adding Rewards" when finished.',
-        {
-          parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: rewardOptions
-          }
-        }
-      );
-
-      return;
-    }
-
-    // If awaiting target participants
-    if (ctx.wizard.state.awaitingTarget) {
-      const targetInput = ctx.message.text.trim();
-      const target = parseInt(targetInput);
-
-      // Validate target
-      if (isNaN(target) || target < 10 || target > 1000) {
-        await ctx.reply(
-          '⚠️ Invalid target. Please enter a number between 10 and 1000.'
-        );
-        return;
-      }
-
-      // Store target
-      ctx.wizard.state.campaignData.targetParticipants = target;
-      ctx.wizard.state.campaignData.currentParticipants = 0;
-
-      // Set default reminders using project settings
-      const defaultPlatforms = ctx.wizard.state.selectedProject.settings.defaultReminderPlatforms || ['telegram'];
-      const defaultInterval = ctx.wizard.state.selectedProject.settings.defaultReminderInterval || 12;
-
-      ctx.wizard.state.campaignData.reminders = {
-        sendAutomatically: true,
-        platforms: {
-          telegram: defaultPlatforms.includes('telegram'),
-          x: defaultPlatforms.includes('x'),
-          discord: defaultPlatforms.includes('discord')
-        },
-        interval: defaultInterval
-      };
-
-      // Ask if campaign should be private
-      await ctx.reply(
-        'Should this campaign be private?\n\n' +
-        'Private campaigns are only visible to invited participants.\n' +
-        'Public campaigns are visible to all users.\n\n' +
-        'Reply with "yes" or "no".'
-      );
-
-      ctx.wizard.state.awaitingTarget = false;
-      ctx.wizard.state.awaitingPrivate = true;
-      return;
-    }
-
-    // If awaiting private setting
-    if (ctx.wizard.state.awaitingPrivate) {
-      const privateInput = ctx.message.text.trim().toLowerCase();
-
-      if (privateInput !== 'yes' && privateInput !== 'no') {
-        await ctx.reply('Please reply with "yes" or "no".');
-        return;
-      }
-
-      // Store private setting
-      ctx.wizard.state.campaignData.private = privateInput === 'yes';
-
-      // Finalize and create campaign
-      try {
-        // Get project details
-        const project = ctx.wizard.state.selectedProject;
-
-        // Create campaign
-        const savedCampaign = await Campaign.create({
-          name: ctx.wizard.state.campaignData.name,
-          description: ctx.wizard.state.campaignData.description,
-          projectId: project.id,
-          projectName: project.name,
-          xPostUrl: ctx.wizard.state.campaignData.xPostUrl,
-          startDate: ctx.wizard.state.campaignData.startDate,
-          endDate: ctx.wizard.state.campaignData.endDate,
-          targetParticipants: ctx.wizard.state.campaignData.targetParticipants,
-          createdBy: ctx.from.id.toString(),
-          status: 'active',
-          isPrivate: ctx.wizard.state.campaignData.private,
-          rewards: ctx.wizard.state.campaignData.rewards
-        });
 
         // Update subscription only
         await pool.query(
