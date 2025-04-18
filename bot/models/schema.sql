@@ -1,4 +1,3 @@
-
 -- Users table with complete fields
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
@@ -12,6 +11,8 @@ CREATE TABLE IF NOT EXISTS users (
   current_state TEXT,
   social_accounts JSONB DEFAULT '[]',
   credits INTEGER DEFAULT 0,
+  verification_code TEXT,
+  verification_expiry TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
