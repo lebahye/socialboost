@@ -481,7 +481,7 @@ const campaignCreationScene = new Scenes.WizardScene(
 
         // Update subscription only
         await pool.query(
-          'UPDATE projects SET campaigns_remaining = campaigns_remaining - 1 WHERE id = $1',
+          'UPDATE projects SET subscription = jsonb_set(subscription, \'{campaignsRemaining}\', (COALESCE((subscription->\'campaignsRemaining\')::text::int, 3) - 1)::text::jsonb) WHERE id = $1',
           [project.id]
         );
 

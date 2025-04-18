@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS projects (
   category TEXT NOT NULL,
   owner_id TEXT NOT NULL REFERENCES users(telegram_id),
   subscription JSONB DEFAULT '{"isActive": true, "campaignsRemaining": 3}',
+  campaigns_remaining INTEGER DEFAULT 3,
   social_accounts JSONB DEFAULT '{"x": null, "discord": null}',
   settings JSONB DEFAULT '{}',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
