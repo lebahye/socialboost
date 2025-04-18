@@ -1,0 +1,98 @@
+/start - Begin interaction with the bot
+/help - Show available commands
+/status - Check your current status
+/link - Link social media accounts
+/verify - Verify linked accounts
+/unlink - Unlink social media accounts
+/newproject - Create a new project
+/myprojects - List your projects
+/project - Manage a specific project
+/newcampaign - Create a new campaign
+/campaigns - List available campaigns
+/campaign - Manage a specific campaign
+/check - Check participation in a campaign
+/remind - Send reminders to participants
+/analytics - Show analytics for projects/campaigns
+/export - Export project or campaign data
+
+I'll break down each command and its functionality based on the code in your bot:
+
+/start (basicHandlers.js)
+Creates a new user record in PostgreSQL database with Telegram ID and username
+Sends welcome message suggesting to use /help
+Stores: telegram_id, username, first_name, last_name
+/help (basicHandlers.js)
+Checks if user is project owner
+Shows different command sets based on user type
+Basic users see general commands
+Project owners see additional project management commands
+/status (basicHandlers.js)
+Shows user account details
+Displays join date
+Shows account type (Project Owner/Participant)
+Shows linked social accounts status
+/link (accountHandlers.js)
+Provides menu to link social media accounts (X/Twitter, Discord)
+Generates unique verification codes
+Guides through platform-specific verification process
+Stores pending verifications
+/verify (accountHandlers.js)
+Checks verification status of linked accounts
+Shows pending verifications with codes
+Displays verification instructions per platform
+Indicates expired verification codes
+/unlink (accountHandlers.js)
+Shows list of currently linked accounts
+Allows selecting account to unlink
+Removes selected account after confirmation
+Warns about reverification if re-linked
+/newproject (projectHandlers.js)
+Starts project registration wizard
+Collects project details (name, description, website)
+Creates project record in database
+Associates project with owner
+/myprojects (projectHandlers.js)
+Lists all projects owned by user
+Shows project names and IDs
+Displays campaign count per project
+Provides management options
+/project [ID] (projectHandlers.js)
+Shows detailed project information
+Offers project management options
+Allows editing project details
+Shows project analytics
+/newcampaign (campaignHandlers.js)
+Starts campaign creation wizard
+Collects campaign details
+Sets up rewards and requirements
+Creates campaign record
+/campaigns (campaignHandlers.js)
+Lists available campaigns
+Shows different views for owners/participants
+Displays campaign status and progress
+Shows participation status
+/campaign [number] (campaignHandlers.js)
+Shows detailed campaign information
+Offers management options for owners
+Shows participation options for users
+Displays campaign analytics
+/check (campaignHandlers.js)
+Verifies participation status
+Shows engagement metrics
+Confirms reward eligibility
+Lists completed requirements
+/remind (campaignHandlers.js)
+Sends reminders to non-participating users
+Shows reminder history
+Allows scheduling reminders
+Tracks reminder effectiveness
+/analytics (analyticsHandlers.js)
+Shows project/campaign statistics
+Displays engagement metrics
+Shows participation rates
+Provides performance insights
+/export (analyticsHandlers.js)
+Exports project or campaign data
+Generates CSV-like text exports
+Shows participation history
+Exports analytics data
