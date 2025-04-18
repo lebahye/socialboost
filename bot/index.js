@@ -104,18 +104,13 @@ bot.command('stats', userStatsHandler);
 bot.command('export', exportDataHandler);
 bot.command('referral', referralHandler);
 bot.command('referralstats', referralStatsHandler);
-if (typeof achievementsHandler !== 'function') {
-  console.error('Error: achievementsHandler is not defined or not a function');
-  bot.command('achievements', (ctx) => {
-    ctx.reply('The achievements functionality is not available at the moment.');
-  });
-} else {
-  if (typeof achievementsHandler === 'function') {
+if (achievementsHandler && typeof achievementsHandler === 'function') {
   bot.command('achievements', achievementsHandler);
 } else {
   console.warn('Achievement handler not properly initialized');
-  bot.command('achievements', (ctx) => ctx.reply('Achievements system is currently under maintenance'));
-}
+  bot.command('achievements', (ctx) => {
+    return ctx.reply('The achievements functionality is not available at the moment.');
+  });
 }
 
 // Register monetization handlers
