@@ -98,6 +98,8 @@ bot.command('newcampaign', ctx => ctx.scene.enter('CAMPAIGN_CREATION'));
 bot.command('campaigns', listCampaignsHandler);
 bot.command('campaign', manageCampaignHandler);
 bot.command('postcampaign', postCampaignToChannelHandler);
+// Remove or comment out undefined handlers
+// bot.command('check', checkCampaignHandler); // This was causing the error
 bot.command('analytics', analyticsHandler);
 bot.command('stats', userStatsHandler);
 bot.command('export', exportDataHandler);
