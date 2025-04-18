@@ -1,4 +1,3 @@
-
 import type { User } from './models/user';
 import type { Campaign } from './models/campaign';
 import { type SubscriptionPlan, SUBSCRIPTION_PLANS } from './models/payment';
@@ -8,8 +7,6 @@ import { type SubscriptionPlan, SUBSCRIPTION_PLANS } from './models/payment';
  */
 export function calculateReward(campaign: Campaign, isPremiumUser: boolean): number {
   const baseReward = campaign.reward;
-
-  // Premium users get 50% bonus on all campaign rewards
   return isPremiumUser ? Math.floor(baseReward * 1.5) : baseReward;
 }
 
@@ -17,7 +14,6 @@ export function calculateReward(campaign: Campaign, isPremiumUser: boolean): num
  * Calculate the amount of credits needed to cash out a specific amount
  */
 export function calculateCreditsForCashout(amountUsd: number): number {
-  // 1000 credits = $10
   return amountUsd * 100;
 }
 
@@ -25,8 +21,7 @@ export function calculateCreditsForCashout(amountUsd: number): number {
  * Calculate USD value of credits
  */
 export function calculateUsdValueOfCredits(credits: number): number {
-  // 1000 credits = $10
-  return (credits / 100) * 1;
+  return (credits / 100);
 }
 
 /**
@@ -61,6 +56,20 @@ export function isEligibleForCashout(user: User, minCredits = 1000): {
 }
 
 /**
+ * Calculate campaign creation fee
+ */
+export function calculateCampaignFee(campaignType: 'basic' | 'featured' | 'viral', duration: number): number {
+  const baseFees = {
+    basic: 10,
+    featured: 25,
+    viral: 50
+  };
+
+  const extraDaysFee = Math.max(0, duration - 7) * 2;
+  return baseFees[campaignType] + extraDaysFee;
+}
+
+/**
  * Get subscription plan details
  */
 export function getSubscriptionPlan(planId: string): SubscriptionPlan | undefined {
@@ -79,24 +88,8 @@ export function calculateSubscriptionEndDate(planId: string, startDate = new Dat
   } else if (plan?.interval === 'yearly') {
     endDate.setFullYear(endDate.getFullYear() + 1);
   }
-  
-  return endDate;
-}
 
-/**
- * Calculate campaign creation fee
- */
-export function calculateCampaignFee(campaignType: 'basic' | 'featured' | 'viral', duration: number): number {
-  const baseFees = {
-    basic: 10, // $10 base fee
-    featured: 25, // $25 base fee
-    viral: 50 // $50 base fee
-  };
-  
-  // Longer campaigns cost more (additional $2 per day after 7 days)
-  const extraDaysFee = Math.max(0, duration - 7) * 2;
-  
-  return baseFees[campaignType] + extraDaysFee;
+  return endDate;
 }
 
 /**

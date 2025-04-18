@@ -110,7 +110,12 @@ if (typeof achievementsHandler !== 'function') {
     ctx.reply('The achievements functionality is not available at the moment.');
   });
 } else {
+  if (typeof achievementsHandler === 'function') {
   bot.command('achievements', achievementsHandler);
+} else {
+  console.warn('Achievement handler not properly initialized');
+  bot.command('achievements', (ctx) => ctx.reply('Achievements system is currently under maintenance'));
+}
 }
 
 // Register monetization handlers
