@@ -74,7 +74,8 @@ const { analyticsHandler, exportDataHandler, userStatsHandler } = require('./han
 const { registerPaymentHandlers } = require('./handlers/paymentHandlers');
 const { paymentService } = require('./services/paymentService');
 const { referralHandler, referralStatsHandler, processReferral } = require('./handlers/referralHandlers');
-const { achievementsHandler, checkAchievements, notifyAchievements } = require('./handlers/achievementHandlers');
+const achievementHandlers = require('./handlers/achievementHandlers');
+const { achievementsHandler } = achievementHandlers;
 
 // Register command handlers
 bot.command('start', async (ctx) => {
@@ -103,11 +104,14 @@ bot.command('stats', userStatsHandler);
 bot.command('export', exportDataHandler);
 bot.command('referral', referralHandler);
 bot.command('referralstats', referralStatsHandler);
-// Ensure the handler is properly defined before using it
-bot.command('achievements', achievementsHandler || (async (ctx) => {
-  await ctx.reply('Achievements feature is currently under maintenance. Please try again later.');
-  console.log('Warning: achievementsHandler is not properly defined');
-}));
+bot.command('achievements', async (ctx) => {
+  try {
+    await achievementHandlers.achievementsHandler(ctx);
+  } catch (error) {
+    console.error('Error in achievements command:', error);
+    await ctx.reply('An error occurred while fetching your achievements. Please try again later.');
+  }
+});
 
 // Register monetization handlers
 registerPaymentHandlers(bot);
