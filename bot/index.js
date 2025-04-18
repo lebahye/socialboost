@@ -70,6 +70,8 @@ const { linkSocialHandler, verifyAccountHandler, unlinkAccountHandler } = requir
 const { newProjectHandler, listProjectsHandler, manageProjectHandler } = require('./handlers/projectHandlers');
 const { newCampaignHandler, listCampaignsHandler, manageCampaignHandler, postCampaignToChannelHandler } = require('./handlers/campaignHandlers');
 const { analyticsHandler, exportDataHandler } = require('./handlers/analyticsHandlers');
+const { registerPaymentHandlers } = require('./handlers/paymentHandlers');
+const { paymentService } = require('./services/paymentService');
 
 // Register command handlers
 bot.command('start', startHandler);
@@ -87,6 +89,12 @@ bot.command('campaign', manageCampaignHandler);
 bot.command('postcampaign', postCampaignToChannelHandler);
 bot.command('analytics', analyticsHandler);
 bot.command('export', exportDataHandler);
+
+// Register monetization handlers
+registerPaymentHandlers(bot);
+
+// Initialize payment service
+paymentService.setBot(bot);
 
 // Register callback query handlers
 bot.action(/link_([a-z]+)/, async (ctx) => {
@@ -176,6 +184,9 @@ async function connectDatabase() {
 // Initial connection
 connectDatabase();
 
+// Import webhook server
+const { startWebhookServer } = require('./api/webhookServer');
+
 // Launch bot
 bot.launch().then(() => {
   console.log('Bot started');
@@ -183,6 +194,12 @@ bot.launch().then(() => {
   // Initialize scheduled tasks
   initializeScheduler(bot);
   console.log('Scheduler initialized');
+  
+  // Start webhook server for payment processing
+  if (process.env.ENABLE_WEBHOOKS === 'true') {
+    startWebhookServer();
+    console.log('Webhook server initialized');
+  }
 }).catch(err => {
   console.error('Bot error:', err);
 });
