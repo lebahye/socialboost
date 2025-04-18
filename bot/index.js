@@ -110,7 +110,6 @@ bot.command('newcampaign', ctx => ctx.scene.enter('CAMPAIGN_CREATION'));
 bot.command('campaigns', listCampaignsHandler || (async (ctx) => await ctx.reply('Campaign listing is not available')));
 bot.command('campaign', manageCampaignHandler || (async (ctx) => await ctx.reply('Campaign management is not available')));
 bot.command('postcampaign', postCampaignToChannelHandler || (async (ctx) => await ctx.reply('Campaign posting is not available')));
-bot.command('postcampaign', postCampaignToChannelHandler || (async (ctx) => await ctx.reply('Campaign posting is not available')));
 bot.command('analytics', analyticsHandler || (async (ctx) => await ctx.reply('Analytics feature is not available')));
 bot.command('stats', userStatsHandler || (async (ctx) => await ctx.reply('Stats feature is not available')));
 bot.command('export', exportDataHandler || (async (ctx) => await ctx.reply('Export feature is not available')));
