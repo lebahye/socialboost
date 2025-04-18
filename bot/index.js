@@ -110,14 +110,18 @@ bot.command('newcampaign', ctx => ctx.scene.enter('campaignCreation'));
 bot.command('campaigns', listCampaignsHandler);
 bot.command('campaign', manageCampaignHandler);
 bot.command('postcampaign', postCampaignToChannelHandler);
-bot.command('analytics', analyticsHandler);
-bot.command('stats', userStatsHandler);
-bot.command('export', exportDataHandler);
-bot.command('referral', referralHandler);
-bot.command('referralstats', referralStatsHandler);
+bot.command('analytics', analyticsHandler || (async (ctx) => await ctx.reply('Analytics feature is not available')));
+bot.command('stats', userStatsHandler || (async (ctx) => await ctx.reply('Stats feature is not available')));
+bot.command('export', exportDataHandler || (async (ctx) => await ctx.reply('Export feature is not available')));
+bot.command('referral', referralHandler || (async (ctx) => await ctx.reply('Referral feature is not available')));
+bot.command('referralstats', referralStatsHandler || (async (ctx) => await ctx.reply('Referral stats feature is not available')));
 bot.command('achievements', async (ctx) => {
   try {
-    await achievementsHandler(ctx);
+    if (achievementsHandler) {
+      await achievementsHandler(ctx);
+    } else {
+      await ctx.reply('Achievements feature is not available');
+    }
   } catch (error) {
     console.error('Error in achievements handler:', error);
     await ctx.reply('An error occurred while fetching achievements. Please try again later.');
