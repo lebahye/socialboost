@@ -485,11 +485,12 @@ const campaignCreationScene = new Scenes.WizardScene(
           [project.id]
         );
 
-        // Update stats
-        project.stats.totalCampaigns += 1;
-        project.stats.activeCampaigns += 1;
-
-        await project.save();
+        // Update project subscription
+        await pool.query(`
+          UPDATE projects 
+          SET subscription = jsonb_set(subscription, '{campaignsRemaining}', (COALESCE((subscription->>'campaignsRemaining')::text::int, 3) - 1)::text::jsonb)
+          WHERE id = $1
+        `, [project.id]);
 
         // Success message
         await ctx.reply(
