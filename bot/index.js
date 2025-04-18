@@ -85,10 +85,16 @@ bot.command('export', exportDataHandler);
 bot.action(/link_([a-z]+)/, async (ctx) => {
   console.log('Link action callback received:', ctx.match[1]);
   const platform = ctx.match[1];
-  if (platform === 'x') {
-    await accountHandlers.linkXAccountCallback(ctx);
-  } else if (platform === 'discord') {
-    await accountHandlers.linkDiscordCallback(ctx);
+  try {
+    const accountHandlers = require('./handlers/accountHandlers');
+    if (platform === 'x') {
+      await accountHandlers.linkXAccountCallback(ctx);
+    } else if (platform === 'discord') {
+      await accountHandlers.linkDiscordCallback(ctx);
+    }
+  } catch (err) {
+    console.error('Error in link callback:', err);
+    await ctx.answerCbQuery('An error occurred. Please try again later.');
   }
 });
 

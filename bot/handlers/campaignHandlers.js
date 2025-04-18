@@ -55,7 +55,8 @@ const listCampaignsHandler = async (ctx) => {
     allCampaigns.forEach(campaign => {
       //Added safety check to prevent crashes if created_by is null or undefined
       const createdBy = campaign.created_by || '';
-      if (createdBy.toString() === user.telegramId.toString()) {
+      const userTelegramId = user.telegramId || '';
+      if (createdBy.toString() === userTelegramId.toString()) {
         userCampaigns.push(campaign);
       } else {
         otherCampaigns.push(campaign);
@@ -117,12 +118,33 @@ const manageCampaignHandler = async (ctx) => {
 
   const campaignNumber = parseInt(parts[1]);
 
+  // Initialize session if not exists
+  if (!ctx.session) ctx.session = {};
+
   // Check if user has listed campaigns in session
   if (!ctx.session.listedCampaigns || ctx.session.listedCampaigns.length === 0) {
-    await ctx.reply(
-      'Please use /campaigns first to see the list of available campaigns.'
-    );
-    return;
+    // Fetch campaigns directly if not in session
+    try {
+      const { rows: campaigns } = await pool.query(`
+        SELECT id FROM campaigns 
+        WHERE created_by = $1 OR private = false
+      `, [user.telegramId]);
+      
+      if (!campaigns || campaigns.length === 0) {
+        await ctx.reply(
+          'No campaigns found. You can create a new campaign with /newcampaign'
+        );
+        return;
+      }
+      
+      ctx.session.listedCampaigns = campaigns.map(c => c.id);
+    } catch (err) {
+      console.error('Error fetching campaigns:', err);
+      await ctx.reply(
+        'Please use /campaigns first to see the list of available campaigns.'
+      );
+      return;
+    }
   }
 
   if (campaignNumber < 1 || campaignNumber > ctx.session.listedCampaigns.length) {
@@ -300,6 +322,11 @@ async function showCampaignDetailsForParticipant(ctx, campaign, user) {
  */
 const joinCampaignCallback = async (ctx) => {
   const user = ctx.state.user;
+  if (!user) {
+    await ctx.answerCbQuery('User information not found. Please start the bot with /start');
+    return;
+  }
+  
   const callbackData = ctx.callbackQuery.data;
   const campaignId = callbackData.replace('join_campaign_', '');
 
@@ -316,8 +343,20 @@ const joinCampaignCallback = async (ctx) => {
       return;
     }
 
+    // Parse participants if they're stored as JSON string
+    let participants = [];
+    if (typeof campaign.participants === 'string') {
+      try {
+        participants = JSON.parse(campaign.participants);
+      } catch (e) {
+        participants = [];
+      }
+    } else if (Array.isArray(campaign.participants)) {
+      participants = campaign.participants;
+    }
+
     // Check if user already joined
-    const isParticipant = campaign.participants.some(p => p.telegramId === user.telegramId);
+    const isParticipant = participants.some(p => p.telegramId === user.telegramId);
 
     if (isParticipant) {
       await ctx.answerCbQuery('You have already joined this campaign.');
@@ -325,7 +364,10 @@ const joinCampaignCallback = async (ctx) => {
     }
 
     // Check if user has verified X account if campaign requires it
-    if (!user.hasVerifiedAccount('x')) {
+    const hasVerifiedAccount = user.social_accounts && 
+                              user.social_accounts.some(acc => acc.platform === 'x' && acc.verified);
+                              
+    if (!hasVerifiedAccount) {
       await ctx.answerCbQuery(
         'You need a verified X account to join this campaign. Use /link to connect your account.',
         { show_alert: true }
