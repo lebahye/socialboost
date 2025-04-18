@@ -42,19 +42,6 @@ let twitterClient = null;
 if (process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET) {
   try {
     twitterClient = new TwitterApi({
-
-// Health check endpoint
-bot.command('healthcheck', async (ctx) => {
-  try {
-    // Test database connection
-    await pool.query('SELECT NOW()');
-    await ctx.reply('✅ Bot is running\n✅ Database is connected');
-  } catch (error) {
-    console.error('Health check failed:', error);
-    await ctx.reply('❌ Error: ' + error.message);
-  }
-});
-
       appKey: process.env.TWITTER_API_KEY,
       appSecret: process.env.TWITTER_API_SECRET,
       accessToken: process.env.TWITTER_ACCESS_TOKEN,
@@ -88,6 +75,18 @@ const { registerPaymentHandlers } = require('./handlers/paymentHandlers');
 const { paymentService } = require('./services/paymentService');
 const { referralHandler, referralStatsHandler, processReferral } = require('./handlers/referralHandlers');
 const { achievementsHandler } = require('./handlers/achievementHandlers');
+
+// Health check endpoint
+bot.command('healthcheck', async (ctx) => {
+  try {
+    // Test database connection
+    await pool.query('SELECT NOW()');
+    await ctx.reply('✅ Bot is running\n✅ Database is connected');
+  } catch (error) {
+    console.error('Health check failed:', error);
+    await ctx.reply('❌ Error: ' + error.message);
+  }
+});
 
 // Register command handlers
 bot.command('start', async (ctx) => {
