@@ -104,7 +104,14 @@ bot.command('stats', userStatsHandler);
 bot.command('export', exportDataHandler);
 bot.command('referral', referralHandler);
 bot.command('referralstats', referralStatsHandler);
-bot.command('achievements', achievementsHandler);
+if (typeof achievementsHandler !== 'function') {
+  console.error('Error: achievementsHandler is not defined or not a function');
+  bot.command('achievements', (ctx) => {
+    ctx.reply('The achievements functionality is not available at the moment.');
+  });
+} else {
+  bot.command('achievements', achievementsHandler);
+}
 
 // Register monetization handlers
 registerPaymentHandlers(bot);
