@@ -53,7 +53,9 @@ const listCampaignsHandler = async (ctx) => {
 
     // Separate user's own campaigns from others
     allCampaigns.forEach(campaign => {
-      if (campaign.created_by.toString() === user.telegramId.toString()) {
+      //Added safety check to prevent crashes if created_by is null or undefined
+      const createdBy = campaign.created_by || '';
+      if (createdBy.toString() === user.telegramId.toString()) {
         userCampaigns.push(campaign);
       } else {
         otherCampaigns.push(campaign);
@@ -65,10 +67,10 @@ const listCampaignsHandler = async (ctx) => {
       let message = '🚀 *Your Campaigns*\n\n';
 
       userCampaigns.forEach((campaign, index) => {
-        const status = campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1);
-        message += `${index + 1}. *${campaign.name}* (${status})\n`;
-        message += `   Project: ${campaign.project_name}\n`;
-        message += `   ID: \`${campaign.id}\`\n\n`;
+        const status = campaign.status ? campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1) : 'Unknown Status';
+        message += `${index + 1}. *${campaign.name || 'Unnamed Campaign'}* (${status})\n`;
+        message += `   Project: ${campaign.project_name || 'Unknown Project'}\n`;
+        message += `   ID: \`${campaign.id || 'Unknown ID'}\`\n\n`;
       });
 
       await ctx.replyWithMarkdown(message);
@@ -79,10 +81,10 @@ const listCampaignsHandler = async (ctx) => {
       let message = '📢 *Available Campaigns*\n\n';
 
       otherCampaigns.forEach((campaign, index) => {
-        const status = campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1);
-        message += `${index + 1}. *${campaign.name}* (${status})\n`;
-        message += `   Project: ${campaign.project_name}\n`;
-        message += `   ID: \`${campaign.id}\`\n\n`;
+        const status = campaign.status ? campaign.status.charAt(0).toUpperCase() + campaign.status.slice(1) : 'Unknown Status';
+        message += `${index + 1}. *${campaign.name || 'Unnamed Campaign'}* (${status})\n`;
+        message += `   Project: ${campaign.project_name || 'Unknown Project'}\n`;
+        message += `   ID: \`${campaign.id || 'Unknown ID'}\`\n\n`;
       });
 
       await ctx.replyWithMarkdown(message);

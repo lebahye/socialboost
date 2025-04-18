@@ -81,6 +81,17 @@ bot.command('campaign', manageCampaignHandler);
 bot.command('analytics', analyticsHandler);
 bot.command('export', exportDataHandler);
 
+// Register callback query handlers
+bot.action(/link_([a-z]+)/, async (ctx) => {
+  console.log('Link action callback received:', ctx.match[1]);
+  const platform = ctx.match[1];
+  if (platform === 'x') {
+    await accountHandlers.linkXAccountCallback(ctx);
+  } else if (platform === 'discord') {
+    await accountHandlers.linkDiscordCallback(ctx);
+  }
+});
+
 // Error handling
 bot.catch((err, ctx) => {
   console.error('Bot error:', err);
