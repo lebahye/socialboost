@@ -65,18 +65,32 @@ bot.use(async (ctx, next) => {
 });
 
 // Import all handlers
-const { startHandler, helpHandler, statusHandler } = require('./handlers/basicHandlers');
+const { startHandler, helpHandler, statusHandler, tutorialHandler } = require('./handlers/basicHandlers');
 const { linkSocialHandler, verifyAccountHandler, unlinkAccountHandler } = require('./handlers/accountHandlers');
 const { newProjectHandler, listProjectsHandler, manageProjectHandler } = require('./handlers/projectHandlers');
 const { newCampaignHandler, listCampaignsHandler, manageCampaignHandler, postCampaignToChannelHandler } = require('./handlers/campaignHandlers');
-const { analyticsHandler, exportDataHandler } = require('./handlers/analyticsHandlers');
+const { analyticsHandler, exportDataHandler, userStatsHandler } = require('./handlers/analyticsHandlers');
 const { registerPaymentHandlers } = require('./handlers/paymentHandlers');
 const { paymentService } = require('./services/paymentService');
+const { referralHandler, referralStatsHandler, processReferral } = require('./handlers/referralHandlers');
+const { achievementsHandler, checkAchievements, notifyAchievements } = require('./handlers/achievementHandlers');
+
+// Import new handlers
+const { referralHandler, referralStatsHandler, processReferral } = require('./handlers/referralHandlers');
+const { userStatsHandler } = require('./handlers/analyticsHandlers');
 
 // Register command handlers
-bot.command('start', startHandler);
+bot.command('start', async (ctx) => {
+  // Check for referral code in deep link
+  if (ctx.startPayload && ctx.startPayload.startsWith('ref_')) {
+    const referralCode = ctx.startPayload.substring(4);
+    await processReferral(ctx, referralCode);
+  }
+  await startHandler(ctx);
+});
 bot.command('help', helpHandler);
 bot.command('status', statusHandler);
+bot.command('tutorial', tutorialHandler);
 bot.command('link', linkSocialHandler);
 bot.command('verify', verifyAccountHandler);
 bot.command('unlink', unlinkAccountHandler);
@@ -88,7 +102,11 @@ bot.command('campaigns', listCampaignsHandler);
 bot.command('campaign', manageCampaignHandler);
 bot.command('postcampaign', postCampaignToChannelHandler);
 bot.command('analytics', analyticsHandler);
+bot.command('stats', userStatsHandler);
 bot.command('export', exportDataHandler);
+bot.command('referral', referralHandler);
+bot.command('referralstats', referralStatsHandler);
+bot.command('achievements', achievementsHandler);
 
 // Register monetization handlers
 registerPaymentHandlers(bot);

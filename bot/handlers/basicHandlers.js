@@ -65,13 +65,28 @@ const helpHandler = async (ctx) => {
     const isProjectOwner = result.rows[0]?.is_project_owner || false;
 
     let helpMessage = `📚 *Bot Commands & Help* 📚\n\n`;
-    helpMessage += `🔹 *General Commands:*\n`;
+    
+    helpMessage += `🔹 *Getting Started:*\n`;
     helpMessage += `/start - Start the bot\n`;
     helpMessage += `/help - Show this help message\n`;
-    helpMessage += `/status - Check your account status\n`;
+    helpMessage += `/tutorial - View interactive tutorial\n`;
+    helpMessage += `/status - Check your account status\n\n`;
+    
+    helpMessage += `🔹 *Account Management:*\n`;
     helpMessage += `/link - Link social media accounts\n`;
     helpMessage += `/verify - Verify linked accounts\n`;
     helpMessage += `/unlink - Unlink social media accounts\n\n`;
+    
+    helpMessage += `🔹 *Campaigns & Rewards:*\n`;
+    helpMessage += `/campaigns - List available campaigns\n`;
+    helpMessage += `/stats - View your participation stats\n`;
+    helpMessage += `/achievements - View your achievements\n`;
+    helpMessage += `/referral - Get your referral link\n`;
+    helpMessage += `/referralstats - Check your referrals\n\n`;
+    
+    helpMessage += `🔹 *Monetization:*\n`;
+    helpMessage += `/premium - View premium plans\n`;
+    helpMessage += `/cashout - Cash out your credits\n\n`;
 
     if (isProjectOwner) {
       helpMessage += `🔹 *Project Owner Commands:*\n`;
@@ -79,11 +94,10 @@ const helpHandler = async (ctx) => {
       helpMessage += `/myprojects - View your projects\n`;
       helpMessage += `/project - Manage a specific project\n`;
       helpMessage += `/newcampaign - Create a new campaign\n`;
-      helpMessage += `/campaigns - List available campaigns\n`;
       helpMessage += `/campaign - Manage a specific campaign\n`;
-      helpMessage += `/check - Check participation status\n`;
-      helpMessage += `/remind - Send reminders to participants\n`;
+      helpMessage += `/postcampaign - Post campaign to channel\n`;
       helpMessage += `/analytics - View campaign analytics\n`;
+      helpMessage += `/export - Export campaign data\n`;
     }
 
     await ctx.replyWithMarkdown(helpMessage);
@@ -110,6 +124,51 @@ const statusHandler = async (ctx) => {
     statusMessage += `*User:* ${user.username || ctx.from.username || 'No username'}\n`;
     statusMessage += `*Joined:* ${new Date(user.created_at).toDateString()}\n`;
     statusMessage += `*Account Type:* ${user.is_project_owner ? 'Project Owner' : 'Participant'}\n`;
+
+const tutorialHandler = async (ctx) => {
+  try {
+    const messages = [
+      {
+        text: "*Welcome to SocialBoost Bot Tutorial* 🚀\n\nThis quick guide will show you how to use our platform effectively.",
+        parse_mode: 'Markdown'
+      },
+      {
+        text: "*Step 1: Link Your Accounts* 🔗\n\nUse /link to connect your social media accounts (X/Twitter, Discord) to verify your participation in campaigns.",
+        parse_mode: 'Markdown'
+      },
+      {
+        text: "*Step 2: Join Campaigns* 💪\n\nUse /campaigns to see active campaigns you can join. Each campaign will have specific tasks to complete.",
+        parse_mode: 'Markdown'
+      },
+      {
+        text: "*Step 3: Complete Tasks & Earn* 💰\n\nFollow campaign instructions to complete social tasks. Once verified, you'll earn credits for your participation.",
+        parse_mode: 'Markdown'
+      },
+      {
+        text: "*Step 4: Cash Out or Upgrade* 🌟\n\nUse /cashout to convert your credits to cryptocurrency or /premium to upgrade your account for higher rewards.",
+        parse_mode: 'Markdown'
+      }
+    ];
+    
+    // Send messages with a delay between each
+    for (let i = 0; i < messages.length; i++) {
+      setTimeout(() => {
+        ctx.replyWithMarkdown(messages[i].text);
+      }, i * 1500);
+    }
+  } catch (error) {
+    console.error('Error in tutorialHandler:', error);
+    await ctx.reply('An error occurred while displaying the tutorial. Please try again.');
+  }
+};
+
+module.exports = {
+  startHandler,
+  helpHandler,
+  statusHandler,
+  tutorialHandler
+};
+
 
     await ctx.replyWithMarkdown(statusMessage);
   } catch (error) {

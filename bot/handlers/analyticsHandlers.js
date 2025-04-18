@@ -1,4 +1,3 @@
-
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -9,13 +8,80 @@ const pool = new Pool({
 });
 
 /**
+ * Handler for user statistics command
+ */
+const userStatsHandler = async (ctx) => {
+  try {
+    const telegramId = ctx.from.id.toString();
+
+    // Get user basic info
+    const userResult = await pool.query(
+      `SELECT credits, created_at, is_premium, premium_until, 
+              (SELECT COUNT(*) FROM campaigns c 
+               WHERE c.participants::jsonb @> ANY(ARRAY[jsonb_build_object('telegram_id', $1)])) as campaigns_joined
+       FROM users 
+       WHERE telegram_id = $1`,
+      [telegramId]
+    );
+
+    if (!userResult.rows[0]) {
+      return ctx.reply('Please start the bot first with /start');
+    }
+
+    const user = userResult.rows[0];
+
+    // Get campaign participation stats
+    const statsResult = await pool.query(
+      `SELECT c.project_name, c.name, c.status
+       FROM campaigns c
+       WHERE c.participants::jsonb @> ANY(ARRAY[jsonb_build_object('telegram_id', $1)])
+       ORDER BY c.created_at DESC
+       LIMIT 5`,
+      [telegramId]
+    );
+
+    // Calculate days as member
+    const joinDate = new Date(user.created_at);
+    const daysSinceJoin = Math.floor((new Date() - joinDate) / (1000 * 60 * 60 * 24));
+
+    let message = `📊 *Your Activity Dashboard*\n\n`;
+    message += `*Account Summary:*\n`;
+    message += `• Member for: ${daysSinceJoin} days\n`;
+    message += `• Total campaigns joined: ${user.campaigns_joined}\n`;
+    message += `• Credits balance: ${user.credits || 0}\n`;
+    message += `• Account status: ${user.is_premium ? '⭐ Premium' : 'Standard'}\n`;
+
+    if (user.is_premium && user.premium_until) {
+      const premiumEnds = new Date(user.premium_until);
+      const daysLeft = Math.ceil((premiumEnds - new Date()) / (1000 * 60 * 60 * 24));
+      message += `• Premium expires in: ${daysLeft} days\n`;
+    }
+
+    if (statsResult.rows.length > 0) {
+      message += `\n*Recent Campaign Activity:*\n`;
+      statsResult.rows.forEach((campaign, index) => {
+        message += `${index + 1}. ${campaign.project_name}: ${campaign.name} (${campaign.status})\n`;
+      });
+    }
+
+    message += `\nUse /export to download your complete activity history.`;
+
+    await ctx.replyWithMarkdown(message);
+
+  } catch (error) {
+    console.error('Error in userStatsHandler:', error);
+    await ctx.reply('An error occurred while fetching your statistics.');
+  }
+};
+
+/**
  * Handler for viewing analytics for projects and campaigns
  */
 const analyticsHandler = async (ctx) => {
   if (!ctx.from) {
     return ctx.reply('User information not available. Please try again.');
   }
-  
+
   const userId = ctx.from.id.toString();
 
   try {
@@ -43,7 +109,7 @@ const analyticsHandler = async (ctx) => {
           'SELECT * FROM campaigns WHERE project_id = $1',
           [project.id]
         );
-        
+
         totalCampaigns += campaigns.length;
 
         for (const campaign of campaigns) {
@@ -81,15 +147,15 @@ const analyticsHandler = async (ctx) => {
 
     // Specific project analytics
     const projectId = args[1];
-    
+
     // Query using PostgreSQL
     const { rows: projectRows } = await pool.query(
       'SELECT * FROM projects WHERE id = $1 AND owner_id = $2',
       [projectId, userId]
     );
-    
+
     const project = projectRows[0];
-    
+
     if (!project) {
       return ctx.reply('Project not found or you don\'t have permission to view analytics.');
     }
@@ -294,5 +360,6 @@ const exportDataHandler = async (ctx) => {
 
 module.exports = {
   analyticsHandler,
-  exportDataHandler
+  exportDataHandler,
+  userStatsHandler
 };
