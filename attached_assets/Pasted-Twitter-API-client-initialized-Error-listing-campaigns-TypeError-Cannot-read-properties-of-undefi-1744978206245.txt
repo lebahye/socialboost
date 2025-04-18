@@ -1,0 +1,63 @@
+Twitter API client initialized
+Error listing campaigns: TypeError: Cannot read properties of undefined (reading 'isProjectOwner')
+    at listCampaignsHandler (/home/runner/workspace/bot/handlers/campaignHandlers.js:28:14)
+    at /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:397:28
+    at /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:165:111
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+Error listing campaigns: TypeError: Cannot read properties of undefined (reading 'isProjectOwner')
+    at listCampaignsHandler (/home/runner/workspace/bot/handlers/campaignHandlers.js:28:14)
+    at /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:397:28
+    at /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:165:111
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+Error in listProjectsHandler: error: column "projectid" does not exist
+    at /home/runner/workspace/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async Campaign.find (/home/runner/workspace/bot/models/Campaign.js:23:22)
+    at async /home/runner/workspace/bot/handlers/projectHandlers.js:75:25
+    at async Promise.all (index 0)
+    at async listProjectsHandler (/home/runner/workspace/bot/handlers/projectHandlers.js:74:25)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21 {
+  length: 176,
+  severity: 'ERROR',
+  code: '42703',
+  detail: undefined,
+  hint: 'Perhaps you meant to reference the column "campaigns.project_id".',
+  position: '31',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '3729',
+  routine: 'errorMissingColumn'
+}
+Error in analyticsHandler: TypeError: Project.find is not a function
+    at analyticsHandler (/home/runner/workspace/bot/handlers/analyticsHandlers.js:17:38)
+    at /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:397:28
+    at /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:165:111
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
