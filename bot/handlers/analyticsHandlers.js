@@ -64,16 +64,23 @@ const analyticsHandler = async (ctx) => {
 
     // Specific project analytics
     const projectId = args[1];
-    const project = await Project.findOne({
-      _id: projectId,
-      ownerId: userId
-    });
-
+    
+    // Query using PostgreSQL
+    const { rows: projectRows } = await pool.query(
+      'SELECT * FROM projects WHERE id = $1 AND owner_id = $2',
+      [projectId, userId]
+    );
+    
+    const project = projectRows[0];
+    
     if (!project) {
       return ctx.reply('Project not found or you don\'t have permission to view analytics.');
     }
 
-    const campaigns = await Campaign.find({ projectId: project._id });
+    const { rows: campaigns } = await pool.query(
+      'SELECT * FROM campaigns WHERE project_id = $1',
+      [project.id]
+    );
 
     // Calculate project stats
     const activeCampaigns = campaigns.filter(c => c.status === 'active').length;
@@ -156,7 +163,10 @@ const exportDataHandler = async (ctx) => {
         return ctx.reply('Project not found or you don\'t have permission to export it.');
       }
 
-      const campaigns = await Campaign.find({ projectId: project._id });
+      const { rows: campaigns } = await pool.query(
+        'SELECT * FROM campaigns WHERE project_id = $1',
+        [project.id]
+      );
 
       // Basic text export of project details
       const exportData =
