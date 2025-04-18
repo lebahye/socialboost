@@ -18,23 +18,48 @@ export function calculateCreditsForCashout(amountUsd: number): number {
 }
 
 /**
- * Calculate USD value of credits
+ * Calculate USD value of user credits
  */
 export function calculateUsdValueOfCredits(credits: number): number {
-  return (credits / 100);
+  // Each credit is worth $0.10 USD
+  return credits * 0.10;
 }
 
 /**
- * Calculate commission on cash-outs
+ * Calculate commission fee for cashouts
  */
-export function calculateCashoutCommission(amountUsd: number, commissionPercentage = 5): number {
-  return (amountUsd * commissionPercentage) / 100;
+export function calculateCashoutCommission(amount: number): number {
+  // 5% commission fee
+  return amount * 0.05;
 }
 
 /**
  * Check if user is eligible for cashout
  */
-export function isEligibleForCashout(user: User, minCredits = 1000): {
+export function isEligibleForCashout(credits: number): boolean {
+  // Minimum 100 credits ($10) for cashout
+  return credits >= 100;
+}
+
+/**
+ * Calculate campaign creation fee
+ */
+export function calculateCampaignFee(campaignType: 'basic' | 'featured' | 'viral', duration: number): number {
+  const baseFees = {
+    basic: 10, // $10 base fee
+    featured: 25, // $25 base fee
+    viral: 50 // $50 base fee
+  };
+
+  // Add $5 per day for campaigns longer than 7 days
+  const extraDaysFee = Math.max(0, duration - 7) * 5;
+  return baseFees[campaignType] + extraDaysFee;
+}
+
+/**
+ * Check if user is eligible for cashout
+ */
+export function isEligibleForCashoutOld(user: User, minCredits = 1000): {
   eligible: boolean;
   reason?: string;
 } {
@@ -55,19 +80,6 @@ export function isEligibleForCashout(user: User, minCredits = 1000): {
   return { eligible: true };
 }
 
-/**
- * Calculate campaign creation fee
- */
-export function calculateCampaignFee(campaignType: 'basic' | 'featured' | 'viral', duration: number): number {
-  const baseFees = {
-    basic: 10,
-    featured: 25,
-    viral: 50
-  };
-
-  const extraDaysFee = Math.max(0, duration - 7) * 2;
-  return baseFees[campaignType] + extraDaysFee;
-}
 
 /**
  * Get subscription plan details
