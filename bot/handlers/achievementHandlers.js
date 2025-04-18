@@ -1,4 +1,3 @@
-
 const { Pool } = require('pg');
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -47,88 +46,55 @@ const achievements = [
 ];
 
 /**
- * Check and award achievements for a user
+ * Functions to check for achievements
  */
-const checkAchievements = async (userId, triggerType) => {
+const checkAchievements = async (userId) => {
+  // Implementation of achievement checking logic
   try {
     // Get user data
-    const userResult = await pool.query(
-      `SELECT 
-        telegram_id, 
-        social_accounts, 
-        is_premium, 
-        referral_count,
-        (SELECT COUNT(*) FROM campaigns c 
-         WHERE c.participants::jsonb @> ANY(ARRAY[jsonb_build_object('telegram_id', $1)])) as campaigns_joined,
-        achievements
-      FROM users 
-      WHERE telegram_id = $1`,
-      [userId]
-    );
-    
-    if (!userResult.rows[0]) return;
-    
-    const user = userResult.rows[0];
-    const userAchievements = user.achievements ? 
-      (typeof user.achievements === 'string' ? JSON.parse(user.achievements) : user.achievements) 
-      : [];
-    
-    // Check each achievement
+    const { rows } = await pool.query('SELECT * FROM users WHERE telegram_id = $1', [userId]);
+
+    if (!rows.length) return [];
+
+    const user = rows[0];
+
+    // Existing achievements
+    const userAchievements = user.achievements || [];
     const newAchievements = [];
-    
-    for (const achievement of achievements) {
-      // Skip if already earned
-      if (userAchievements.includes(achievement.id)) continue;
-      
-      // Check qualification
-      let qualified = false;
-      
-      switch (achievement.id) {
-        case 'first_campaign':
-          qualified = user.campaigns_joined >= 1 && triggerType === 'campaign_complete';
-          break;
-        case 'verification_complete':
-          const socialAccounts = typeof user.social_accounts === 'string' ? 
-            JSON.parse(user.social_accounts) : user.social_accounts || [];
-          qualified = socialAccounts.length >= 2 && 
-                     socialAccounts.every(acc => acc.is_verified) && 
-                     triggerType === 'account_verified';
-          break;
-        case 'five_campaigns':
-          qualified = user.campaigns_joined >= 5 && triggerType === 'campaign_complete';
-          break;
-        case 'referral_master':
-          qualified = (user.referral_count || 0) >= 3 && triggerType === 'referral_added';
-          break;
-        case 'premium_member':
-          qualified = user.is_premium && triggerType === 'premium_activated';
-          break;
-      }
-      
-      if (qualified) {
-        newAchievements.push(achievement);
-        userAchievements.push(achievement.id);
+
+    // Check for first campaign achievement
+    if (user.campaigns_completed >= 1) {
+      const firstCampaignAchievement = {
+        id: 'first_campaign',
+        name: 'First Campaign',
+        description: 'Completed your first campaign',
+        icon: '🎯',
+        reward: 50,
+        earned_at: new Date()
+      };
+
+      if (!userAchievements.some(a => a.id === 'first_campaign')) {
+        newAchievements.push(firstCampaignAchievement);
       }
     }
-    
-    // If new achievements earned, update user
+
+    // If new achievements earned, update user record
     if (newAchievements.length > 0) {
-      // Update user achievements
+      const updatedAchievements = [...userAchievements, ...newAchievements];
+
+      // Update credits
+      const totalRewards = newAchievements.reduce((sum, a) => sum + a.reward, 0);
+      const newCredits = (user.credits || 0) + totalRewards;
+
+      // Update user record
       await pool.query(
-        'UPDATE users SET achievements = $1 WHERE telegram_id = $2',
-        [JSON.stringify(userAchievements), userId]
+        'UPDATE users SET achievements = $1, credits = $2 WHERE telegram_id = $3',
+        [JSON.stringify(updatedAchievements), newCredits, userId]
       );
-      
-      // Award credits
-      const totalReward = newAchievements.reduce((sum, a) => sum + a.reward, 0);
-      await pool.query(
-        'UPDATE users SET credits = COALESCE(credits, 0) + $1 WHERE telegram_id = $2',
-        [totalReward, userId]
-      );
-      
+
       return newAchievements;
     }
-    
+
     return [];
   } catch (error) {
     console.error('Error checking achievements:', error);
@@ -141,20 +107,20 @@ const checkAchievements = async (userId, triggerType) => {
  */
 const notifyAchievements = async (bot, userId, achievements) => {
   if (!achievements || achievements.length === 0) return;
-  
+
   try {
     let message = '🏆 *Achievement Unlocked!* 🏆\n\n';
-    
+
     achievements.forEach(achievement => {
       message += `${achievement.icon} *${achievement.name}*\n`;
       message += `${achievement.description}\n`;
       message += `Reward: ${achievement.reward} credits\n\n`;
     });
-    
+
     const totalReward = achievements.reduce((sum, a) => sum + a.reward, 0);
     message += `Total credits earned: ${totalReward}\n`;
     message += `\nCheck /achievements to see all your earned achievements!`;
-    
+
     await bot.telegram.sendMessage(userId, message, { parse_mode: 'Markdown' });
   } catch (error) {
     console.error('Error notifying about achievements:', error);
@@ -167,24 +133,24 @@ const notifyAchievements = async (bot, userId, achievements) => {
 const achievementsHandler = async (ctx) => {
   try {
     const telegramId = ctx.from.id.toString();
-    
+
     // Get user achievements
     const result = await pool.query(
       'SELECT achievements, credits FROM users WHERE telegram_id = $1',
       [telegramId]
     );
-    
+
     if (!result.rows[0]) {
       return ctx.reply('Please start the bot first with /start');
     }
-    
+
     const user = result.rows[0];
     const userAchievements = user.achievements ? 
       (typeof user.achievements === 'string' ? JSON.parse(user.achievements) : user.achievements) 
       : [];
-    
+
     let message = '🏆 *Your Achievements* 🏆\n\n';
-    
+
     if (userAchievements.length === 0) {
       message += 'You haven\'t earned any achievements yet. Keep participating to unlock them!\n\n';
     } else {
@@ -196,7 +162,7 @@ const achievementsHandler = async (ctx) => {
         message += `Reward: ${achievement.reward} credits\n\n`;
       });
     }
-    
+
     // Display available achievements
     const available = achievements.filter(a => !userAchievements.includes(a.id));
     if (available.length > 0) {
@@ -207,18 +173,18 @@ const achievementsHandler = async (ctx) => {
         message += `Reward: ${achievement.reward} credits\n\n`;
       });
     }
-    
+
     await ctx.replyWithMarkdown(message);
-    
+
   } catch (error) {
     console.error('Error in achievementsHandler:', error);
     await ctx.reply('An error occurred while fetching your achievements.');
   }
 };
 
+// Export all functions that need to be accessible from other files
 module.exports = {
-  achievements,
-  checkAchievements,
+  achievementsHandler,
   notifyAchievements,
-  achievementsHandler
+  checkAchievements
 };
