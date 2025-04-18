@@ -77,14 +77,6 @@ const { Composer } = require('telegraf');
 const Project = require('../models/Project');
 const Campaign = require('../models/Campaign');
 
-// Initialize PostgreSQL connection pool
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
-
 
 /**
  * Handler for creating a new project
