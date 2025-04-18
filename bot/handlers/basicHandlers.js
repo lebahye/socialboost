@@ -124,6 +124,13 @@ const statusHandler = async (ctx) => {
     statusMessage += `*User:* ${user.username || ctx.from.username || 'No username'}\n`;
     statusMessage += `*Joined:* ${new Date(user.created_at).toDateString()}\n`;
     statusMessage += `*Account Type:* ${user.is_project_owner ? 'Project Owner' : 'Participant'}\n`;
+    
+    await ctx.replyWithMarkdown(statusMessage);
+  } catch (error) {
+    console.error('Error in statusHandler:', error);
+    await ctx.reply('An error occurred while fetching your status. Please try again.');
+  }
+};
 
 const tutorialHandler = async (ctx) => {
   try {
@@ -167,18 +174,4 @@ module.exports = {
   helpHandler,
   statusHandler,
   tutorialHandler
-};
-
-
-    await ctx.replyWithMarkdown(statusMessage);
-  } catch (error) {
-    console.error('Error in statusHandler:', error);
-    await ctx.reply('An error occurred while fetching your status. Please try again.');
-  }
-};
-
-module.exports = {
-  startHandler,
-  helpHandler,
-  statusHandler
 };
