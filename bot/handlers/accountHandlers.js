@@ -141,7 +141,7 @@ const processXUsername = async (ctx) => {
     const verificationCode = generateVerificationCode();
 
     // Update or create the user's social accounts in the database
-    const telegramId = ctx.from.id.toString();
+    // Using already defined telegramId from above
 
     // Check if user already has social accounts
     const userResult = await pool.query(
