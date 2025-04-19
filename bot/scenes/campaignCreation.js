@@ -116,6 +116,11 @@ const campaignCreationScene = new Scenes.WizardScene(
 
   // Step 3: Get campaign name and ask for description
   async (ctx) => {
+    if (!ctx.message?.text) {
+      await ctx.reply('Please enter a campaign name (text only).');
+      return;
+    }
+
     // Get campaign name
     const campaignName = ctx.message.text.trim();
 
