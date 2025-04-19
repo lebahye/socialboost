@@ -151,9 +151,6 @@ const processXUsername = async (ctx) => {
 
     // Generate verification code
     const verificationCode = generateVerificationCode();
-
-    // Generate verification code
-    const verificationCode = generateVerificationCode();
     
     // Get current social accounts
     const userResult = await pool.query(
