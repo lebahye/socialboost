@@ -144,14 +144,25 @@ const listCampaignsHandler = async (ctx) => {
  */
 const manageCampaignHandler = async (ctx) => {
   try {
-    // Get user ID from context
+    // Validate context
+    if (!ctx?.from?.id) {
+      console.error('Invalid context in manageCampaignHandler');
+      await ctx.reply('An error occurred. Please try again.');
+      return;
+    }
+
     const userId = ctx.from.id.toString();
 
-    // Get user from database
-    const { rows: [user] } = await pool.query(
+    // Get user from database with error handling
+    const { rows } = await pool.query(
       'SELECT * FROM users WHERE telegram_id = $1',
       [userId]
-    );
+    ).catch(err => {
+      console.error('Database error in manageCampaignHandler:', err);
+      throw new Error('Failed to fetch user data');
+    });
+
+    const user = rows[0];
 
     if (!user) {
       await ctx.reply('Please start the bot first with /start command.');
@@ -205,6 +216,11 @@ const manageCampaignHandler = async (ctx) => {
       }
     }
 
+    if (!ctx.session?.listedCampaigns || !Array.isArray(ctx.session.listedCampaigns)) {
+      await ctx.reply('Please use /campaigns first to see available campaigns.');
+      return;
+    }
+
     if (campaignNumber < 1 || campaignNumber > ctx.session.listedCampaigns.length) {
       await ctx.reply(
         `Invalid campaign number. Please choose a number between 1 and ${ctx.session.listedCampaigns.length}.`
@@ -213,6 +229,10 @@ const manageCampaignHandler = async (ctx) => {
     }
 
     const campaignId = ctx.session.listedCampaigns[campaignNumber - 1];
+    if (!campaignId) {
+      await ctx.reply('Campaign not found. Please try listing campaigns again.');
+      return;
+    }
 
     try {
       const campaign = await Campaign.findById(campaignId);

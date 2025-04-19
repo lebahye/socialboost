@@ -40,6 +40,10 @@ const xVerificationScene = new Scenes.WizardScene(
     } else if (response === 'no') {
       // User needs a code, check if they have a linked account
       const user = ctx.state.user;
+      if (!user) {
+        await ctx.reply('❌ User not found. Please try again later.');
+        return ctx.scene.leave();
+      }
       const xAccount = user.socialAccounts.find(acc => acc.platform === 'x');
 
       if (!xAccount) {
@@ -61,7 +65,12 @@ const xVerificationScene = new Scenes.WizardScene(
         // Update account with new code
         xAccount.verificationCode = verificationCode;
         xAccount.verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
-        await user.save();
+        try {
+          await user.save();
+        } catch (error) {
+          await ctx.reply(`❌ Error saving user data: ${error.message}`);
+          return ctx.scene.leave();
+        }
       }
 
       // Display the verification code instructions
@@ -90,6 +99,10 @@ const xVerificationScene = new Scenes.WizardScene(
   // Step 3: Process verification code or check status
   async (ctx) => {
     const user = ctx.state.user;
+    if (!user) {
+      await ctx.reply('❌ User not found. Please try again later.');
+      return ctx.scene.leave();
+    }
     const input = ctx.message.text.trim();
 
     if (ctx.wizard.state.hasCode) {
@@ -135,20 +148,28 @@ const xVerificationScene = new Scenes.WizardScene(
     } else {
       // User should type "check" to verify
       if (input.toLowerCase() === 'check') {
-        // Try to verify the account
-        const isVerified = await verificationService.verifyXAccount(
-          ctx.wizard.state.verificationData.username,
-          ctx.wizard.state.verificationData.code
-        );
+        try {
+          if (!ctx.wizard.state.verificationData?.username || !ctx.wizard.state.verificationData?.code) {
+            await ctx.reply('❌ Verification data is missing. Please start the verification process again.');
+            return ctx.scene.leave();
+          }
 
-        if (isVerified) {
-          // Update user account as verified
-          const xAccount = user.socialAccounts.find(
-            acc => acc.platform === 'x' &&
-            acc.username === ctx.wizard.state.verificationData.username
+          const isVerified = await verificationService.verifyXAccount(
+            ctx.wizard.state.verificationData.username,
+            ctx.wizard.state.verificationData.code
           );
 
-          if (xAccount) {
+          if (isVerified) {
+            // Update user account as verified
+            const xAccount = user.socialAccounts.find(
+              acc => acc.platform === 'x' &&
+              acc.username === ctx.wizard.state.verificationData.username
+            );
+
+            if (!xAccount) {
+              await ctx.reply('❌ Account not found. Please try linking your account again using /link.');
+              return ctx.scene.leave();
+            }
             xAccount.isVerified = true;
             await user.save();
 
@@ -159,17 +180,18 @@ const xVerificationScene = new Scenes.WizardScene(
               { parse_mode: 'Markdown' }
             );
           } else {
-            await ctx.reply('❌ Error finding your account. Please contact support.');
+            await ctx.reply(
+              '❌ Verification failed. We couldn\'t find a direct message with your verification code.\n\n' +
+              'Please make sure you:\n' +
+              '1. Sent the exact code to @ProjectVerifierBot\n' +
+              '2. Sent it from the correct account\n\n' +
+              'You can try again by typing "check" or use /link to generate a new code.'
+            );
+            return; // Stay on the same step
           }
-        } else {
-          await ctx.reply(
-            '❌ Verification failed. We couldn\'t find a direct message with your verification code.\n\n' +
-            'Please make sure you:\n' +
-            '1. Sent the exact code to @ProjectVerifierBot\n' +
-            '2. Sent it from the correct account\n\n' +
-            'You can try again by typing "check" or use /link to generate a new code.'
-          );
-          return; // Stay on the same step
+        } catch (error) {
+          await ctx.reply(`❌ An error occurred during verification: ${error.message}`);
+          return ctx.scene.leave();
         }
       } else {
         await ctx.reply('Please type "check" when you\'ve sent the verification code via DM.');
@@ -180,56 +202,8 @@ const xVerificationScene = new Scenes.WizardScene(
     return ctx.scene.leave();
   },
 
-  // Step 4: Handle verification check
-  async (ctx) => {
-    const input = ctx.message.text.trim().toLowerCase();
+  // Step 4 (Removed - redundant with Step 3)
 
-    if (input === 'check') {
-      // Try to verify the account
-      const isVerified = await verificationService.verifyXAccount(
-        ctx.wizard.state.verificationData.username,
-        ctx.wizard.state.verificationData.code
-      );
-
-      const user = ctx.state.user;
-
-      if (isVerified) {
-        // Update user account as verified
-        const xAccount = user.socialAccounts.find(
-          acc => acc.platform === 'x' &&
-          acc.username === ctx.wizard.state.verificationData.username
-        );
-
-        if (xAccount) {
-          xAccount.isVerified = true;
-          await user.save();
-
-          await ctx.reply(
-            '✅ *Verification Successful!*\n\n' +
-            `Your X account @${xAccount.username} has been verified and linked to your Telegram account.\n\n` +
-            'You can now participate in campaigns that require X engagement.',
-            { parse_mode: 'Markdown' }
-          );
-        } else {
-          await ctx.reply('❌ Error finding your account. Please contact support.');
-        }
-      } else {
-        await ctx.reply(
-          '❌ Verification failed. We couldn\'t find a direct message with your verification code.\n\n' +
-          'Please make sure you:\n' +
-          '1. Sent the exact code to @ProjectVerifierBot\n' +
-          '2. Sent it from the correct account\n\n' +
-          'You can try again by typing "check" or use /link to generate a new code.'
-        );
-        return; // Stay on the same step
-      }
-    } else {
-      await ctx.reply('Please type "check" when you\'ve sent the verification code via DM.');
-      return; // Stay on the same step
-    }
-
-    return ctx.scene.leave();
-  }
 );
 
 // Add middleware to handle exit command
