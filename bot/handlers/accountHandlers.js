@@ -154,6 +154,25 @@ const processXUsername = async (ctx) => {
       // Parse existing accounts if they exist
       if (typeof userResult.rows[0].social_accounts === 'string') {
         socialAccounts = JSON.parse(userResult.rows[0].social_accounts);
+
+// Handle Discord account linking
+bot.command('link_discord', async (ctx) => {
+  try {
+    await ctx.reply(
+      'To link your Discord account:\n\n' +
+      '1. Send your Discord username (example: user#1234)\n' +
+      '2. I will send you a verification code\n' +
+      '3. Add me on Discord and send me that code'
+    );
+    
+    // Set user state for Discord verification
+    await User.setState(ctx.from.id.toString(), 'AWAITING_DISCORD_USERNAME');
+  } catch (error) {
+    console.error('Error in link_discord command:', error);
+    await ctx.reply('An error occurred. Please try again later.');
+  }
+});
+
       } else {
         socialAccounts = userResult.rows[0].social_accounts;
       }

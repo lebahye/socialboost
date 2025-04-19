@@ -381,11 +381,37 @@ async function showCampaignDetailsForParticipant(ctx, campaign, user) {
  * Handler for the join campaign callback query
  */
 const joinCampaignCallback = async (ctx) => {
-  const user = ctx.state.user;
-  if (!user) {
-    await ctx.answerCbQuery('User information not found. Please start the bot with /start');
-    return;
-  }
+  try {
+    // Get user directly from database since ctx.state.user might be empty
+    const { rows: [user] } = await pool.query(
+      'SELECT * FROM users WHERE telegram_id = $1',
+      [ctx.from.id.toString()]
+    );
+
+    if (!user) {
+      await ctx.answerCbQuery('Please start the bot first with /start command', { show_alert: true });
+      return;
+    }
+
+    // Check if user has verified social accounts
+    if (!user.social_accounts || !Array.isArray(user.social_accounts)) {
+      await ctx.answerCbQuery(
+        'You need to link your X and Discord accounts first. Use /link command.',
+        { show_alert: true }
+      );
+      return;
+    }
+
+    const hasX = user.social_accounts.some(acc => acc.platform === 'x' && acc.verified);
+    const hasDiscord = user.social_accounts.some(acc => acc.platform === 'discord' && acc.verified);
+
+    if (!hasX || !hasDiscord) {
+      await ctx.answerCbQuery(
+        `Please link your ${!hasX ? 'X' : ''} ${!hasX && !hasDiscord ? 'and' : ''} ${!hasDiscord ? 'Discord' : ''} accounts first using /link command`,
+        { show_alert: true }
+      );
+      return;
+    }
 
   const callbackData = ctx.callbackQuery.data;
   const campaignId = callbackData.replace('join_campaign_', '');
