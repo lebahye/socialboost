@@ -204,7 +204,7 @@ const processXUsername = async (ctx) => {
     await ctx.reply(
       `✅ Your X account @${xUsername} has been linked!\n\n` +
       `To verify this account, please follow these steps:\n\n` +
-      `1. Go to X and send a DIRECT MESSAGE (DM) to @VerifierProBot123 with the following unique code:\n\n` +
+      `1. Go to X and send a DIRECT MESSAGE (DM) to @SCampaign49365 with the following unique code:\n\n` +
       `\`${verificationCode}\`\n\n` +
       `2. Do NOT post this code publicly! Only send it via DM.\n` +
       `3. Once verified, you'll be able to participate in campaigns.\n\n` +
@@ -373,7 +373,7 @@ const verifyAccountHandler = async (ctx) => {
         message += `  📝 Verification code: \`${account.verification_code}\`\n`;
 
         if (account.platform === 'x') {
-          message += '  📨 Send this code to @VerifierProBot123 on X\n';
+          message += '  📨 Send this code to @SCampaign49365 on X\n';
         } else if (account.platform === 'discord') {
           message += '  📨 Send this code to @VerifyBot on our Discord server\n';
         }
