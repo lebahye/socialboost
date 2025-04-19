@@ -16,9 +16,17 @@ const processDeepLink = async (ctx) => {
 
 const startHandler = async (ctx) => {
   try {
-    // Check for deep linking payload
-    if (ctx.startPayload && await processDeepLink(ctx)) {
-      return; // Deep link was processed
+    // Check for registration deep links
+    if (ctx.startPayload) {
+      if (ctx.startPayload === 'register_member') {
+        ctx.session.registrationType = 'member';
+        return ctx.scene.enter('USER_REGISTRATION');
+      } else if (ctx.startPayload === 'register_project') {
+        ctx.session.registrationType = 'project';
+        return ctx.scene.enter('USER_REGISTRATION');
+      } else if (await processDeepLink(ctx)) {
+        return; // Other deep link was processed
+      }
     }
 
     // Get user info from Telegram
