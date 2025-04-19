@@ -34,7 +34,7 @@ const { userRegistrationScene } = require('./scenes/userRegistration');
 // Initialize stage with scenes
 const stage = new Stage([
   projectRegistrationScene,
-  campaignCreationScene.scene,
+  campaignCreationScene,
   userRegistrationScene
 ]);
 
