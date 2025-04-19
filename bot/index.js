@@ -208,6 +208,7 @@ registerPaymentHandlers(bot);
 paymentService.setBot(bot);
 
 // Register callback query handlers
+const { joinCampaignCallback } = require('./handlers/campaignHandlers');
 bot.action(/join_campaign_(.+)/, joinCampaignCallback);
 bot.action(/link_([a-z]+)/, async (ctx) => {
   try {
