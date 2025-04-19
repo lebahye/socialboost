@@ -59,37 +59,34 @@ class VerificationService {
         throw new Error('X account not found or is private');
       }
 
-      // Get user's recent tweets with expanded parameters
-      let tweets;
+      // Get user's recent DMs
+      let messages;
       try {
-        tweets = await twitterClient.v2.userTimeline(user.data.id, {
-          max_results: 20,
-          'tweet.fields': ['text', 'created_at', 'public_metrics'],
-          exclude: ['retweets', 'replies']
+        messages = await twitterClient.v2.listDirectMessages({
+          max_results: 50,
+          'dm.fields': ['text', 'created_at']
         });
       } catch (err) {
-        console.error('Error fetching tweets:', err);
-        throw new Error('Failed to fetch recent tweets. Please try again.');
+        console.error('Error fetching DMs:', err);
+        throw new Error('Failed to fetch direct messages. Please try again.');
       }
 
-      if (!tweets?.data) {
-        throw new Error('No recent tweets found');
+      if (!messages?.data) {
+        throw new Error('No direct messages found');
       }
 
-      // Check for verification code in tweets with timestamps
-      const verificationTweet = tweets.data.find(tweet => {
-        const tweetTime = new Date(tweet.created_at);
-        const timeElapsed = Date.now() - tweetTime.getTime();
-        return tweet.text.includes(verificationCode) && timeElapsed < 15 * 60 * 1000;
+      // Check for verification code in DMs with timestamps
+      const verificationMessage = messages.data.find(msg => {
+        const messageTime = new Date(msg.created_at);
+        const timeElapsed = Date.now() - messageTime.getTime();
+        return msg.text.includes(verificationCode) && timeElapsed < 15 * 60 * 1000;
       });
 
-      if (verificationTweet) {
+      if (verificationMessage) {
         console.log(`Successfully verified X account: ${username}`);
-        // Store additional metrics for later use
         return {
           verified: true,
-          tweet_id: verificationTweet.id,
-          metrics: verificationTweet.public_metrics
+          message_id: verificationMessage.id
         };
       }
 
