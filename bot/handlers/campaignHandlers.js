@@ -204,8 +204,10 @@ const manageCampaignHandler = async (ctx) => {
       // Get campaigns directly if not in session
       try {
         const { rows: campaigns } = await pool.query(`
-          SELECT * FROM campaigns 
-          WHERE created_by = $1 OR private = false
+          SELECT c.*, p.name as project_name 
+          FROM campaigns c
+          LEFT JOIN projects p ON c.project_id = p.id
+          WHERE c.created_by = $1 OR c.private = false
         `, [user.telegramId]);
 
         if (!campaigns || campaigns.length === 0) {
