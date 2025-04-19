@@ -150,8 +150,8 @@ const manageCampaignHandler = async (ctx) => {
     }
 
     // Validate campaign number format
-    const text = ctx.message.text.trim();
-    const parts = text.split(' ');
+    const messageText = ctx.message.text.trim();
+    const parts = messageText.split(' ');
     
     if (parts.length !== 2 || isNaN(parseInt(parts[1]))) {
       await ctx.reply(
@@ -162,8 +162,6 @@ const manageCampaignHandler = async (ctx) => {
       );
       return;
     }
-
-    const campaignNumber = parseInt(parts[1]);
 
     const userId = ctx.from.id.toString();
 
