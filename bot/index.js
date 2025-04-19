@@ -1,4 +1,3 @@
-
 const { Telegraf, Scenes: { Stage }, session } = require('telegraf');
 const { Pool } = require('pg');
 const { TwitterApi } = require('twitter-api-v2');
@@ -67,7 +66,7 @@ bot.use(async (ctx, next) => {
 
 // Import all handlers
 const { startHandler, helpHandler, statusHandler, tutorialHandler } = require('./handlers/basicHandlers');
-const { linkSocialHandler, verifyAccountHandler, unlinkAccountHandler } = require('./handlers/accountHandlers');
+const { linkSocialHandler, linkXAccountCallback, linkDiscordCallback, verifyAccountHandler, unlinkAccountHandler, unlinkAccountCallback, textHandler } = require('./handlers/accountHandlers');
 const { newProjectHandler, listProjectsHandler, manageProjectHandler } = require('./handlers/projectHandlers');
 const { newCampaignHandler, listCampaignsHandler, manageCampaignHandler, postCampaignToChannelHandler } = require('./handlers/campaignHandlers');
 const { analyticsHandler, exportDataHandler, userStatsHandler } = require('./handlers/analyticsHandlers');
