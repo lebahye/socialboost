@@ -364,10 +364,21 @@ async function showCampaignDetailsForParticipant(ctx, campaign, user) {
     }
   });
 
-  messageText += '\n*How to Participate:*\n';
-  messageText += '1. Click "View X Post" to open the post\n';
-  messageText += '2. Like, retweet, or comment on the post\n';
-  messageText += '3. Your participation will be tracked automatically\n';
+  messageText += '\n🎯 *Raid Reached:*\n';
+  messageText += `❤️ Likes: ${campaign.stats?.engagement?.likes || 0}\n`;
+  messageText += `💬 Comments: ${campaign.stats?.engagement?.comments || 0}\n`;
+  messageText += `🔄 Retweets: ${campaign.stats?.engagement?.retweets || 0}\n`;
+  messageText += `🔖 Bookmarks: ${campaign.stats?.engagement?.bookmarks || 0}\n\n`;
+
+  messageText += '🏆 *Rewards:*\n';
+  messageText += `⚡️ Raid Earned: +${campaign.reward || 0}\n`;
+  messageText += `📊 Total Points: ${campaign.stats?.totalPoints || 0}\n`;
+  messageText += `📈 Leaderboard Entry: ${campaign.stats?.leaderboardPosition || 'N/A'}\n\n`;
+
+  messageText += '🔗 *Actions:*\n';
+  messageText += `📊 [Leaderboard](https://t.me/${ctx.botInfo.username}?start=leaderboard)\n`;
+  messageText += `⚡️ [Boost Points](https://t.me/${ctx.botInfo.username}?start=boost_${campaign.id})\n`;
+
 
   await ctx.replyWithMarkdown(messageText, {
     reply_markup: {
