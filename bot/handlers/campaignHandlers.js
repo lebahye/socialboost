@@ -182,7 +182,6 @@ const manageCampaignHandler = async (ctx) => {
       return;
     }
 
-    const campaignNumber = parseInt(parts[1]);
     if (!campaignNumber || isNaN(campaignNumber)) {
       await ctx.reply(
         '❌ Invalid command format.\n\n' +
