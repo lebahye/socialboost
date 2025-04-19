@@ -149,8 +149,29 @@ const processXUsername = async (ctx) => {
       return;
     }
 
-    // Generate verification code
-    const verificationCode = generateVerificationCode();
+    // Generate verification code with user-specific prefix
+    const userPrefix = telegramId.substring(0, 3);
+    const verificationCode = `${userPrefix}-${generateVerificationCode()}`;
+
+    // Add rate limiting check
+    const rateLimitKey = `verify_${telegramId}`;
+    const attempts = await pool.query(
+      'SELECT verification_attempts, last_attempt FROM users WHERE telegram_id = $1',
+      [telegramId]
+    );
+
+    const now = new Date();
+    if (attempts.rows[0].verification_attempts >= 3 && 
+        now - new Date(attempts.rows[0].last_attempt) < 1000 * 60 * 15) {
+      await ctx.reply('Too many verification attempts. Please try again in 15 minutes.');
+      return;
+    }
+
+    // Update attempt count
+    await pool.query(
+      'UPDATE users SET verification_attempts = verification_attempts + 1, last_attempt = NOW() WHERE telegram_id = $1',
+      [telegramId]
+    );
 
     // Get current social accounts
     const userResult = await pool.query(
@@ -187,7 +208,7 @@ const processXUsername = async (ctx) => {
         username: xUsername,
         is_verified: false,
         verification_code: verificationCode,
-        verification_expiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+        verification_expiry: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 minutes
       });
     }
 
@@ -201,10 +222,15 @@ const processXUsername = async (ctx) => {
     await ctx.reply(
       `✅ Your X account @${xUsername} has been linked!\n\n` +
       `To verify this account, please follow these steps:\n\n` +
-      `1. Go to X and send a direct message to @ProjectVerifierBot with the following code:\n\n` +
+      `1. Go to X and send a DIRECT MESSAGE (DM) to @ProjectVerifierBot with the following unique code:\n\n` +
       `\`${verificationCode}\`\n\n` +
-      `2. Once verified, you'll be able to participate in campaigns.\n\n` +
-      `The verification code will expire in 24 hours. Use /verify command to check verification status.`,
+      `2. Do NOT post this code publicly! Only send it via DM.\n` +
+      `3. Once verified, you'll be able to participate in campaigns.\n\n` +
+      `⚠️ This code:\n` +
+      `• Is unique to your account\n` +
+      `• Will expire in 30 minutes\n` +
+      `• Can only be used once\n\n` +
+      `Use /verify command to check verification status.`,
       { parse_mode: 'Markdown' }
     );
   } catch (err) {
