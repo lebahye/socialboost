@@ -83,8 +83,9 @@ const campaignCreationScene = new Scenes.WizardScene(
       }
 
       // Handle callback queries for project selection
-      if (ctx.callbackQuery) {
+      if (ctx.callbackQuery && ctx.callbackQuery.data) {
         const data = ctx.callbackQuery.data;
+        await ctx.answerCbQuery(); // Acknowledge the callback
 
         // Check if user wants to cancel
         if (data === 'cancel') {
@@ -95,8 +96,14 @@ const campaignCreationScene = new Scenes.WizardScene(
         // Extract project index
         const projectIndex = parseInt(data.split('_')[1]);
 
-        if (!ctx.wizard.state.availableProjects || isNaN(projectIndex) || projectIndex < 0 || projectIndex >= ctx.wizard.state.availableProjects.length) {
-          await ctx.editMessageText('Invalid selection. Please use /newcampaign to start again.');
+        if (!ctx.wizard.state.availableProjects || !Array.isArray(ctx.wizard.state.availableProjects)) {
+          console.error('Available projects not found in wizard state');
+          await ctx.editMessageText('An error occurred. Please use /newcampaign to start again.');
+          return ctx.scene.leave();
+        }
+
+        if (isNaN(projectIndex) || projectIndex < 0 || projectIndex >= ctx.wizard.state.availableProjects.length) {
+          await ctx.editMessageText('Invalid project selection. Please use /newcampaign to start again.');
           return ctx.scene.leave();
         }
 

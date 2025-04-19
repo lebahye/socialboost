@@ -201,10 +201,10 @@ const manageCampaignHandler = async (ctx) => {
 
     // Check if user has listed campaigns in session
     if (!ctx.session.listedCampaigns || ctx.session.listedCampaigns.length === 0) {
-      // Fetch campaigns directly if not in session
+      // Get campaigns directly if not in session
       try {
         const { rows: campaigns } = await pool.query(`
-          SELECT id FROM campaigns 
+          SELECT * FROM campaigns 
           WHERE created_by = $1 OR private = false
         `, [user.telegramId]);
 
@@ -215,11 +215,22 @@ const manageCampaignHandler = async (ctx) => {
           return;
         }
 
-        ctx.session.listedCampaigns = campaigns.map(c => c.id);
+        ctx.session.listedCampaigns = campaigns;
+
+        // Show available campaigns
+        let message = '📢 *Available Campaigns*\n\n';
+        campaigns.forEach((campaign, index) => {
+          message += `${index + 1}. *${campaign.name}*\n`;
+          message += `   Status: ${campaign.status}\n`;
+          message += `   Project: ${campaign.project_name}\n\n`;
+        });
+
+        await ctx.replyWithMarkdown(message);
+        return;
       } catch (err) {
         console.error('Error fetching campaigns:', err);
         await ctx.reply(
-          'Please use /campaigns first to see the list of available campaigns.'
+          'An error occurred while fetching campaigns. Please try again.'
         );
         return;
       }
@@ -237,7 +248,7 @@ const manageCampaignHandler = async (ctx) => {
       return;
     }
 
-    const campaignId = ctx.session.listedCampaigns[campaignNumber - 1];
+    const campaignId = ctx.session.listedCampaigns[campaignNumber - 1].id;
     if (!campaignId) {
       await ctx.reply('Campaign not found. Please try listing campaigns again.');
       return;
