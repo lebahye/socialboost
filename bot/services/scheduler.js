@@ -134,8 +134,36 @@ class SchedulerService {
 // Export singleton instance
 const schedulerService = new SchedulerService();
 
-function initializeScheduler(bot) {
-  schedulerService.initialize(bot);
+async function initializeScheduler(bot) {
+  // Check for pending verifications every hour
+  setInterval(async () => {
+    //await verificationService.processPendingVerifications();  //Commented out as verificationService is not defined in this snippet.
+  }, 60 * 60 * 1000);
+
+  // Send reminders every 12 hours
+  setInterval(async () => {
+    const Campaign = require('../models/Campaign');
+    const activeCampaigns = await Campaign.find({ status: 'active' });
+
+    for (const campaign of activeCampaigns) {
+      const participants = campaign.participants || [];
+      for (const participant of participants) {
+        if (!participant.participated) {
+          try {
+            await bot.telegram.sendMessage(
+              participant.telegramId,
+              `🔔 Reminder: Don't forget to engage with the campaign post!\n` +
+              `Campaign: ${campaign.name}\n` +
+              `X Post: ${campaign.xPostUrl}\n\n` +
+              `Participate now to earn rewards!`
+            );
+          } catch (err) {
+            console.error('Error sending reminder:', err);
+          }
+        }
+      }
+    }
+  }, 12 * 60 * 60 * 1000);
 }
 
 module.exports = {

@@ -185,12 +185,17 @@ class VerificationService {
 // Export instance
 const verificationService = new VerificationService();
 
-async function verifyXPostEngagement(postId, userXHandle) {
+async function verifyXPostEngagement(postId, userXHandle, campaignId) {
   try {
-    // Use the existing Twitter client from verification service
     const client = verificationService.twitterClient;
     if (!client) {
       throw new Error('Twitter client not initialized');
+    }
+
+    const Campaign = require('../models/Campaign');
+    const campaign = await Campaign.findById(campaignId);
+    if (!campaign) {
+      throw new Error('Campaign not found');
     }
     
     // Get post details
