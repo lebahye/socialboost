@@ -413,69 +413,72 @@ const joinCampaignCallback = async (ctx) => {
       return;
     }
 
-  const callbackData = ctx.callbackQuery.data;
-  const campaignId = callbackData.replace('join_campaign_', '');
+    const callbackData = ctx.callbackQuery.data;
+    const campaignId = callbackData.replace('join_campaign_', '');
 
-  try {
-    const campaign = await Campaign.findById(campaignId);
+    try {
+      const campaign = await Campaign.findById(campaignId);
 
-    if (!campaign) {
-      await ctx.answerCbQuery('Campaign not found.');
-      return;
-    }
-
-    if (campaign.status !== 'active') {
-      await ctx.answerCbQuery(`This campaign is ${campaign.status} and cannot be joined.`);
-      return;
-    }
-
-    // Parse participants if they're stored as JSON string
-    let participants = [];
-    if (typeof campaign.participants === 'string') {
-      try {
-        participants = JSON.parse(campaign.participants);
-      } catch (e) {
-        participants = [];
+      if (!campaign) {
+        await ctx.answerCbQuery('Campaign not found.');
+        return;
       }
-    } else if (Array.isArray(campaign.participants)) {
-      participants = campaign.participants;
+
+      if (campaign.status !== 'active') {
+        await ctx.answerCbQuery(`This campaign is ${campaign.status} and cannot be joined.`);
+        return;
+      }
+
+      // Parse participants if they're stored as JSON string
+      let participants = [];
+      if (typeof campaign.participants === 'string') {
+        try {
+          participants = JSON.parse(campaign.participants);
+        } catch (e) {
+          participants = [];
+        }
+      } else if (Array.isArray(campaign.participants)) {
+        participants = campaign.participants;
+      }
+
+      // Check if user already joined
+      const isParticipant = participants.some(p => p.telegramId === user.telegramId);
+
+      if (isParticipant) {
+        await ctx.answerCbQuery('You have already joined this campaign.');
+        return;
+      }
+
+      // Check if user has verified X account if campaign requires it
+      const hasVerifiedAccount = user.social_accounts && 
+                                user.social_accounts.some(acc => acc.platform === 'x' && acc.verified);
+
+      if (!hasVerifiedAccount) {
+        await ctx.answerCbQuery(
+          'You need a verified X account to join this campaign. Use /link to connect your account.',
+          { show_alert: true }
+        );
+        return;
+      }
+
+      // Add user as participant
+      campaign.participants.push({
+        userId: user._id.toString(),
+        telegramId: user.telegramId,
+        telegramUsername: user.username,
+        participated: false
+      });
+
+      await campaign.save();
+
+      // Update the message to show new status
+      await showCampaignDetailsForParticipant(ctx, campaign, user);
+
+      await ctx.answerCbQuery('You have successfully joined the campaign!');
+    } catch (err) {
+      console.error('Error in join campaign:', err);
+      await ctx.answerCbQuery('An error occurred while joining the campaign. Please try again later.');
     }
-
-    // Check if user already joined
-    const isParticipant = participants.some(p => p.telegramId === user.telegramId);
-
-    if (isParticipant) {
-      await ctx.answerCbQuery('You have already joined this campaign.');
-      return;
-    }
-
-    // Check if user has verified X account if campaign requires it
-    const hasVerifiedAccount = user.social_accounts && 
-                              user.social_accounts.some(acc => acc.platform === 'x' && acc.verified);
-
-    if (!hasVerifiedAccount) {
-      await ctx.answerCbQuery(
-        'You need a verified X account to join this campaign. Use /link to connect your account.',
-        { show_alert: true }
-      );
-      return;
-    }
-
-    // Add user as participant
-    campaign.participants.push({
-      userId: user._id.toString(),
-      telegramId: user.telegramId,
-      telegramUsername: user.username,
-      participated: false
-    });
-
-    await campaign.save();
-
-    // Update the message to show new status
-    await showCampaignDetailsForParticipant(ctx, campaign, user);
-
-    await ctx.answerCbQuery('You have successfully joined the campaign!');
-
   } catch (err) {
     console.error('Error in joinCampaignCallback:', err);
     await ctx.answerCbQuery('An error occurred while joining the campaign. Please try again later.');
