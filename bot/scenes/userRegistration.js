@@ -9,7 +9,7 @@ const pool = new Pool({
 });
 
 const userRegistrationScene = new Scenes.WizardScene(
-  'userRegistration',
+  'USER_REGISTRATION',
   // Step 1: Ask about user type
   async (ctx) => {
     await ctx.reply(

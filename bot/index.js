@@ -38,12 +38,8 @@ stage.on('error', (ctx, error) => {
   ctx.reply('An error occurred during the process. Please try again with /register.');
 });
 
-// Set up session handling
+// Set up session handling and stage middleware
 bot.use(session());
-bot.use(stage.middleware());
-bot.use(session());
-
-// Register stage middleware
 bot.use(stage.middleware());
 
 // Initialize Twitter API client if credentials exist
