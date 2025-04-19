@@ -17,7 +17,7 @@ const pool = new Pool({
 const linkSocialHandler = async (ctx) => {
   try {
     const telegramId = ctx.from.id.toString();
-    
+
     // Check if user exists in database
     const result = await pool.query(
       'SELECT * FROM users WHERE telegram_id = $1',
@@ -54,7 +54,7 @@ const linkSocialHandler = async (ctx) => {
 const linkXAccountCallback = async (ctx) => {
   try {
     const telegramId = ctx.from.id.toString();
-    
+
     // First check if user exists
     const result = await pool.query(
       'SELECT * FROM users WHERE telegram_id = $1',
@@ -151,7 +151,7 @@ const processXUsername = async (ctx) => {
 
     // Generate verification code
     const verificationCode = generateVerificationCode();
-    
+
     // Get current social accounts
     const userResult = await pool.query(
       'SELECT social_accounts FROM users WHERE telegram_id = $1',
@@ -159,33 +159,33 @@ const processXUsername = async (ctx) => {
     );
 
     let socialAccounts = [];
-    if (userResult.rows[0]?.social_accounts) {
+    try {
       socialAccounts = Array.isArray(userResult.rows[0].social_accounts) 
         ? userResult.rows[0].social_accounts 
         : [];
-
-// Handle Discord account linking
-bot.command('link_discord', async (ctx) => {
-  try {
-    await ctx.reply(
-      'To link your Discord account:\n\n' +
-      '1. Send your Discord username (example: user#1234)\n' +
-      '2. I will send you a verification code\n' +
-      '3. Add me on Discord and send me that code'
-    );
-    
-    // Set user state for Discord verification
-    await User.setState(ctx.from.id.toString(), 'AWAITING_DISCORD_USERNAME');
-  } catch (error) {
-    console.error('Error in link_discord command:', error);
-    await ctx.reply('An error occurred. Please try again later.');
-  }
-});
-
-      } else {
-        socialAccounts = userResult.rows[0].social_accounts;
-      }
+    } catch (error) {
+      console.error('Error parsing social accounts:', error);
+      socialAccounts = [];
     }
+
+    // Handle Discord account linking
+    bot.command('link_discord', async (ctx) => {
+      try {
+        await ctx.reply(
+          'To link your Discord account:\n\n' +
+          '1. Send your Discord username (example: user#1234)\n' +
+          '2. I will send you a verification code\n' +
+          '3. Add me on Discord and send me that code'
+        );
+
+        // Set user state for Discord verification
+        await User.setState(ctx.from.id.toString(), 'AWAITING_DISCORD_USERNAME');
+      } catch (error) {
+        console.error('Error in link_discord command:', error);
+        await ctx.reply('An error occurred. Please try again later.');
+      }
+    });
+
 
     // Find existing account or prepare to add new one
     const existingAccountIndex = socialAccounts.findIndex(acc => acc.platform === 'x');
@@ -522,7 +522,7 @@ const unlinkAccountCallback = async (ctx) => {
 const textHandler = async (ctx) => {
   try {
     const telegramId = ctx.from.id.toString();
-    
+
     // Get user's current state from database
     const result = await pool.query(
       'SELECT current_state FROM users WHERE telegram_id = $1',
