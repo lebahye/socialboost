@@ -24,6 +24,8 @@ const newCampaignHandler = async (ctx) => {
       [userId]
     );
 
+    console.log('Starting campaign creation for user:', userId);
+
     if (!result.rows[0]) {
       await ctx.reply('Please start the bot first with /start');
       return;

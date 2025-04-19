@@ -76,23 +76,29 @@ const campaignCreationScene = new Scenes.WizardScene(
 
   // Step 2: Handle project selection and ask for campaign name
   async (ctx) => {
-    // Handle callback queries for project selection
-    if (ctx.callbackQuery) {
-      const data = ctx.callbackQuery.data;
-
-      // Check if user wants to cancel
-      if (data === 'cancel') {
-        await ctx.editMessageText('Campaign creation cancelled.');
-        return ctx.scene.leave();
+    try {
+      // Initialize wizard state if not exists
+      if (!ctx.wizard.state) {
+        ctx.wizard.state = {};
       }
 
-      // Extract project index
-      const projectIndex = parseInt(data.split('_')[1]);
+      // Handle callback queries for project selection
+      if (ctx.callbackQuery) {
+        const data = ctx.callbackQuery.data;
 
-      if (isNaN(projectIndex) || projectIndex < 0 || projectIndex >= ctx.wizard.state.availableProjects.length) {
-        await ctx.editMessageText('Invalid selection. Please use /newcampaign to start again.');
-        return ctx.scene.leave();
-      }
+        // Check if user wants to cancel
+        if (data === 'cancel') {
+          await ctx.editMessageText('Campaign creation cancelled.');
+          return ctx.scene.leave();
+        }
+
+        // Extract project index
+        const projectIndex = parseInt(data.split('_')[1]);
+
+        if (!ctx.wizard.state.availableProjects || isNaN(projectIndex) || projectIndex < 0 || projectIndex >= ctx.wizard.state.availableProjects.length) {
+          await ctx.editMessageText('Invalid selection. Please use /newcampaign to start again.');
+          return ctx.scene.leave();
+        }
 
       // Store selected project
       ctx.wizard.state.selectedProject = ctx.wizard.state.availableProjects[projectIndex];
