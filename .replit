@@ -85,3 +85,12 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "cd bot && node index.js"
+
+[[workflows.workflow]]
+name = "Check Database"
+author = 39354119
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "node bot/test-db.js"

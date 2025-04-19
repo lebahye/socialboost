@@ -33,3 +33,31 @@ async function testConnection() {
 }
 
 testConnection();
+const { Pool } = require('pg');
+require('dotenv').config();
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+async function checkUserAccounts() {
+  try {
+    const result = await pool.query('SELECT telegram_id, username, social_accounts FROM users WHERE social_accounts IS NOT NULL');
+    console.log('\nUsers with linked accounts:');
+    console.log('------------------------');
+    for (const row of result.rows) {
+      console.log(`\nTelegram ID: ${row.telegram_id}`);
+      console.log(`Username: ${row.username}`);
+      console.log('Social accounts:', row.social_accounts);
+    }
+  } catch (err) {
+    console.error('Error checking accounts:', err);
+  } finally {
+    await pool.end();
+  }
+}
+
+checkUserAccounts();
