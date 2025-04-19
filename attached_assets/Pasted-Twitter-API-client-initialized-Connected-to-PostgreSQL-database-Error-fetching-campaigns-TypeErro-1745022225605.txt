@@ -1,0 +1,24 @@
+Twitter API client initialized
+Connected to PostgreSQL database
+Error fetching campaigns: TypeError: Cannot read properties of undefined (reading 'telegramId')
+    at manageCampaignHandler (/home/runner/workspace/bot/handlers/campaignHandlers.js:131:16)
+    at /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:397:28
+    at /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:165:111
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+Error fetching campaigns: TypeError: Cannot read properties of undefined (reading 'telegramId')
+    at manageCampaignHandler (/home/runner/workspace/bot/handlers/campaignHandlers.js:131:16)
+    at /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:397:28
+    at /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:165:111
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
+    at async execute (/home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:518:17)
+    at async /home/runner/workspace/bot/node_modules/telegraf/lib/composer.js:519:21
