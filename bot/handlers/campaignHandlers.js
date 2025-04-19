@@ -152,8 +152,9 @@ const manageCampaignHandler = async (ctx) => {
     // Validate campaign number format
     const messageText = ctx.message.text.trim();
     const parts = messageText.split(' ');
+    const campaignNumber = parseInt(parts[1]);
     
-    if (parts.length !== 2 || isNaN(parseInt(parts[1]))) {
+    if (parts.length !== 2 || isNaN(campaignNumber)) {
       await ctx.reply(
         '❌ Invalid command format\n\n' +
         'Usage: /campaign [number]\n' +
@@ -193,8 +194,6 @@ const manageCampaignHandler = async (ctx) => {
       );
       return;
     }
-
-    const campaignNumber = parseInt(parts[1]);
 
     // Initialize session if not exists
     if (!ctx.session) ctx.session = {};
