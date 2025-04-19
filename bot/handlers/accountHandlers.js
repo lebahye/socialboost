@@ -113,8 +113,8 @@ const linkDiscordCallback = async (ctx) => {
  * Handler for processing X username submission
  */
 const processXUsername = async (ctx) => {
-  const user = ctx.state.user;
   const xUsername = ctx.message.text.trim();
+  const telegramId = ctx.from.id.toString();
 
   // Check if username starts with @
   if (xUsername.startsWith('@')) {
@@ -133,40 +133,39 @@ const processXUsername = async (ctx) => {
 
   try {
     // Check if username already exists in system for another user
-    const telegramId = ctx.from.id.toString();
     const existingUser = await pool.query(
-      'SELECT * FROM users WHERE social_accounts->\'x\'->\'username\' = $1 AND telegram_id != $2',
-      [xUsername, telegramId]
+      'SELECT * FROM users WHERE social_accounts @> $1 AND telegram_id != $2',
+      [JSON.stringify([{platform: 'x', username: xUsername}]), telegramId]
     );
 
-    const userExists = existingUser.rows.length > 0;
-
-    if (userExists) {
+    if (existingUser.rows.length > 0) {
       await ctx.reply(
         'This X account is already linked to another user. Please use a different account or contact support if you believe this is an error.'
       );
-      user.currentState = null;
-      await user.save();
+      await pool.query(
+        'UPDATE users SET current_state = NULL WHERE telegram_id = $1',
+        [telegramId]
+      );
       return;
     }
 
     // Generate verification code
     const verificationCode = generateVerificationCode();
 
-    // Update or create the user's social accounts in the database
-    // Using already defined telegramId from above
-
-    // Check if user already has social accounts
+    // Generate verification code
+    const verificationCode = generateVerificationCode();
+    
+    // Get current social accounts
     const userResult = await pool.query(
       'SELECT social_accounts FROM users WHERE telegram_id = $1',
       [telegramId]
     );
 
     let socialAccounts = [];
-    if (userResult.rows[0] && userResult.rows[0].social_accounts) {
-      // Parse existing accounts if they exist
-      if (typeof userResult.rows[0].social_accounts === 'string') {
-        socialAccounts = JSON.parse(userResult.rows[0].social_accounts);
+    if (userResult.rows[0]?.social_accounts) {
+      socialAccounts = Array.isArray(userResult.rows[0].social_accounts) 
+        ? userResult.rows[0].social_accounts 
+        : [];
 
 // Handle Discord account linking
 bot.command('link_discord', async (ctx) => {
