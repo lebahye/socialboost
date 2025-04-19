@@ -66,10 +66,17 @@ class VerificationService {
         const appPermissions = await twitterClient.v2.me();
         console.log('Bot permissions:', appPermissions);
         
+        // Get DMs with expanded user info
         messages = await twitterClient.v2.listDirectMessages({
           max_results: 50,
-          'dm.fields': ['text', 'created_at', 'sender_id']
+          'dm.fields': ['text', 'created_at', 'sender_id'],
+          'user.fields': ['username'],
+          expansions: ['sender_id']
         });
+        
+        if (!messages?.data) {
+          throw new Error('Could not retrieve DMs - check app permissions');
+        }
         
         console.log('Retrieved DMs for verification');
       } catch (err) {
