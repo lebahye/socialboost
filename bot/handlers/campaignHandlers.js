@@ -16,8 +16,13 @@ const pool = new Pool({
  * Starts the campaign creation wizard
  */
 const newCampaignHandler = async (ctx) => {
-  // Enter the campaign creation scene
-  return ctx.scene.enter('CAMPAIGN_CREATION');
+  try {
+    // Enter the campaign creation scene
+    return ctx.scene.enter('campaignCreation');
+  } catch (error) {
+    console.error('Error in newCampaignHandler:', error);
+    await ctx.reply('An error occurred while creating a new campaign. Please try again.');
+  }
 };
 
 /**

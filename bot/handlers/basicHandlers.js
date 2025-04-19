@@ -118,7 +118,7 @@ const registerHandler = async (ctx) => {
     };
 
     // Enter registration scene
-    return ctx.scene.enter('USER_REGISTRATION');
+    return ctx.scene.enter('userRegistration');
   } catch (error) {
     console.error('Error in registerHandler:', error);
     await ctx.reply('An error occurred during registration. Please try again.');

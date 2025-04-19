@@ -103,18 +103,41 @@ bot.command('start', async (ctx) => {
   await startHandler(ctx);
 });
 bot.command('welcome', welcomeHandler || (async (ctx) => await ctx.reply('Welcome command is not available')));
-bot.command('register', registerHandler || (async (ctx) => await ctx.reply('Registration is not available')));
-bot.command('help', helpHandler || (async (ctx) => await ctx.reply('Help command is not available')));
-bot.command('status', statusHandler || (async (ctx) => await ctx.reply('Status command is not available')));
-bot.command('tutorial', tutorialHandler || (async (ctx) => await ctx.reply('Tutorial command is not available')));
-bot.command('link', linkSocialHandler || (async (ctx) => await ctx.reply('Link command is not available')));
-bot.command('verify', verifyAccountHandler || (async (ctx) => await ctx.reply('Verify command is not available')));
-bot.command('unlink', unlinkAccountHandler || (async (ctx) => await ctx.reply('Unlink command is not available')));
-bot.command('newproject', ctx => ctx.scene.enter('projectRegistration'));
-bot.command('myprojects', listProjectsHandler || (async (ctx) => await ctx.reply('Project listing is not available')));
-bot.command('project', manageProjectHandler || (async (ctx) => await ctx.reply('Project management is not available')));
-bot.command('newcampaign', ctx => ctx.scene.enter('campaignCreation'));
-bot.command('campaigns', listCampaignsHandler || (async (ctx) => await ctx.reply('Campaign listing is not available')));
+// Basic commands
+bot.command('register', registerHandler);
+bot.command('help', helpHandler);
+bot.command('status', statusHandler);
+bot.command('tutorial', tutorialHandler);
+bot.command('welcome', welcomeHandler);
+
+// Account commands
+bot.command('link', linkSocialHandler);
+bot.command('verify', verifyAccountHandler);
+bot.command('unlink', unlinkAccountHandler);
+
+// Project commands 
+bot.command('newproject', async (ctx) => {
+  try {
+    await ctx.scene.enter('projectRegistration');
+  } catch (error) {
+    console.error('Error entering project registration:', error);
+    await ctx.reply('An error occurred. Please try again.');
+  }
+});
+bot.command('myprojects', listProjectsHandler);
+bot.command('project', manageProjectHandler);
+
+// Campaign commands
+bot.command('newcampaign', async (ctx) => {
+  try {
+    await ctx.scene.enter('campaignCreation');
+  } catch (error) {
+    console.error('Error entering campaign creation:', error);
+    await ctx.reply('An error occurred. Please try again.');
+  }
+});
+bot.command('campaigns', listCampaignsHandler);
+bot.command('campaign', manageCampaignHandler);
 bot.command('campaign', manageCampaignHandler || (async (ctx) => await ctx.reply('Campaign management is not available')));
 bot.command('postcampaign', postCampaignToChannelHandler || (async (ctx) => await ctx.reply('Campaign posting is not available')));
 bot.command('analytics', analyticsHandler || (async (ctx) => await ctx.reply('Analytics feature is not available')));
