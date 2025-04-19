@@ -12,7 +12,7 @@ const pool = new Pool({
 // Rate limiting configuration - more restrictive for campaign posts
 const rateLimitConfig = {
   window: 1000 * 60 * 5, // 5 minutes
-  limit: 5, // posts per window
+  limit: 20, // posts per window
   onLimitExceeded: (ctx) => ctx.reply('⚠️ Campaign posting rate limit reached. Please wait before posting more campaigns.')
 };
 
