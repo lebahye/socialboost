@@ -209,9 +209,11 @@ paymentService.setBot(bot);
 
 // Register callback query handlers
 bot.action(/link_([a-z]+)/, async (ctx) => {
-  console.log('Link action callback received:', ctx.match[1]);
-  const platform = ctx.match[1];
   try {
+    await ctx.answerCbQuery(); // Acknowledge the button press
+    const platform = ctx.match[1];
+    console.log('Link action callback received:', platform);
+    
     const accountHandlers = require('./handlers/accountHandlers');
     if (platform === 'x') {
       await accountHandlers.linkXAccountCallback(ctx);
@@ -220,7 +222,17 @@ bot.action(/link_([a-z]+)/, async (ctx) => {
     }
   } catch (err) {
     console.error('Error in link callback:', err);
-    await ctx.answerCbQuery('An error occurred. Please try again later.');
+    await ctx.reply('An error occurred while processing your request. Please try again.');
+  }
+});
+
+// Handle text messages
+bot.on('text', async (ctx) => {
+  try {
+    const { textHandler } = require('./handlers/accountHandlers');
+    await textHandler(ctx);
+  } catch (error) {
+    console.error('Error handling text message:', error);
   }
 });
 

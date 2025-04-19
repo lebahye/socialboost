@@ -16,10 +16,15 @@ const pool = new Pool({
  */
 const linkSocialHandler = async (ctx) => {
   try {
-    const userId = ctx.from.id.toString();
-    const user = await User.findOne({ telegram_id: userId });
+    const telegramId = ctx.from.id.toString();
+    
+    // Check if user exists in database
+    const result = await pool.query(
+      'SELECT * FROM users WHERE telegram_id = $1',
+      [telegramId]
+    );
 
-    if (!user) {
+    if (!result.rows[0]) {
       return ctx.reply('Please start the bot first with /start');
     }
 
@@ -33,7 +38,8 @@ const linkSocialHandler = async (ctx) => {
             [{ text: 'X (Twitter)', callback_data: 'link_x' }],
             [{ text: 'Discord', callback_data: 'link_discord' }]
           ]
-        }
+        },
+        parse_mode: 'Markdown'
       }
     );
   } catch (error) {
