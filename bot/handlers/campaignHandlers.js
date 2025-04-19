@@ -17,9 +17,10 @@ const pool = new Pool({
  */
 const newCampaignHandler = async (ctx) => {
   try {
+    // Verify user exists and has required permissions
     const userId = ctx.from.id.toString();
     const result = await pool.query(
-      'SELECT is_project_owner FROM users WHERE telegram_id = $1',
+      'SELECT is_project_owner, username FROM users WHERE telegram_id = $1',
       [userId]
     );
 
@@ -33,6 +34,18 @@ const newCampaignHandler = async (ctx) => {
       return;
     }
 
+    // Check if user has any projects
+    const projectResult = await pool.query(
+      'SELECT COUNT(*) FROM projects WHERE owner_id = $1',
+      [userId]
+    );
+
+    if (projectResult.rows[0].count === '0') {
+      await ctx.reply('You need to create a project first. Use /newproject to create one.');
+      return;
+    }
+
+    // Enter campaign creation scene
     return ctx.scene.enter('campaignCreation');
   } catch (error) {
     console.error('Error in newCampaignHandler:', error);

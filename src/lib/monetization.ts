@@ -3,6 +3,7 @@
 import type { User } from './models/user';
 import type { Campaign } from './models/campaign';
 import { type SubscriptionPlan, SUBSCRIPTION_PLANS } from './models/payment';
+import type { PaymentMethod } from './models/payment';
 
 /**
  * Calculate the reward amount for a user's campaign participation
@@ -13,37 +14,27 @@ export function calculateReward(campaign: Campaign, isPremiumUser: boolean): num
 }
 
 /**
- * Calculate the amount of credits needed to cash out a specific amount
- */
-export function calculateCreditsForCashout(amountUsd: number): number {
-  return amountUsd * 100;
-}
-
-/**
  * Calculate USD value of credits
  */
 export function calculateUsdValueOfCredits(credits: number): number {
-  const conversionRate = 0.01; // 1 credit = $0.01 USD
-  return credits * conversionRate;
+  // 1 credit = $0.01 USD
+  return credits * 0.01;
 }
 
 /**
  * Calculate cashout commission based on amount
  */
 export function calculateCashoutCommission(amount: number): number {
-  const baseCommission = 0.05; // 5% base commission
-  const minCommission = 1; // Minimum $1 commission
-
-  const commission = amount * baseCommission;
-  return Math.max(commission, minCommission);
+  // 5% commission on cashouts
+  return amount * 0.05;
 }
 
 /**
  * Check if user is eligible for cashout
  */
 export function isEligibleForCashout(credits: number): boolean {
-  const minCashoutCredits = 1000; // Minimum 1000 credits required
-  return credits >= minCashoutCredits;
+  // Minimum 1000 credits ($10) for cashout
+  return credits >= 1000;
 }
 
 /**
@@ -56,13 +47,21 @@ export function calculateCampaignFee(campaignType: 'basic' | 'featured' | 'viral
     viral: 50 // $50 base fee
   };
 
-  const dailyFees = {
-    basic: 2, // $2 per day
-    featured: 5, // $5 per day
-    viral: 10 // $10 per day
-  };
+  // Add $5 per day after first day
+  const extraDays = Math.max(0, duration - 1);
+  return baseFees[campaignType] + (extraDays * 5);
+}
 
-  return baseFees[campaignType] + (dailyFees[campaignType] * duration);
+export function calculateRewardPoints(engagement: {
+  likes?: number;
+  retweets?: number;
+  comments?: number;
+}): number {
+  return (
+    (engagement.likes || 0) * 1 +
+    (engagement.retweets || 0) * 2 +
+    (engagement.comments || 0) * 3
+  );
 }
 
 /**
