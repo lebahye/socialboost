@@ -113,7 +113,7 @@ const manageCampaignHandler = async (ctx) => {
   try {
     // Get user ID from context
     const userId = ctx.from.id.toString();
-    
+
     // Get user from database
     const { rows: [user] } = await pool.query(
       'SELECT * FROM users WHERE telegram_id = $1',
@@ -141,78 +141,82 @@ const manageCampaignHandler = async (ctx) => {
       return;
     }
 
-  const campaignNumber = parseInt(parts[1]);
+    const campaignNumber = parseInt(parts[1]);
 
-  // Initialize session if not exists
-  if (!ctx.session) ctx.session = {};
+    // Initialize session if not exists
+    if (!ctx.session) ctx.session = {};
 
-  // Check if user has listed campaigns in session
-  if (!ctx.session.listedCampaigns || ctx.session.listedCampaigns.length === 0) {
-    // Fetch campaigns directly if not in session
-    try {
-      const { rows: campaigns } = await pool.query(`
-        SELECT id FROM campaigns 
-        WHERE created_by = $1 OR private = false
-      `, [user.telegramId]);
-      
-      if (!campaigns || campaigns.length === 0) {
+    // Check if user has listed campaigns in session
+    if (!ctx.session.listedCampaigns || ctx.session.listedCampaigns.length === 0) {
+      // Fetch campaigns directly if not in session
+      try {
+        const { rows: campaigns } = await pool.query(`
+          SELECT id FROM campaigns 
+          WHERE created_by = $1 OR private = false
+        `, [user.telegramId]);
+
+        if (!campaigns || campaigns.length === 0) {
+          await ctx.reply(
+            'No campaigns found. You can create a new campaign with /newcampaign'
+          );
+          return;
+        }
+
+        ctx.session.listedCampaigns = campaigns.map(c => c.id);
+      } catch (err) {
+        console.error('Error fetching campaigns:', err);
         await ctx.reply(
-          'No campaigns found. You can create a new campaign with /newcampaign'
+          'Please use /campaigns first to see the list of available campaigns.'
         );
         return;
       }
-      
-      ctx.session.listedCampaigns = campaigns.map(c => c.id);
-    } catch (err) {
-      console.error('Error fetching campaigns:', err);
+    }
+
+    if (campaignNumber < 1 || campaignNumber > ctx.session.listedCampaigns.length) {
       await ctx.reply(
-        'Please use /campaigns first to see the list of available campaigns.'
+        `Invalid campaign number. Please choose a number between 1 and ${ctx.session.listedCampaigns.length}.`
       );
       return;
     }
-  }
 
-  if (campaignNumber < 1 || campaignNumber > ctx.session.listedCampaigns.length) {
-    await ctx.reply(
-      `Invalid campaign number. Please choose a number between 1 and ${ctx.session.listedCampaigns.length}.`
-    );
-    return;
-  }
+    const campaignId = ctx.session.listedCampaigns[campaignNumber - 1];
 
-  const campaignId = ctx.session.listedCampaigns[campaignNumber - 1];
+    try {
+      const campaign = await Campaign.findById(campaignId);
 
-  try {
-    const campaign = await Campaign.findById(campaignId);
-
-    if (!campaign) {
-      await ctx.reply('Campaign not found. It may have been deleted.');
-      return;
-    }
-
-    // Different behavior for project owners vs regular users
-    if (user.isProjectOwner) {
-      // Check if user is owner of the project this campaign belongs to
-      const project = await Project.findOne({
-        _id: campaign.projectId,
-        'owners.telegramId': user.telegramId
-      });
-
-      if (!project) {
-        await ctx.reply('You do not have permission to manage this campaign.');
+      if (!campaign) {
+        await ctx.reply('Campaign not found. It may have been deleted.');
         return;
       }
 
-      // Show campaign details with management options
-      await showCampaignDetailsForOwner(ctx, campaign, project);
+      // Different behavior for project owners vs regular users
+      if (user.isProjectOwner) {
+        // Check if user is owner of the project this campaign belongs to
+        const project = await Project.findOne({
+          _id: campaign.projectId,
+          'owners.telegramId': user.telegramId
+        });
 
-    } else {
-      // Show campaign details with participation options
-      await showCampaignDetailsForParticipant(ctx, campaign, user);
+        if (!project) {
+          await ctx.reply('You do not have permission to manage this campaign.');
+          return;
+        }
+
+        // Show campaign details with management options
+        await showCampaignDetailsForOwner(ctx, campaign, project);
+
+      } else {
+        // Show campaign details with participation options
+        await showCampaignDetailsForParticipant(ctx, campaign, user);
+      }
+
+    } catch (err) {
+      console.error('Error managing campaign:', err);
+      await ctx.reply('An error occurred while retrieving campaign details. Please try again later.');
     }
-
-  } catch (err) {
-    console.error('Error managing campaign:', err);
-    await ctx.reply('An error occurred while retrieving campaign details. Please try again later.');
+  } catch (error) {
+    console.error("Error in manageCampaignHandler", error);
+    await ctx.reply("An unexpected error occurred. Please try again later.");
   }
 };
 
@@ -298,7 +302,7 @@ async function showCampaignDetailsForParticipant(ctx, campaign, user) {
     if (xAccount) {
       const postId = campaign.xPostUrl.split('/').pop();
       const verification = await verifyXPostEngagement(postId, xAccount.username);
-      
+
       if (verification.verified) {
         // Update participation status
         await Campaign.update(campaign.id, {
@@ -313,7 +317,7 @@ async function showCampaignDetailsForParticipant(ctx, campaign, user) {
             engagement: verification.metrics
           }
         });
-        
+
         // Refresh campaign data
         campaign = await Campaign.findById(campaign.id);
         hasParticipated = true;
@@ -382,7 +386,7 @@ const joinCampaignCallback = async (ctx) => {
     await ctx.answerCbQuery('User information not found. Please start the bot with /start');
     return;
   }
-  
+
   const callbackData = ctx.callbackQuery.data;
   const campaignId = callbackData.replace('join_campaign_', '');
 
@@ -422,7 +426,7 @@ const joinCampaignCallback = async (ctx) => {
     // Check if user has verified X account if campaign requires it
     const hasVerifiedAccount = user.social_accounts && 
                               user.social_accounts.some(acc => acc.platform === 'x' && acc.verified);
-                              
+
     if (!hasVerifiedAccount) {
       await ctx.answerCbQuery(
         'You need a verified X account to join this campaign. Use /link to connect your account.',
@@ -447,8 +451,10 @@ const joinCampaignCallback = async (ctx) => {
     await ctx.answerCbQuery('You have successfully joined the campaign!');
 
   } catch (err) {
-    console.error('Error joining campaign:', err);
-    await ctx.answerCbQuery('An error occurred. Please try again later.');
+    console.error('Error in joinCampaignCallback:', err);
+    await ctx.answerCbQuery('An error occurred while joining the campaign. Please try again later.');
+  }
+};
 
 /**
  * Function to post a campaign to a project's Telegram channel
@@ -471,7 +477,7 @@ const postCampaignToChannelHandler = async (ctx) => {
 
     const campaignId = parts[1];
     const channelUsername = parts[2];
-    
+
     // Verify the user has permission to manage this campaign
     const user = ctx.state.user || await User.findOne({ telegramId: ctx.from.id.toString() });
     if (!user) {
@@ -530,16 +536,16 @@ const postCampaignToChannelHandler = async (ctx) => {
           inline_keyboard: inlineKeyboard
         }
       });
-      
+
       // Update campaign with channel information
       campaign.postedToChannels = campaign.postedToChannels || [];
       campaign.postedToChannels.push({
         channelUsername: channelUsername,
         postedAt: new Date()
       });
-      
+
       await campaign.save();
-      
+
       await ctx.reply(`Campaign has been successfully posted to ${channelUsername}!`);
     } catch (error) {
       console.error('Error posting to channel:', error);
@@ -557,9 +563,6 @@ module.exports = {
   manageCampaignHandler,
   joinCampaignCallback,
   postCampaignToChannelHandler
-};
-
-  }
 };
 
 /**
@@ -603,10 +606,3 @@ function formatDate(date) {
     day: 'numeric'
   });
 }
-
-module.exports = {
-  newCampaignHandler,
-  listCampaignsHandler,
-  manageCampaignHandler,
-  joinCampaignCallback
-};
