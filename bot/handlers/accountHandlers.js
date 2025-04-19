@@ -46,32 +46,39 @@ const linkSocialHandler = async (ctx) => {
  * Callback handler for linking X (Twitter) account
  */
 const linkXAccountCallback = async (ctx) => {
-  const telegramId = ctx.from.id.toString();
-  const result = await pool.query(
-    'SELECT * FROM users WHERE telegram_id = $1',
-    [telegramId]
-  );
+  try {
+    const telegramId = ctx.from.id.toString();
+    
+    // First check if user exists
+    const result = await pool.query(
+      'SELECT * FROM users WHERE telegram_id = $1',
+      [telegramId]
+    );
 
-  if (!result.rows[0]) {
-    return ctx.reply('Please start the bot first with /start');
+    if (!result.rows[0]) {
+      return ctx.reply('Please start the bot first with /start');
+    }
+
+    // Update user state
+    await pool.query(
+      'UPDATE users SET current_state = $1 WHERE telegram_id = $2',
+      ['awaiting_x_username', telegramId]
+    );
+
+    const message = '📱 *Linking your X (Twitter) account*\n\n' +
+      'Please send your X username *without* the @ symbol.\n' +
+      'For example, if your X handle is @username, just send `username`';
+
+    // Handle both cases - new message or edit existing
+    if (ctx.callbackQuery) {
+      await ctx.editMessageText(message, { parse_mode: 'Markdown' });
+    } else {
+      await ctx.reply(message, { parse_mode: 'Markdown' });
+    }
+  } catch (error) {
+    console.error('Error in linkXAccountCallback:', error);
+    await ctx.reply('An error occurred while setting up X account linking. Please try again.');
   }
-
-  // Update user state
-  const updateResult = await pool.query(
-    'UPDATE users SET current_state = $1 WHERE telegram_id = $2 RETURNING *',
-    ['awaiting_x_username', telegramId]
-  );
-
-  if (!result.rows[0]) {
-    return ctx.reply('Please start the bot first with /start');
-  }
-
-  await ctx.editMessageText(
-    '📱 *Linking your X (Twitter) account*\n\n' +
-    'Please send your X username *without* the @ symbol.\n' +
-    'For example, if your X handle is @username, just send `username`',
-    { parse_mode: 'Markdown' }
-  );
 };
 
 /**
@@ -511,26 +518,44 @@ const unlinkAccountCallback = async (ctx) => {
  * Text message handler for state-based conversations
  */
 const textHandler = async (ctx) => {
-  const user = ctx.state.user;
+  try {
+    const telegramId = ctx.from.id.toString();
+    
+    // Get user's current state from database
+    const result = await pool.query(
+      'SELECT current_state FROM users WHERE telegram_id = $1',
+      [telegramId]
+    );
 
-  if (!user || !user.currentState) {
-    // If no state is set, pass to next handler
-    return;
-  }
+    if (!result.rows[0]) {
+      return;
+    }
 
-  switch (user.currentState) {
-    case 'awaiting_x_username':
-      await processXUsername(ctx);
-      break;
+    const currentState = result.rows[0].current_state;
 
-    case 'awaiting_discord_username':
-      await processDiscordUsername(ctx);
-      break;
+    if (!currentState) {
+      return;
+    }
 
-    default:
-      // Unknown state, reset it
-      user.currentState = null;
-      await user.save();
+    switch (currentState) {
+      case 'awaiting_x_username':
+        await processXUsername(ctx);
+        break;
+
+      case 'awaiting_discord_username':
+        await processDiscordUsername(ctx);
+        break;
+
+      default:
+        // Reset unknown state
+        await pool.query(
+          'UPDATE users SET current_state = NULL WHERE telegram_id = $1',
+          [telegramId]
+        );
+    }
+  } catch (error) {
+    console.error('Error in textHandler:', error);
+    await ctx.reply('An error occurred while processing your message. Please try again.');
   }
 };
 
