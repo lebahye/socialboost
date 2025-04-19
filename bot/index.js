@@ -32,7 +32,15 @@ const stage = new Stage([
   userRegistrationScene
 ]);
 
-// Set up session handling (use built-in session middleware)
+// Scene error handling
+stage.on('error', (ctx, error) => {
+  console.error('Scene error:', error);
+  ctx.reply('An error occurred during the process. Please try again with /register.');
+});
+
+// Set up session handling
+bot.use(session());
+bot.use(stage.middleware());
 bot.use(session());
 
 // Register stage middleware

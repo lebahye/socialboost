@@ -109,8 +109,16 @@ const registerHandler = async (ctx) => {
       );
     }
 
-    // Start registration scene
-    return ctx.scene.enter('USER_REGISTRATION');
+    // Initialize registration state
+    ctx.session.registrationData = {
+      telegramId,
+      username: ctx.from.username,
+      firstName: ctx.from.first_name,
+      lastName: ctx.from.last_name
+    };
+
+    // Enter registration scene
+    return ctx.scene.enter('userRegistration');
   } catch (error) {
     console.error('Error in registerHandler:', error);
     await ctx.reply('An error occurred during registration. Please try again.');
