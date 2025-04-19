@@ -37,6 +37,15 @@ const listCampaignsHandler = async (ctx) => {
       return;
     }
 
+    await ctx.reply(
+      '📢 *Campaign Selection Guide*\n\n' +
+      '1️⃣ Find the campaign number (1, 2, 3, etc.)\n' +
+      '2️⃣ Use `/campaign [number]` to view details\n' +
+      '3️⃣ Example: `/campaign 1`\n\n' +
+      'Available campaigns are listed below:\n',
+      { parse_mode: 'Markdown' }
+    );
+
     // Get all campaigns from database
     const { rows: allCampaigns } = await pool.query(`
       SELECT * FROM campaigns 
@@ -101,20 +110,29 @@ const listCampaignsHandler = async (ctx) => {
  * Allows viewing and managing specific campaigns
  */
 const manageCampaignHandler = async (ctx) => {
-  const user = ctx.state.user;
+  try {
+    // Get user from context
+    const user = ctx.state.user;
+    if (!user) {
+      await ctx.reply('Please start the bot first with /start command.');
+      return;
+    }
 
-  // Extract campaign number from command
-  const text = ctx.message.text.trim();
-  const parts = text.split(' ');
+    // Extract campaign number from command
+    const text = ctx.message.text.trim();
+    const parts = text.split(' ');
 
-  if (parts.length !== 2 || isNaN(parseInt(parts[1]))) {
-    await ctx.reply(
-      'Please specify which campaign to view or manage.\n\n' +
-      'Usage: /campaign [number]\n\n' +
-      'You can see the campaign numbers by using the /campaigns command.'
-    );
-    return;
-  }
+    if (parts.length !== 2 || isNaN(parseInt(parts[1]))) {
+      await ctx.reply(
+        '❌ Invalid command format.\n\n' +
+        '📝 How to use:\n' +
+        '1. First use /campaigns to see available campaigns\n' +
+        '2. Note the number (1, 2, 3, etc.) next to the campaign you want to view\n' +
+        '3. Then use: /campaign [number]\n\n' +
+        'Example: /campaign 1 to view the first campaign'
+      );
+      return;
+    }
 
   const campaignNumber = parseInt(parts[1]);
 
