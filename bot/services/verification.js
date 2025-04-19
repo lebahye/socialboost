@@ -62,12 +62,21 @@ class VerificationService {
       // Get user's recent DMs
       let messages;
       try {
+        // First ensure we have DM permissions
+        const appPermissions = await twitterClient.v2.me();
+        console.log('Bot permissions:', appPermissions);
+        
         messages = await twitterClient.v2.listDirectMessages({
           max_results: 50,
-          'dm.fields': ['text', 'created_at']
+          'dm.fields': ['text', 'created_at', 'sender_id']
         });
+        
+        console.log('Retrieved DMs for verification');
       } catch (err) {
         console.error('Error fetching DMs:', err);
+        if (err.code === 349) {
+          throw new Error('Bot lacks DM permissions. Please check API tokens.');
+        }
         throw new Error('Failed to fetch direct messages. Please try again.');
       }
 
