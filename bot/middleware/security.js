@@ -22,15 +22,24 @@ const postAttempts = new Map();
 // Content verification middleware
 const contentVerificationMiddleware = async (ctx, next) => {
   if (ctx.message?.text) {
-    // Basic content filtering
+    // Enhanced content filtering
     const forbiddenPatterns = [
       /script\s*?>/i,
       /(wget|curl)\s+/i,
-      /rm\s+-rf/i
+      /rm\s+-rf/i,
+      /[<>].*?[<>]/i, // Prevent HTML/XML injection
+      /(?:http|ftp|https):\/\/[\w-]+(?:\.[\w-]+)+(?:[\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?/i, // URL validation
+      /[^\x20-\x7E]/ // Non-printable characters
     ];
     
     if (forbiddenPatterns.some(pattern => pattern.test(ctx.message.text))) {
       await ctx.reply('⚠️ Potentially harmful content detected.');
+      return;
+    }
+
+    // Check message length
+    if (ctx.message.text.length > 4096) {
+      await ctx.reply('⚠️ Message too long. Maximum length is 4096 characters.');
       return;
     }
   }
