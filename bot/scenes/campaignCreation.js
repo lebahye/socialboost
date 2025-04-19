@@ -100,24 +100,29 @@ const campaignCreationScene = new Scenes.WizardScene(
           return ctx.scene.leave();
         }
 
-      // Store selected project
-      ctx.wizard.state.selectedProject = ctx.wizard.state.availableProjects[projectIndex];
+        // Store selected project
+        ctx.wizard.state.selectedProject = ctx.wizard.state.availableProjects[projectIndex];
 
-      // Ask for campaign name
-      await ctx.editMessageText(
-        '🚀 *Campaign Creation - Step 2/6*\n\n' +
-        `Selected Project: *${ctx.wizard.state.selectedProject.name}*\n\n` +
-        'What would you like to name this campaign?\n\n' +
-        'Please enter a clear, descriptive name (max 50 characters).',
-        { parse_mode: 'Markdown' }
-      );
+        // Ask for campaign name
+        await ctx.editMessageText(
+          '🚀 *Campaign Creation - Step 2/6*\n\n' +
+          `Selected Project: *${ctx.wizard.state.selectedProject.name}*\n\n` +
+          'What would you like to name this campaign?\n\n' +
+          'Please enter a clear, descriptive name (max 50 characters).',
+          { parse_mode: 'Markdown' }
+        );
 
-      return ctx.wizard.next();
+        return ctx.wizard.next();
+      }
+
+      // If not a callback query, prompt to use the buttons
+      await ctx.reply('Please select a project using the buttons above.');
+      return;
+    } catch (error) {
+      console.error('Error in campaign creation step 2:', error);
+      await ctx.reply('An error occurred while creating the campaign. Please try again.');
+      return ctx.scene.leave();
     }
-
-    // If not a callback query, prompt to use the buttons
-    await ctx.reply('Please select a project using the buttons above.');
-    return;
   },
 
   // Step 3: Get campaign name and ask for description
