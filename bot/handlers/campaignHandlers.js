@@ -153,7 +153,7 @@ const manageCampaignHandler = async (ctx) => {
     const messageText = ctx.message.text.trim();
     const parts = messageText.split(' ');
     const campaignNumber = parseInt(parts[1]);
-    
+
     if (parts.length !== 2 || isNaN(campaignNumber)) {
       await ctx.reply(
         '❌ Invalid command format\n\n' +
@@ -562,9 +562,30 @@ const joinCampaignCallback = async (ctx) => {
  */
 const postCampaignToChannelHandler = async (ctx) => {
   try {
-    // Extract campaign ID from command
-    const text = ctx.message.text.trim();
-    const parts = text.split(' ');
+    // Verify user is project owner
+    const telegramId = ctx.from.id.toString();
+    const userResult = await pool.query(
+      'SELECT * FROM users WHERE telegram_id = $1 AND is_project_owner = true',
+      [telegramId]
+    );
+
+    if (!userResult.rows[0]) {
+      await ctx.reply('❌ Only project owners can post campaigns.');
+      return;
+    }
+
+    // Rate limiting check
+    const rateLimit = await pool.query(
+      'SELECT COUNT(*) FROM campaign_posts WHERE owner_id = $1 AND created_at > NOW() - INTERVAL \'1 hour\'',
+      [telegramId]
+    );
+
+    if (rateLimit.rows[0].count >= 5) {
+      await ctx.reply('⚠️ Rate limit reached. Please wait before posting more campaigns.');
+      return;
+    }
+
+    const parts = ctx.message.text.split(' ');
 
     if (parts.length !== 3) {
       await ctx.reply(

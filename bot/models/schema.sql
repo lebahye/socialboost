@@ -1,3 +1,13 @@
+
+-- Campaign posts tracking for rate limiting
+CREATE TABLE IF NOT EXISTS campaign_posts (
+  id SERIAL PRIMARY KEY,
+  campaign_id INTEGER REFERENCES campaigns(id),
+  owner_id TEXT NOT NULL,
+  channel_id TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Users table with complete fields
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
