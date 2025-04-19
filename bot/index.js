@@ -65,7 +65,7 @@ bot.use(async (ctx, next) => {
 });
 
 // Import all handlers
-const { startHandler, helpHandler, statusHandler, tutorialHandler } = require('./handlers/basicHandlers');
+const { startHandler, helpHandler, statusHandler, tutorialHandler, welcomeHandler, registerHandler } = require('./handlers/basicHandlers');
 const { linkSocialHandler, linkXAccountCallback, linkDiscordCallback, verifyAccountHandler, unlinkAccountHandler, unlinkAccountCallback, textHandler } = require('./handlers/accountHandlers');
 const { newProjectHandler, listProjectsHandler, manageProjectHandler } = require('./handlers/projectHandlers');
 const { newCampaignHandler, listCampaignsHandler, manageCampaignHandler, postCampaignToChannelHandler } = require('./handlers/campaignHandlers');
@@ -96,6 +96,8 @@ bot.command('start', async (ctx) => {
   }
   await startHandler(ctx);
 });
+bot.command('welcome', welcomeHandler || (async (ctx) => await ctx.reply('Welcome command is not available')));
+bot.command('register', registerHandler || (async (ctx) => await ctx.reply('Registration is not available')));
 bot.command('help', helpHandler || (async (ctx) => await ctx.reply('Help command is not available')));
 bot.command('status', statusHandler || (async (ctx) => await ctx.reply('Status command is not available')));
 bot.command('tutorial', tutorialHandler || (async (ctx) => await ctx.reply('Tutorial command is not available')));

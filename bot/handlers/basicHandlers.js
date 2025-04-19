@@ -66,6 +66,51 @@ const startHandler = async (ctx) => {
   }
 };
 
+const welcomeHandler = async (ctx) => {
+  try {
+    await ctx.reply(
+      '👋 *Welcome to SocialBoost!*\n\n' +
+      'I help coordinate social media campaigns between blockchain projects and their communities.\n\n' +
+      '🔹 *For Community Members:*\n' +
+      '• Participate in campaigns\n' +
+      '• Earn rewards for engagement\n' +
+      '• Track your achievements\n\n' +
+      '🔹 *For Project Owners:*\n' +
+      '• Create and manage campaigns\n' +
+      '• Track engagement metrics\n' +
+      '• Grow your community\n\n' +
+      'Use /register to set up your account or /help to see all commands.',
+      { parse_mode: 'Markdown' }
+    );
+  } catch (error) {
+    console.error('Error in welcomeHandler:', error);
+    await ctx.reply('An error occurred. Please try again.');
+  }
+};
+
+const registerHandler = async (ctx) => {
+  try {
+    // Check if user is already registered
+    const telegramId = ctx.from.id.toString();
+    const result = await pool.query(
+      'SELECT * FROM users WHERE telegram_id = $1',
+      [telegramId]
+    );
+
+    if (result.rows[0]) {
+      return ctx.reply(
+        'You are already registered! Use /status to check your account details or /help to see available commands.'
+      );
+    }
+
+    // Start registration scene
+    return ctx.scene.enter('USER_REGISTRATION');
+  } catch (error) {
+    console.error('Error in registerHandler:', error);
+    await ctx.reply('An error occurred during registration. Please try again.');
+  }
+};
+
 const helpHandler = async (ctx) => {
   try {
     const userId = ctx.from.id.toString();
@@ -194,5 +239,7 @@ module.exports = {
   startHandler,
   helpHandler,
   statusHandler,
-  tutorialHandler
+  tutorialHandler,
+  welcomeHandler,
+  registerHandler
 };
