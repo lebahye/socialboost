@@ -38,31 +38,63 @@ class VerificationService {
         throw new Error('Twitter client not initialized');
       }
 
-      // First get user by username
-      const user = await twitterClient.v2.userByUsername(username);
-      if (!user.data) {
-        throw new Error('X account not found');
+      // Validate inputs
+      if (!username || !verificationCode) {
+        throw new Error('Missing required verification parameters');
       }
 
-      // Get user's recent tweets
-      const tweets = await twitterClient.v2.userTimeline(user.data.id, {
-        max_results: 10,
-        'tweet.fields': ['text', 'created_at']
+      // Clean username (remove @ if present)
+      username = username.replace('@', '');
+
+      // Get user by username with error handling
+      let user;
+      try {
+        user = await twitterClient.v2.userByUsername(username);
+      } catch (err) {
+        console.error('Error fetching X user:', err);
+        throw new Error('Failed to fetch X account. Please check the username.');
+      }
+
+      if (!user?.data) {
+        throw new Error('X account not found or is private');
+      }
+
+      // Get user's recent tweets with expanded parameters
+      let tweets;
+      try {
+        tweets = await twitterClient.v2.userTimeline(user.data.id, {
+          max_results: 20,
+          'tweet.fields': ['text', 'created_at', 'public_metrics'],
+          exclude: ['retweets', 'replies']
+        });
+      } catch (err) {
+        console.error('Error fetching tweets:', err);
+        throw new Error('Failed to fetch recent tweets. Please try again.');
+      }
+
+      if (!tweets?.data) {
+        throw new Error('No recent tweets found');
+      }
+
+      // Check for verification code in tweets with timestamps
+      const verificationTweet = tweets.data.find(tweet => {
+        const tweetTime = new Date(tweet.created_at);
+        const timeElapsed = Date.now() - tweetTime.getTime();
+        return tweet.text.includes(verificationCode) && timeElapsed < 15 * 60 * 1000;
       });
 
-      // Check for verification code in tweets
-      const isVerified = tweets.data.some(tweet => 
-        tweet.text.includes(verificationCode) &&
-        new Date(tweet.created_at) > new Date(Date.now() - 15 * 60 * 1000) // Within last 15 minutes
-      );
-
-      if (isVerified) {
+      if (verificationTweet) {
         console.log(`Successfully verified X account: ${username}`);
-        return true;
-      } else {
-        console.log(`Verification failed for X account: ${username}`);
-        return false;
+        // Store additional metrics for later use
+        return {
+          verified: true,
+          tweet_id: verificationTweet.id,
+          metrics: verificationTweet.public_metrics
+        };
       }
+
+      console.log(`Verification failed for X account: ${username}`);
+      return { verified: false };
 
     } catch (error) {
       console.error('X verification error:', error);

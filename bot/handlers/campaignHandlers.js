@@ -144,12 +144,26 @@ const listCampaignsHandler = async (ctx) => {
  */
 const manageCampaignHandler = async (ctx) => {
   try {
-    // Validate context
+    // Input validation
     if (!ctx?.from?.id) {
-      console.error('Invalid context in manageCampaignHandler');
-      await ctx.reply('An error occurred. Please try again.');
+      throw new Error('INVALID_CONTEXT');
+    }
+
+    // Validate campaign number format
+    const text = ctx.message.text.trim();
+    const parts = text.split(' ');
+    
+    if (parts.length !== 2 || isNaN(parseInt(parts[1]))) {
+      await ctx.reply(
+        '❌ Invalid command format\n\n' +
+        'Usage: /campaign [number]\n' +
+        'Example: /campaign 1\n\n' +
+        'Use /campaigns to see available campaigns first.'
+      );
       return;
     }
+
+    const campaignNumber = parseInt(parts[1]);
 
     const userId = ctx.from.id.toString();
 
