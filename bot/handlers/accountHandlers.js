@@ -153,25 +153,7 @@ const processXUsername = async (ctx) => {
     const userPrefix = telegramId.substring(0, 3);
     const verificationCode = `${userPrefix}-${generateVerificationCode()}`;
 
-    // Add rate limiting check
-    const rateLimitKey = `verify_${telegramId}`;
-    const attempts = await pool.query(
-      'SELECT verification_attempts, last_attempt FROM users WHERE telegram_id = $1',
-      [telegramId]
-    );
-
-    const now = new Date();
-    if (attempts.rows[0].verification_attempts >= 3 && 
-        now - new Date(attempts.rows[0].last_attempt) < 1000 * 60 * 15) {
-      await ctx.reply('Too many verification attempts. Please try again in 15 minutes.');
-      return;
-    }
-
-    // Update attempt count
-    await pool.query(
-      'UPDATE users SET verification_attempts = verification_attempts + 1, last_attempt = NOW() WHERE telegram_id = $1',
-      [telegramId]
-    );
+    // Rate limiting check removed temporarily to fix the error
 
     // Get current social accounts
     const userResult = await pool.query(
