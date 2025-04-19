@@ -16,7 +16,9 @@ CREATE TABLE IF NOT EXISTS users (
   referral_code TEXT UNIQUE,
   referred_by TEXT,
   is_premium BOOLEAN DEFAULT false,
-  achievements JSONB DEFAULT '[]',
+  achievements JSONB DEFAULT '[]', 
+  referral_count INTEGER DEFAULT 0,
+  campaigns_completed INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

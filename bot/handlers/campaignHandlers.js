@@ -181,8 +181,8 @@ const manageCampaignHandler = async (ctx) => {
       return;
     }
 
-    // Campaign number was already extracted above, no need to do it again
-    if (!campaignNumber) {
+    const campaignNumber = parseInt(parts[1]);
+    if (!campaignNumber || isNaN(campaignNumber)) {
       await ctx.reply(
         '❌ Invalid command format.\n\n' +
         '📝 How to use:\n' +

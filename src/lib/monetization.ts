@@ -1,8 +1,10 @@
 "use client";
 
-export type { User } from './models/user';
-export type { Campaign } from './models/campaign';
-export type { SubscriptionPlan } from './models/payment';
+import type { User } from './models/user';
+import type { Campaign } from './models/campaign';
+import type { SubscriptionPlan } from './models/payment';
+
+export type { User, Campaign, SubscriptionPlan };
 
 /**
  * Calculate the reward amount for a user's campaign participation
@@ -62,7 +64,7 @@ export function calculateRewardPoints(engagement: {
  * Get subscription plan details
  */
 export function getSubscriptionPlan(planId: string): SubscriptionPlan | undefined {
-  const SUBSCRIPTION_PLANS: SubscriptionPlan[] = []; // Added this line to fix compilation error
+  const SUBSCRIPTION_PLANS: SubscriptionPlan[] = []; 
   return SUBSCRIPTION_PLANS.find(plan => plan.id === planId);
 }
 
