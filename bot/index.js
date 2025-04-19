@@ -8,6 +8,12 @@ const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
 
 // Use session middleware
 const LocalSession = require('telegraf-session-local');
+const { rateLimit, contentVerification, channelPosting } = require('./middleware/security');
+
+// Apply security middleware
+bot.use(rateLimit);
+bot.use(contentVerification);
+bot.use(channelPosting);
 
 // Import scheduler
 const { initializeScheduler } = require('./services/scheduler');
