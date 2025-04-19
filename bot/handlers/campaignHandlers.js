@@ -556,6 +556,25 @@ const postCampaignToChannelHandler = async (ctx) => {
       [{ text: 'Get Campaign Notifications', url: `https://t.me/${ctx.botInfo.username}?start=notify_${campaign._id}` }]
     ];
 
+    // Format engagement stats if available
+    let engagementText = '';
+    if (campaign.stats && campaign.stats.engagement) {
+      engagementText = '\n\n📊 *Engagement Stats:*\n' +
+        `❤️ Likes: ${campaign.stats.engagement.likes || 0}\n` +
+        `💬 Comments: ${campaign.stats.engagement.comments || 0}\n` +
+        `🔄 Retweets: ${campaign.stats.engagement.retweets || 0}\n` +
+        `🔖 Bookmarks: ${campaign.stats.engagement.bookmarks || 0}`;
+    }
+
+    // Add points info if available  
+    if (campaign.reward) {
+      engagementText += '\n\n🎯 *Rewards:*\n' +
+        `🏆 Points: +${campaign.reward}\n` +
+        `📈 Leaderboard Position: ${campaign.leaderboardPosition || 'N/A'}`;
+    }
+
+    messageText += engagementText;
+
     // Post message to the channel
     try {
       await ctx.telegram.sendMessage(channelUsername, messageText, {
