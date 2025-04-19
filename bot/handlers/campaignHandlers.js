@@ -17,7 +17,22 @@ const pool = new Pool({
  */
 const newCampaignHandler = async (ctx) => {
   try {
-    // Enter the campaign creation scene
+    const userId = ctx.from.id.toString();
+    const result = await pool.query(
+      'SELECT is_project_owner FROM users WHERE telegram_id = $1',
+      [userId]
+    );
+
+    if (!result.rows[0]) {
+      await ctx.reply('Please start the bot first with /start');
+      return;
+    }
+
+    if (!result.rows[0].is_project_owner) {
+      await ctx.reply('Only project owners can create campaigns. Use /help for available commands.');
+      return;
+    }
+
     return ctx.scene.enter('campaignCreation');
   } catch (error) {
     console.error('Error in newCampaignHandler:', error);

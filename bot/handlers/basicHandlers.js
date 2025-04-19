@@ -20,10 +20,10 @@ const startHandler = async (ctx) => {
     if (ctx.startPayload) {
       if (ctx.startPayload === 'register_member') {
         ctx.session.registrationType = 'member';
-        return ctx.scene.enter('USER_REGISTRATION');
+        return ctx.scene.enter('userRegistration');
       } else if (ctx.startPayload === 'register_project') {
         ctx.session.registrationType = 'project';
-        return ctx.scene.enter('USER_REGISTRATION');
+        return ctx.scene.enter('userRegistration');
       } else if (await processDeepLink(ctx)) {
         return; // Other deep link was processed
       }

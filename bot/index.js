@@ -104,11 +104,46 @@ bot.command('start', async (ctx) => {
 });
 bot.command('welcome', welcomeHandler || (async (ctx) => await ctx.reply('Welcome command is not available')));
 // Basic commands
-bot.command('register', registerHandler);
-bot.command('help', helpHandler);
-bot.command('status', statusHandler);
-bot.command('tutorial', tutorialHandler);
-bot.command('welcome', welcomeHandler);
+bot.command('register', async (ctx) => {
+  try {
+    await registerHandler(ctx);
+  } catch (error) {
+    console.error('Error in register command:', error);
+    await ctx.reply('An error occurred. Please try again.');
+  }
+});
+bot.command('help', async (ctx) => {
+  try {
+    await helpHandler(ctx);
+  } catch (error) {
+    console.error('Error in help command:', error);
+    await ctx.reply('An error occurred. Please try again.');
+  }
+});
+bot.command('status', async (ctx) => {
+  try {
+    await statusHandler(ctx);
+  } catch (error) {
+    console.error('Error in status command:', error);
+    await ctx.reply('An error occurred. Please try again.');
+  }
+});
+bot.command('tutorial', async (ctx) => {
+  try {
+    await tutorialHandler(ctx);
+  } catch (error) {
+    console.error('Error in tutorial command:', error);
+    await ctx.reply('An error occurred. Please try again.');
+  }
+});
+bot.command('welcome', async (ctx) => {
+  try {
+    await welcomeHandler(ctx);
+  } catch (error) {
+    console.error('Error in welcome command:', error);
+    await ctx.reply('An error occurred. Please try again.');
+  }
+});
 
 // Account commands
 bot.command('link', linkSocialHandler);
