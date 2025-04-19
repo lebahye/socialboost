@@ -12,7 +12,7 @@ const pool = new Pool({
 });
 
 const campaignCreationScene = new Scenes.WizardScene(
-  'CAMPAIGN_CREATION',
+  'campaignCreation',
   // Step 1: Select project or start over if no projects
   async (ctx) => {
     const user = { telegramId: ctx.from.id.toString() };
