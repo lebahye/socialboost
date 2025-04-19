@@ -111,8 +111,15 @@ const listCampaignsHandler = async (ctx) => {
  */
 const manageCampaignHandler = async (ctx) => {
   try {
-    // Get user from context
-    const user = ctx.state.user;
+    // Get user ID from context
+    const userId = ctx.from.id.toString();
+    
+    // Get user from database
+    const { rows: [user] } = await pool.query(
+      'SELECT * FROM users WHERE telegram_id = $1',
+      [userId]
+    );
+
     if (!user) {
       await ctx.reply('Please start the bot first with /start command.');
       return;
