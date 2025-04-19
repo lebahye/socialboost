@@ -34,7 +34,7 @@ const { userRegistrationScene } = require('./scenes/userRegistration');
 // Initialize stage with scenes
 const stage = new Stage([
   projectRegistrationScene,
-  campaignCreationScene,
+  campaignCreationScene.scene,
   userRegistrationScene
 ]);
 
@@ -208,6 +208,7 @@ registerPaymentHandlers(bot);
 paymentService.setBot(bot);
 
 // Register callback query handlers
+bot.action(/join_campaign_(.+)/, joinCampaignCallback);
 bot.action(/link_([a-z]+)/, async (ctx) => {
   try {
     await ctx.answerCbQuery(); // Acknowledge the button press
