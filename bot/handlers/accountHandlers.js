@@ -168,23 +168,7 @@ const processXUsername = async (ctx) => {
       socialAccounts = [];
     }
 
-    // Handle Discord account linking
-    bot.command('link_discord', async (ctx) => {
-      try {
-        await ctx.reply(
-          'To link your Discord account:\n\n' +
-          '1. Send your Discord username (example: user#1234)\n' +
-          '2. I will send you a verification code\n' +
-          '3. Add me on Discord and send me that code'
-        );
-
-        // Set user state for Discord verification
-        await User.setState(ctx.from.id.toString(), 'AWAITING_DISCORD_USERNAME');
-      } catch (error) {
-        console.error('Error in link_discord command:', error);
-        await ctx.reply('An error occurred. Please try again later.');
-      }
-    });
+    // Discord account linking is handled separately
 
 
     // Find existing account or prepare to add new one
@@ -227,8 +211,11 @@ const processXUsername = async (ctx) => {
     console.error('Error linking X account:', err);
     await ctx.reply('Sorry, an error occurred. Please try again later.');
 
-    user.currentState = null;
-    await user.save();
+    // Reset user state in database
+    await pool.query(
+      'UPDATE users SET current_state = NULL WHERE telegram_id = $1',
+      [telegramId]
+    );
   }
 };
 
