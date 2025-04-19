@@ -56,8 +56,9 @@ try {
     appSecret: process.env.TWITTER_API_SECRET,
     accessToken: process.env.TWITTER_ACCESS_TOKEN,
     accessSecret: process.env.TWITTER_ACCESS_SECRET,
+    bearerToken: process.env.TWITTER_BEARER_TOKEN
   });
-  console.log('Twitter API client initialized');
+  console.log('Twitter API client initialized with all credentials');
 } catch (error) {
   console.error('Failed to initialize Twitter API client:', error);
   throw new Error('Twitter API client initialization failed. Please check your API credentials.');
