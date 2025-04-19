@@ -33,23 +33,40 @@ class VerificationService {
     try {
       console.log(`Attempting to verify X account: ${username} with code: ${verificationCode}`);
 
-      if (!this.twitterClient) {
-        console.error('Twitter client not initialized');
+      const twitterClient = global.twitterClient;
+      if (!twitterClient) {
+        throw new Error('Twitter client not initialized');
+      }
+
+      // First get user by username
+      const user = await twitterClient.v2.userByUsername(username);
+      if (!user.data) {
+        throw new Error('X account not found');
+      }
+
+      // Get user's recent tweets
+      const tweets = await twitterClient.v2.userTimeline(user.data.id, {
+        max_results: 10,
+        'tweet.fields': ['text', 'created_at']
+      });
+
+      // Check for verification code in tweets
+      const isVerified = tweets.data.some(tweet => 
+        tweet.text.includes(verificationCode) &&
+        new Date(tweet.created_at) > new Date(Date.now() - 15 * 60 * 1000) // Within last 15 minutes
+      );
+
+      if (isVerified) {
+        console.log(`Successfully verified X account: ${username}`);
+        return true;
+      } else {
+        console.log(`Verification failed for X account: ${username}`);
         return false;
       }
 
-      // For testing/development purposes (REMOVE IN PRODUCTION):
-      // Auto-verify during development to make testing easier
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Development mode: Auto-verifying X account');
-        return true;
-      }
-
-      const tweets = await this.twitterClient.v2.userTimeline(username, {tweet_fields: ['text']});
-      return tweets.data.some(tweet => tweet.text.includes(verificationCode));
     } catch (error) {
-      console.error('Twitter verification error:', error);
-      return false;
+      console.error('X verification error:', error);
+      throw error;
     }
   }
 

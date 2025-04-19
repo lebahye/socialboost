@@ -42,22 +42,23 @@ stage.on('error', (ctx, error) => {
 bot.use(session());
 bot.use(stage.middleware());
 
-// Initialize Twitter API client if credentials exist
+// Initialize Twitter API client
 let twitterClient = null;
-if (process.env.TWITTER_API_KEY && process.env.TWITTER_API_SECRET) {
-  try {
-    twitterClient = new TwitterApi({
-      appKey: process.env.TWITTER_API_KEY,
-      appSecret: process.env.TWITTER_API_SECRET,
-      accessToken: process.env.TWITTER_ACCESS_TOKEN, 
-      accessSecret: process.env.TWITTER_ACCESS_SECRET,
-    });
-    console.log('Twitter API client initialized');
-    console.log('Twitter API client initialized');
-  } catch (error) {
-    console.error('Failed to initialize Twitter API client:', error);
-  }
+try {
+  twitterClient = new TwitterApi({
+    appKey: process.env.TWITTER_API_KEY,
+    appSecret: process.env.TWITTER_API_SECRET,
+    accessToken: process.env.TWITTER_ACCESS_TOKEN,
+    accessSecret: process.env.TWITTER_ACCESS_SECRET,
+  });
+  console.log('Twitter API client initialized');
+} catch (error) {
+  console.error('Failed to initialize Twitter API client:', error);
+  throw new Error('Twitter API client initialization failed. Please check your API credentials.');
 }
+
+// Make Twitter client available globally
+global.twitterClient = twitterClient;
 
 // User state middleware
 bot.use(async (ctx, next) => {
