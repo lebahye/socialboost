@@ -90,7 +90,6 @@ const welcomeHandler = async (ctx) => {
 
 const registerHandler = async (ctx) => {
   try {
-    // Check if user is already registered
     const telegramId = ctx.from.id.toString();
     const result = await pool.query(
       'SELECT * FROM users WHERE telegram_id = $1',
@@ -98,8 +97,15 @@ const registerHandler = async (ctx) => {
     );
 
     if (result.rows[0]) {
+      const user = result.rows[0];
       return ctx.reply(
-        'You are already registered! Use /status to check your account details or /help to see available commands.'
+        `You are already registered!\n\n` +
+        `*Account Details:*\n` +
+        `• Username: ${user.username || 'Not set'}\n` +
+        `• Account Type: ${user.is_project_owner ? 'Project Owner' : 'Community Member'}\n` +
+        `• Joined: ${new Date(user.created_at).toDateString()}\n\n` +
+        `Use /status to check your account details or /help to see available commands.`,
+        { parse_mode: 'Markdown' }
       );
     }
 

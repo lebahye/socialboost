@@ -23,11 +23,13 @@ const pool = new Pool({
 // Import scenes
 const projectRegistrationScene = require('./scenes/projectRegistration');
 const campaignCreationScene = require('./scenes/campaignCreation');
+const { userRegistrationScene } = require('./scenes/userRegistration');
 
 // Initialize stage with scenes
 const stage = new Stage([
   projectRegistrationScene,
-  campaignCreationScene
+  campaignCreationScene,
+  userRegistrationScene
 ]);
 
 // Set up session handling (use built-in session middleware)
