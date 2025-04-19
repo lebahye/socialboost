@@ -136,23 +136,35 @@ const tutorialHandler = async (ctx) => {
   try {
     const messages = [
       {
-        text: "*Welcome to SocialBoost Bot Tutorial* 🚀\n\nThis quick guide will show you how to use our platform effectively.",
+        text: "*Welcome to SocialBoost Bot Tutorial* 🚀\n\nThis comprehensive guide will show you how to use our platform effectively.",
         parse_mode: 'Markdown'
       },
       {
-        text: "*Step 1: Link Your Accounts* 🔗\n\nUse /link to connect your social media accounts (X/Twitter, Discord) to verify your participation in campaigns.",
+        text: "*Step 1: Account Setup* 👤\n\n• Use /status to check your account details\n• View /help anytime to see all available commands\n• Use /verify to confirm your account status",
         parse_mode: 'Markdown'
       },
       {
-        text: "*Step 2: Join Campaigns* 💪\n\nUse /campaigns to see active campaigns you can join. Each campaign will have specific tasks to complete.",
+        text: "*Step 2: Link Your Social Accounts* 🔗\n\n• Use /link to connect X/Twitter and Discord\n• Follow the verification process for each platform\n• Use /unlink if you need to remove any account\n• Check /verify to confirm your accounts are properly linked",
         parse_mode: 'Markdown'
       },
       {
-        text: "*Step 3: Complete Tasks & Earn* 💰\n\nFollow campaign instructions to complete social tasks. Once verified, you'll earn credits for your participation.",
+        text: "*Step 3: Explore Available Campaigns* 🎯\n\n• Use /campaigns to browse active campaigns\n• Each campaign shows required tasks and rewards\n• Use /campaign <number> to view specific campaign details\n• Premium campaigns offer higher rewards (/premium to upgrade)",
         parse_mode: 'Markdown'
       },
       {
-        text: "*Step 4: Cash Out or Upgrade* 🌟\n\nUse /cashout to convert your credits to cryptocurrency or /premium to upgrade your account for higher rewards.",
+        text: "*Step 4: Participate & Earn* 💰\n\n• Join campaigns that interest you\n• Complete required social media tasks\n• Use /check to verify your participation\n• Earn credits upon successful verification",
+        parse_mode: 'Markdown'
+      },
+      {
+        text: "*Step 5: Track & Analyze* 📊\n\n• Use /analytics to view your performance\n• Check campaign statistics and earnings\n• Monitor your engagement metrics\n• Track your referral earnings (/referral)",
+        parse_mode: 'Markdown'
+      },
+      {
+        text: "*Step 6: Rewards & Benefits* 🌟\n\n• Accumulate credits through participation\n• Use /cashout to convert credits (min. 1000 required)\n• Upgrade to premium for higher rewards (/premium)\n• Earn extra through referrals (/referral)",
+        parse_mode: 'Markdown'
+      },
+      {
+        text: "*Project Owners* 🏢\n\n• Create projects with /newproject\n• Launch campaigns using /newcampaign\n• Manage projects via /myprojects\n• Post campaigns with /postcampaign\n• Track performance with /analytics",
         parse_mode: 'Markdown'
       }
     ];
@@ -161,7 +173,7 @@ const tutorialHandler = async (ctx) => {
     for (let i = 0; i < messages.length; i++) {
       setTimeout(() => {
         ctx.replyWithMarkdown(messages[i].text);
-      }, i * 1500);
+      }, i * 2000);
     }
   } catch (error) {
     console.error('Error in tutorialHandler:', error);
