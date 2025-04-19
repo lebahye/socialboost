@@ -1,3 +1,4 @@
+
 const { Scenes } = require('telegraf');
 const { Pool } = require('pg');
 
@@ -13,16 +14,22 @@ const userRegistrationScene = new Scenes.WizardScene(
   // Step 1: Ask about user type
   async (ctx) => {
     await ctx.reply(
-      '🔍 *Are you a community member or a project owner?*\n\n' +
-      '• Community members can participate in campaigns and earn rewards.\n' +
-      '• Project owners can create campaigns to promote their projects.\n\n' +
-      'Please select:',
+      '🔍 *Welcome to Registration!*\n\n' +
+      'Please select your account type:\n\n' +
+      '👥 *Community Member*\n' +
+      '• Participate in campaigns\n' +
+      '• Earn rewards\n' +
+      '• Track your earnings\n\n' +
+      '👑 *Project Owner*\n' +
+      '• Create and manage projects\n' +
+      '• Launch campaigns\n' +
+      '• Access analytics\n',
       {
         parse_mode: 'Markdown',
         reply_markup: {
           inline_keyboard: [
-            [{ text: 'Community Member', callback_data: 'type_member' }],
-            [{ text: 'Project Owner', callback_data: 'type_project' }]
+            [{ text: '👥 Community Member', callback_data: 'type_member' }],
+            [{ text: '👑 Project Owner', callback_data: 'type_owner' }]
           ]
         }
       }
@@ -37,10 +44,10 @@ const userRegistrationScene = new Scenes.WizardScene(
         return;
       }
 
-      const isProjectOwner = ctx.callbackQuery.data === 'type_project';
+      const isProjectOwner = ctx.callbackQuery.data === 'type_owner';
       await ctx.answerCbQuery();
 
-      const { telegramId, username, firstName, lastName } = ctx.session.registrationData;
+      const { id, username, first_name, last_name } = ctx.from;
 
       // Insert user into database
       const result = await pool.query(
@@ -56,17 +63,19 @@ const userRegistrationScene = new Scenes.WizardScene(
           created_at
         ) VALUES ($1, $2, $3, $4, $5, false, 0, '[]', NOW())
         RETURNING *`,
-        [telegramId, username, firstName, lastName, isProjectOwner]
+        [id.toString(), username, first_name, last_name, isProjectOwner]
       );
 
       if (result.rows[0]) {
         const welcomeMsg = isProjectOwner
-          ? '✅ Registration complete! You can now:\n\n' +
+          ? '✅ *Registration Complete!*\n\n' +
+            'As a Project Owner, you can:\n' +
             '• Create projects with /newproject\n' +
             '• Launch campaigns with /newcampaign\n' +
             '• View analytics with /analytics\n\n' +
             'Start by creating your first project with /newproject'
-          : '✅ Registration complete! You can now:\n\n' +
+          : '✅ *Registration Complete!*\n\n' +
+            'As a Community Member, you can:\n' +
             '• Browse campaigns with /campaigns\n' +
             '• Link social accounts with /link\n' +
             '• Track earnings with /status\n\n' +
