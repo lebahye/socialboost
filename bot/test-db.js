@@ -32,6 +32,26 @@ async function testConnection() {
   }
 }
 
+async function checkVerificationCodes() {
+  try {
+    const result = await pool.query('SELECT * FROM verification_attempts ORDER BY attempted_at DESC LIMIT 5');
+    console.log('\nRecent verification attempts:');
+    console.log('------------------------');
+    for (const row of result.rows) {
+      console.log(`\nVerification Code: ${row.verification_code}`);
+      console.log(`X Username: ${row.x_username}`);
+      console.log(`Status: ${row.status}`);
+      console.log(`Attempted at: ${row.attempted_at}`);
+      console.log(`DM received: ${row.dm_received}`);
+    }
+  } catch (err) {
+    console.error('Error checking verification codes:', err);
+  }
+}
+
+checkVerificationCodes();
+
+
 testConnection();
 const { Pool } = require('pg');
 require('dotenv').config();

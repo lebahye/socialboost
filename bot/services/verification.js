@@ -181,8 +181,13 @@ class VerificationService {
         throw new Error('Could not retrieve DMs - check app permissions');
       }
 
+      console.log('Storing verification code:', {
+        user_id: user?.data?.id,
+        username: username,
+        code: verificationCode
+      });
+
       // Log initial verification code issuance
-      // Log verification attempt with available data
       await pool.query(
         `INSERT INTO verification_attempts (
           telegram_id, x_username, verification_code, attempted_at,
