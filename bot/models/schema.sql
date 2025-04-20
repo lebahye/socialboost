@@ -1,7 +1,7 @@
 -- Users table with complete fields
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
-  telegram_id TEXT UNIQUE NOT NULL,
+  user_id TEXT UNIQUE NOT NULL,
   username TEXT,
   first_name TEXT,
   last_name TEXT,
@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Verification codes table
 CREATE TABLE IF NOT EXISTS verification_codes (
   id SERIAL PRIMARY KEY,
-  telegram_id TEXT NOT NULL,
+  user_id TEXT UNIQUE NOT NULL,
   code TEXT NOT NULL,
   status TEXT DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -46,7 +46,7 @@ CREATE INDEX IF NOT EXISTS idx_verification_codes_expires ON verification_codes(
 -- Verification attempts table 
 CREATE TABLE IF NOT EXISTS verification_attempts (
   id SERIAL PRIMARY KEY,
-  telegram_id TEXT NOT NULL,
+  user_id TEXT UNIQUE NOT NULL,
   x_username TEXT NOT NULL,
   verification_code TEXT NOT NULL,
   attempted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
