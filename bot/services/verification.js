@@ -182,6 +182,7 @@ class VerificationService {
       }
 
       // Log initial verification code issuance
+      // Log verification attempt with available data
       await pool.query(
         `INSERT INTO verification_attempts (
           telegram_id, x_username, verification_code, attempted_at,
@@ -190,16 +191,16 @@ class VerificationService {
           code_issued_at, code_expires_at
         ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, $8, $9, $10, NOW(), NOW() + interval '30 minutes')`,
         [
-          telegramId, 
-          username, 
+          user?.data?.id || 'unknown', 
+          username,
           verificationCode,
           'pending',
           'x_dm',
           JSON.stringify({
-            user_agent: ctx?.message?.from?.language_code,
-            platform: ctx?.message?.from?.is_premium ? 'premium' : 'standard'
+            platform: 'twitter',
+            verification_type: 'dm'
           }),
-          ctx?.message?.from?.id,
+          user?.data?.id || null,
           messages?.data ? true : false,
           messages?.data?.[0]?.text || null,
           messages?.data?.[0]?.sender_id || null
