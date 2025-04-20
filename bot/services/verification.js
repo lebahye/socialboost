@@ -68,7 +68,6 @@ class VerificationService {
         // Get DMs with expanded user info
         messages = await twitterClient.v2.listDirectMessages({
           max_results: 50,
-          'dm.fields': ['text', 'created_at', 'sender_id'],
           'user.fields': ['username'],
           expansions: ['sender_id']
         });
@@ -76,16 +75,16 @@ class VerificationService {
         console.log('Retrieved DMs for verification check');
         console.log(`Looking for verification code ${verificationCode} from user ${username}`);
 
+        // Log all DMs for debugging
         if (messages?.data) {
-          messages.data.forEach(msg => {
-            console.log('DM received:', {
-              text: msg.text,
-              sender_id: msg.sender_id,
-              timestamp: msg.created_at
+          console.log('All received DMs:');
+          messages.data.forEach(dm => {
+            console.log({
+              sender: dm.sender_id,
+              text: dm.text,
+              time: new Date(dm.created_at).toISOString()
             });
           });
-        } else {
-          console.log('No DMs found');
         }
       } catch (err) {
         console.error('Error fetching DMs:', err);
