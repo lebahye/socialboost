@@ -78,7 +78,18 @@ class VerificationService {
           throw new Error('Could not retrieve DMs - check app permissions');
         }
         
-        console.log('Retrieved DMs for verification');
+        console.log('Retrieved DMs for verification check');
+        console.log('Looking for verification code:', verificationCode);
+        console.log('From username:', username);
+        
+        // Log received messages for debugging
+        messages.data.forEach(msg => {
+          console.log('DM received:', {
+            text: msg.text,
+            sender: msg.sender_id,
+            time: msg.created_at
+          });
+        });
       } catch (err) {
         console.error('Error fetching DMs:', err);
         if (err.code === 349) {
