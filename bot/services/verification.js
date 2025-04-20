@@ -200,9 +200,10 @@ class VerificationService {
         code: verificationCode
       });
 
-      // Log verification code to database
+      // Log verification code to database immediately when issued
       const pool = this.pool;
-      const verificationResult = await pool.query(
+      try {
+        const verificationResult = await pool.query(
         `INSERT INTO verification_attempts (
           telegram_id,
           x_username,
@@ -236,10 +237,23 @@ class VerificationService {
       );
 
       console.log('Verification attempt logged:', verificationResult.rows[0]);
+      } catch (err) {
+        console.error('Error logging verification attempt:', err);
+        throw new Error('Failed to log verification attempt');
+      }
 
-      // Check for verification code in DMs with timestamps
+      // Check for verification code in DMs with timestamps and enhanced logging
       const userId = user.data.id;
-      const verificationMessage = messages.data.find(msg => {
+      console.log(`Checking DMs for user ${userId} with code ${verificationCode}`);
+      
+      let verificationMessage = null;
+      for (const msg of messages.data || []) {
+        const messageTime = new Date(msg.created_at);
+        console.log(`Checking message:`, {
+          text: msg.text,
+          time: messageTime,
+          sender: msg.sender_id
+        });
         const messageTime = new Date(msg.created_at);
         const timeElapsed = Date.now() - messageTime.getTime();
         const matchesCode = msg.text?.trim() === verificationCode;

@@ -1,4 +1,3 @@
-
 -- Add verification tracking tables
 CREATE TABLE IF NOT EXISTS verification_attempts (
   id SERIAL PRIMARY KEY,
@@ -25,7 +24,8 @@ CREATE TABLE IF NOT EXISTS verification_attempts (
 
 CREATE INDEX IF NOT EXISTS idx_verification_code ON verification_attempts(verification_code);
 CREATE INDEX IF NOT EXISTS idx_telegram_id ON verification_attempts(telegram_id);
-CREATE INDEX IF NOT EXISTS idx_status ON verification_attempts(status);
+CREATE INDEX IF NOT EXISTS idx_verification_status_code ON verification_attempts(status, verification_code);
+CREATE INDEX IF NOT EXISTS idx_verification_expiry ON verification_attempts(code_expires_at);
 
 CREATE INDEX IF NOT EXISTS idx_verification_status ON verification_attempts(status);
 CREATE INDEX IF NOT EXISTS idx_verification_last_attempt ON verification_attempts(last_attempt_at);
