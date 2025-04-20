@@ -12,29 +12,31 @@ async function setupDatabase() {
   try {
     const client = await pool.connect();
     
-    // Create verification_codes table with correct columns
+    // Create verification_codes table
     await client.query(`
       CREATE TABLE IF NOT EXISTS verification_codes (
         id SERIAL PRIMARY KEY,
-        user_id TEXT NOT NULL,
-        code TEXT NOT NULL,
-        platform TEXT NOT NULL NULL,
-        expires_at TIMESTAMP,
+        telegram_id TEXT NOT NULL,
+        code TEXT NOT NULL UNIQUE,
+        status TEXT DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT verification_codes_pkey PRIMARY KEY (id),
-        CONSTRAINT verification_codes_code_unique UNIQUE (code)
+        expires_at TIMESTAMP,
+        platform TEXT NOT NULL,
+        username TEXT NOT NULL
       );
 
+      CREATE INDEX IF NOT EXISTS idx_verification_codes_telegram_id ON verification_codes(telegram_id);
       CREATE INDEX IF NOT EXISTS idx_verification_codes_code ON verification_codes(code);
+      CREATE INDEX IF NOT EXISTS idx_verification_codes_status ON verification_codes(status);
     `);
 
-    // Create verification_attempts table with correct columns
+    // Create verification_attempts table
     await client.query(`
       CREATE TABLE IF NOT EXISTS verification_attempts (
         id SERIAL PRIMARY KEY,
         telegram_id TEXT NOT NULL,
-        x_username TEXT NOT NULL NULL,
-        verification_code TEXT UNIQUE NOT NULL,
+        x_username TEXT NOT NULL,
+        verification_code TEXT NOT NULL,
         attempted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
         code_issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         code_expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + interval '30 minutes',
