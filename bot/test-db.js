@@ -49,20 +49,6 @@ async function checkVerificationCodes() {
   }
 }
 
-checkVerificationCodes();
-
-
-testConnection();
-const { Pool } = require('pg');
-require('dotenv').config();
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
-});
-
 async function checkUserAccounts() {
   try {
     const result = await pool.query('SELECT telegram_id, username, social_accounts FROM users WHERE social_accounts IS NOT NULL');
@@ -80,4 +66,6 @@ async function checkUserAccounts() {
   }
 }
 
+testConnection();
+checkVerificationCodes();
 checkUserAccounts();
