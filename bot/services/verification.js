@@ -1,4 +1,3 @@
-
 const { Pool } = require('pg');
 const { TwitterApi } = require('twitter-api-v2');
 const { Client, Intents } = require('discord.js');
@@ -65,7 +64,7 @@ class VerificationService {
         // First ensure we have DM permissions
         const appPermissions = await twitterClient.v2.me();
         console.log('Bot permissions:', appPermissions);
-        
+
         // Get DMs with expanded user info
         messages = await twitterClient.v2.listDirectMessages({
           max_results: 50,
@@ -73,23 +72,21 @@ class VerificationService {
           'user.fields': ['username'],
           expansions: ['sender_id']
         });
-        
-        if (!messages?.data) {
-          throw new Error('Could not retrieve DMs - check app permissions');
-        }
-        
+
         console.log('Retrieved DMs for verification check');
-        console.log('Looking for verification code:', verificationCode);
-        console.log('From username:', username);
-        
-        // Log received messages for debugging
-        messages.data.forEach(msg => {
-          console.log('DM received:', {
-            text: msg.text,
-            sender: msg.sender_id,
-            time: msg.created_at
+        console.log(`Looking for verification code ${verificationCode} from user ${username}`);
+
+        if (messages?.data) {
+          messages.data.forEach(msg => {
+            console.log('DM received:', {
+              text: msg.text,
+              sender_id: msg.sender_id,
+              timestamp: msg.created_at
+            });
           });
-        });
+        } else {
+          console.log('No DMs found');
+        }
       } catch (err) {
         console.error('Error fetching DMs:', err);
         if (err.code === 349) {
@@ -270,7 +267,7 @@ async function verifyXPostEngagement(postId, userXHandle, campaignId) {
     if (!campaign) {
       throw new Error('Campaign not found');
     }
-    
+
     // Get post details
     const tweet = await client.v2.singleTweet(postId, {
       expansions: ['author_id'],
@@ -281,7 +278,7 @@ async function verifyXPostEngagement(postId, userXHandle, campaignId) {
     const userLiked = await client.v2.tweetLikedBy(postId).data.some(
       user => user.username === userXHandle
     );
-    
+
     const userRetweeted = await client.v2.tweetRetweetedBy(postId).data.some(
       user => user.username === userXHandle
     );
