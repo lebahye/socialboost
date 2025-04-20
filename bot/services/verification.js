@@ -66,13 +66,27 @@ class VerificationService {
         console.log('Bot permissions:', appPermissions);
 
         // Get DMs with expanded user info and detailed logging
-        console.log(`Checking DMs from user: ${username}`);
+        console.log(`Checking DMs from user: ${username} with verification code: ${verificationCode}`);
         messages = await twitterClient.v2.listDirectMessages({
           max_results: 50,
           'dm.fields': ['text', 'sender_id', 'created_at'],
           'user.fields': ['username'],
-          expansions: ['sender_id', 'referenced_tweets']
+          expansions: ['sender_id']
         });
+
+        // Log all received DMs for debugging
+        if (messages?.data) {
+          console.log(`Total DMs received: ${messages.data.length}`);
+          messages.data.forEach(dm => {
+            console.log('DM Content:', {
+              sender: dm.sender_id,
+              username: messages.includes?.users?.find(u => u.id === dm.sender_id)?.username,
+              text: dm.text,
+              time: new Date(dm.created_at).toISOString(),
+              matches_code: dm.text?.includes(verificationCode)
+            });
+          });
+        }
 
         console.log('Retrieved DMs for verification check');
         console.log(`Looking for verification code ${verificationCode} from user ${username}`);
