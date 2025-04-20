@@ -163,8 +163,8 @@ const processXUsername = async (ctx) => {
 
     let socialAccounts = [];
     try {
-      socialAccounts = Array.isArray(userResult.rows[0].social_accounts) 
-        ? userResult.rows[0].social_accounts 
+      socialAccounts = Array.isArray(userResult.rows[0].social_accounts)
+        ? userResult.rows[0].social_accounts
         : [];
     } catch (error) {
       console.error('Error parsing social accounts:', error);
@@ -199,6 +199,82 @@ const processXUsername = async (ctx) => {
       'UPDATE users SET social_accounts = $1, current_state = NULL WHERE telegram_id = $2',
       [JSON.stringify(socialAccounts), telegramId]
     );
+
+    // Log verification code to database immediately when issued
+    try {
+      // Use a transaction to ensure both inserts succeed or fail together
+      await pool.query('BEGIN');
+
+      console.log('Starting verification code storage transaction:', {
+        telegram_id: telegramId,
+        username: xUsername,
+        code: verificationCode
+      });
+
+      // First store in verification_codes
+      const codeResult = await pool.query(
+        `INSERT INTO verification_codes (
+          telegram_id,
+          code,
+          status,
+          created_at,
+          expires_at,
+          platform,
+          username
+        ) VALUES ($1, $2, $3, NOW(), NOW() + interval '30 minutes', $4, $5)
+        ON CONFLICT (code) DO UPDATE 
+        SET status = 'pending',
+            expires_at = NOW() + interval '30 minutes'
+        RETURNING *`,
+        [
+          telegramId,
+          verificationCode,
+          'pending',
+          'twitter',
+          xUsername
+        ]
+      );
+
+      console.log('Verification code stored:', codeResult.rows[0]);
+
+      // Then store attempt details
+      const verificationResult = await pool.query(
+        `INSERT INTO verification_attempts (
+          telegram_id,
+          x_username,
+          verification_code,
+          attempted_at,
+          status,
+          verification_method,
+          client_info,
+          dm_received,
+          code_issued_at,
+          code_expires_at
+        ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, NOW(), NOW() + interval '30 minutes') 
+        RETURNING *`,
+        [
+          telegramId,
+          xUsername,
+          verificationCode,
+          'pending',
+          'x_dm',
+          JSON.stringify({
+            platform: 'twitter',
+            verification_type: 'dm'
+          }),
+          false
+        ]
+      );
+
+      await pool.query('COMMIT');
+      console.log('Transaction committed successfully');
+    } catch (err) {
+      console.error('Error storing verification code:', err);
+      await pool.query('ROLLBACK');
+      await ctx.reply('Sorry, an error occurred. Please try again later.');
+      return;
+    }
+
 
     // Send verification instructions
     await ctx.reply(
