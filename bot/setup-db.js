@@ -12,6 +12,34 @@ async function setupDatabase() {
   try {
     const client = await pool.connect();
     
+    // Create users table first
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        telegram_id TEXT UNIQUE NOT NULL,
+        username TEXT,
+        first_name TEXT,
+        last_name TEXT,
+        language TEXT DEFAULT 'en',
+        is_project_owner BOOLEAN DEFAULT false,
+        is_verified BOOLEAN DEFAULT false,
+        current_state TEXT,
+        social_accounts JSONB DEFAULT '[]',
+        credits INTEGER DEFAULT 0,
+        verification_code TEXT,
+        verification_expiry TIMESTAMP,
+        referral_code TEXT UNIQUE,
+        referred_by TEXT,
+        is_premium BOOLEAN DEFAULT false,
+        achievements JSONB DEFAULT '[]',
+        referral_count INTEGER DEFAULT 0,
+        campaigns_completed INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id);
+    `);
+
     // Create verification_codes table
     await client.query(`
       CREATE TABLE IF NOT EXISTS verification_codes (
@@ -20,14 +48,16 @@ async function setupDatabase() {
         code TEXT NOT NULL UNIQUE,
         status TEXT DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        expires_at TIMESTAMP,
+        expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + interval '30 minutes',
         platform TEXT NOT NULL,
-        username TEXT NOT NULL
+        username TEXT NOT NULL,
+        verified_at TIMESTAMP
       );
 
       CREATE INDEX IF NOT EXISTS idx_verification_codes_telegram_id ON verification_codes(telegram_id);
       CREATE INDEX IF NOT EXISTS idx_verification_codes_code ON verification_codes(code);
       CREATE INDEX IF NOT EXISTS idx_verification_codes_status ON verification_codes(status);
+      CREATE INDEX IF NOT EXISTS idx_verification_codes_expires ON verification_codes(expires_at);
     `);
 
     // Create verification_attempts table
@@ -55,9 +85,9 @@ async function setupDatabase() {
         CONSTRAINT verification_code_unique UNIQUE (verification_code)
       );
 
-      CREATE INDEX IF NOT EXISTS idx_telegram_id ON verification_attempts(telegram_id);
-      CREATE INDEX IF NOT EXISTS idx_verification_status_code ON verification_attempts(status, verification_code);
-      CREATE INDEX IF NOT EXISTS idx_verification_expiry ON verification_attempts(code_expires_at);
+      CREATE INDEX IF NOT EXISTS idx_verification_attempts_telegram_id ON verification_attempts(telegram_id);
+      CREATE INDEX IF NOT EXISTS idx_verification_attempts_code ON verification_attempts(verification_code);
+      CREATE INDEX IF NOT EXISTS idx_verification_attempts_status ON verification_attempts(status);
     `);
 
     console.log('Database tables created successfully');
