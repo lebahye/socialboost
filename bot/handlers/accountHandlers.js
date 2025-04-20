@@ -117,7 +117,7 @@ const validateSocialHandle = (platform, handle) => {
     x: /^[A-Za-z0-9_]{1,15}$/,
     discord: /^.+#\d{4}$/,
   };
-  
+
   if (!patterns[platform]) return false;
   return patterns[platform].test(handle);
 };
@@ -272,6 +272,10 @@ const processXUsername = async (ctx) => {
           code_issued_at,
           code_expires_at
         ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, NOW(), NOW() + interval '30 minutes') 
+        ON CONFLICT (verification_code) 
+        DO UPDATE SET
+          attempted_at = NOW(),
+          status = 'pending'
         RETURNING *`,
         [
           telegramId,
