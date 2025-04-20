@@ -96,14 +96,26 @@ class VerificationService {
       }
 
       if (!messages?.data) {
-        throw new Error('No direct messages found');
+        console.error('No DMs found - check bot permissions');
+        throw new Error('Could not retrieve DMs - check app permissions');
       }
+
+      console.log(`Checking ${messages.data.length} DMs for verification code: ${verificationCode}`);
 
       // Check for verification code in DMs with timestamps
       const verificationMessage = messages.data.find(msg => {
         const messageTime = new Date(msg.created_at);
         const timeElapsed = Date.now() - messageTime.getTime();
-        return msg.text.includes(verificationCode) && timeElapsed < 15 * 60 * 1000;
+        const matches = msg.text.includes(verificationCode);
+
+        console.log(`Checking DM:`, {
+          text: msg.text,
+          matches: matches,
+          timeElapsed: timeElapsed,
+          withinWindow: timeElapsed < 15 * 60 * 1000
+        });
+
+        return matches && timeElapsed < 15 * 60 * 1000;
       });
 
       if (verificationMessage) {
