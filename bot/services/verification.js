@@ -75,25 +75,32 @@ class VerificationService {
         });
 
         // Log DM details for debugging
-        console.log('DM Response:', {
-          total_dms: messages?.data?.length || 0,
-          expected_user: username,
-          verification_code: verificationCode
+        console.log('Starting DM verification check for:', {
+          username: username,
+          expected_code: verificationCode,
+          total_messages: messages?.data?.length || 0
         });
 
-        // Log all received DMs for debugging
+        // Enhanced DM logging
         if (messages?.data) {
+          console.log('Found DMs:', messages.data.length);
           messages.data.forEach(dm => {
-            const dmText = dm.text || '';
-            console.log('Processing DM:', {
-              from_user: messages.includes?.users?.find(u => u.id === dm.sender_id)?.username,
-              text_preview: dmText.substring(0, 50),
-              has_code: dmText.includes(verificationCode),
-              time: new Date(dm.created_at).toISOString()
+            // Get sender info
+            const sender = messages.includes?.users?.find(u => u.id === dm.sender_id);
+            const messageTime = new Date(dm.created_at);
+            const timeElapsed = Date.now() - messageTime.getTime();
+            
+            console.log('DM Details:', {
+              sender_username: sender?.username,
+              message_text: dm.text,
+              time_sent: messageTime.toISOString(),
+              minutes_ago: Math.floor(timeElapsed / (60 * 1000)),
+              contains_code: dm.text?.includes(verificationCode),
+              matches_sender: sender?.username?.toLowerCase() === username.toLowerCase()
             });
           });
         } else {
-          console.log('No DMs found in response');
+          console.warn('No DMs found - Check bot permissions and rate limits');
         }
 
         // Log all received DMs for debugging
