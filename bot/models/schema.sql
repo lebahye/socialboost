@@ -2,18 +2,19 @@
 CREATE TABLE IF NOT EXISTS verification_codes (
   id SERIAL PRIMARY KEY,
   telegram_id TEXT NOT NULL,
-  code TEXT NOT NULL,
+  code TEXT NOT NULL UNIQUE,
   status TEXT DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + interval '30 minutes',
   platform TEXT NOT NULL,
   username TEXT NOT NULL,
-  CONSTRAINT code_unique UNIQUE (code)
+  verified_at TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_verification_codes_telegram_id ON verification_codes(telegram_id);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_code ON verification_codes(code);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_status ON verification_codes(status);
+CREATE INDEX IF NOT EXISTS idx_verification_codes_expires ON verification_codes(expires_at);
 
 -- Verification attempts table 
 CREATE TABLE IF NOT EXISTS verification_attempts (
