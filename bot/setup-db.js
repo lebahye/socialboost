@@ -1,47 +1,70 @@
-const fs = require('fs');
+
 const { Pool } = require('pg');
-require('dotenv').config();
 
-// Verify database URL exists
-if (!process.env.DATABASE_URL) {
-  console.error('DATABASE_URL environment variable is not set');
-  process.exit(1);
-}
-
-// Create a new pool with the connection string from the environment variables
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
-// Check if schema file exists
-if (!fs.existsSync('./models/schema.sql')) {
-  console.error('Schema file not found: ./models/schema.sql');
-  process.exit(1);
-}
-
-// Read the SQL script
-const setupSQL = fs.readFileSync('./models/schema.sql', 'utf8');
-
-// Execute the SQL script
 async function setupDatabase() {
-  console.log('Setting up database...');
   try {
-    // Test connection first
     const client = await pool.connect();
-    console.log('Database connection successful');
-    client.release();
+    
+    // Create verification_codes table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS verification_codes (
+        id SERIAL PRIMARY KEY,
+        telegram_id TEXT NOT NULL,
+        code TEXT NOT NULL UNIQUE,
+        status TEXT DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        expires_at TIMESTAMP,
+        platform TEXT NOT NULL,
+        username TEXT NOT NULL,
+        CONSTRAINT code_unique UNIQUE (code)
+      );
+    `);
 
-    // Execute schema
-    await pool.query(setupSQL);
+    // Create verification_attempts table
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS verification_attempts (
+        id SERIAL PRIMARY KEY,
+        telegram_id TEXT NOT NULL,
+        x_username TEXT NOT NULL,
+        verification_code TEXT NOT NULL,
+        attempted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        code_issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        code_expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + interval '30 minutes',
+        status TEXT DEFAULT 'pending',
+        verification_method TEXT,
+        client_info JSONB,
+        dm_received BOOLEAN DEFAULT false
+      );
+    `);
+
+    // Create users table if it doesn't exist
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        telegram_id TEXT UNIQUE NOT NULL,
+        username TEXT,
+        first_name TEXT,
+        last_name TEXT,
+        current_state TEXT,
+        social_accounts JSONB DEFAULT '[]'::jsonb,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
     console.log('Database setup completed successfully');
-  } catch (error) {
-    console.error('Error setting up database:', error);
-    process.exit(1);
-  } finally {
+    client.release();
     await pool.end();
+  } catch (err) {
+    console.error('Error setting up database:', err);
+    process.exit(1);
   }
 }
 
-// Run the setup function
 setupDatabase();
