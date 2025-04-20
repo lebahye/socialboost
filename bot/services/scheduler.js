@@ -114,9 +114,47 @@ class SchedulerService {
    * Start task to clean up expired campaigns and verification codes (every day)
    */
   startCleanupTask() {
-    // Run every day at 2:00 AM
-    this.tasks.cleanup = cron.schedule('0 2 * * *', async () => {
-      console.log('Running cleanup task');
+    // Run every hour to clean up expired verifications
+    this.tasks.cleanup = cron.schedule('0 * * * *', async () => {
+      console.log('Running verification cleanup task');
+      try {
+        const pool = new Pool({
+          connectionString: process.env.DATABASE_URL,
+          ssl: { rejectUnauthorized: false }
+        });
+
+        // Start transaction
+        await pool.query('BEGIN');
+
+        // Clean up expired verification codes
+        await pool.query(`
+          DELETE FROM verification_codes 
+          WHERE expires_at < NOW() 
+          AND status = 'pending'
+        `);
+
+        // Clean up expired verification attempts
+        await pool.query(`
+          DELETE FROM verification_attempts 
+          WHERE code_expires_at < NOW() 
+          AND status = 'pending'
+        `);
+
+        // Update user states for expired verifications
+        await pool.query(`
+          UPDATE users 
+          SET current_state = NULL,
+              verification_code = NULL,
+              verification_expiry = NULL
+          WHERE verification_expiry < NOW()
+        `);
+
+        await pool.query('COMMIT');
+        console.log('Verification cleanup completed successfully');
+      } catch (error) {
+        console.error('Error in cleanup task:', error);
+        await pool.query('ROLLBACK');
+      }
       try {
         const pool = new Pool({
           connectionString: process.env.DATABASE_URL,

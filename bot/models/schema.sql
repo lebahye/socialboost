@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS users (
   referral_code TEXT UNIQUE,
   referred_by TEXT,
   is_premium BOOLEAN DEFAULT false,
-  achievements JSONB DEFAULT '[]',
+  achievements JSONB DEFAULT '[]'::jsonb,
   referral_count INTEGER DEFAULT 0,
   campaigns_completed INTEGER DEFAULT 0
 );
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS verification_codes (
   code TEXT NOT NULL,
   status TEXT DEFAULT 'pending'::text,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + '00:30:00'::interval,
+  expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + interval '30 minutes',
   username TEXT NOT NULL,
   verified_at TIMESTAMP,
   attempts_count INTEGER DEFAULT 0,

@@ -44,6 +44,36 @@ class VerificationService {
     try {
       console.log(`Attempting to verify X account: ${username} with code: ${verificationCode}`);
 
+      // Validation and rate limit check
+      const rateLimitKey = `verify_${username}_${Date.now()}`;
+      const rateLimit = await this.pool.query(
+        'SELECT COUNT(*) FROM verification_attempts WHERE x_username = $1 AND attempted_at > NOW() - interval \'5 minutes\'',
+        [username]
+      );
+
+      if (parseInt(rateLimit.rows[0].count) > 5) {
+        throw new Error('Rate limit exceeded. Please try again in 5 minutes.');
+      }
+
+      // Error handling wrapper
+      const handleApiError = async (operation) => {
+        try {
+          return await operation();
+        } catch (error) {
+          console.error('API Error:', error);
+          
+          if (error.code === 429 || error.errors?.some(e => e.code === 88)) {
+            throw new Error('Rate limit reached. Please try again in a few minutes.');
+          }
+          
+          if (error.code === 349) {
+            throw new Error('Bot lacks required permissions. Please contact support.');
+          }
+
+          throw new Error('API error occurred. Please try again.');
+        }
+      };
+
       const twitterClient = global.twitterClient || this.twitterClient;
       if (!twitterClient) {
         throw new Error('Twitter client not initialized');
