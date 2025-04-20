@@ -1,12 +1,11 @@
-
--- Add verification_codes table
+-- Verification codes table
 CREATE TABLE IF NOT EXISTS verification_codes (
   id SERIAL PRIMARY KEY,
   telegram_id TEXT NOT NULL,
-  code TEXT NOT NULL UNIQUE,
+  code TEXT NOT NULL,
   status TEXT DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  expires_at TIMESTAMP,
+  expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + interval '30 minutes',
   platform TEXT NOT NULL,
   username TEXT NOT NULL,
   CONSTRAINT code_unique UNIQUE (code)
@@ -16,8 +15,7 @@ CREATE INDEX IF NOT EXISTS idx_verification_codes_telegram_id ON verification_co
 CREATE INDEX IF NOT EXISTS idx_verification_codes_code ON verification_codes(code);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_status ON verification_codes(status);
 
-
--- Add verification tracking tables
+-- Verification attempts table 
 CREATE TABLE IF NOT EXISTS verification_attempts (
   id SERIAL PRIMARY KEY,
   telegram_id TEXT NOT NULL,
@@ -41,14 +39,12 @@ CREATE TABLE IF NOT EXISTS verification_attempts (
   CONSTRAINT verification_code_unique UNIQUE (verification_code)
 );
 
-CREATE INDEX IF NOT EXISTS idx_verification_code ON verification_attempts(verification_code);
-CREATE INDEX IF NOT EXISTS idx_telegram_id ON verification_attempts(telegram_id);
-CREATE INDEX IF NOT EXISTS idx_verification_status_code ON verification_attempts(status, verification_code);
-CREATE INDEX IF NOT EXISTS idx_verification_expiry ON verification_attempts(code_expires_at);
+CREATE INDEX IF NOT EXISTS idx_verification_attempts_telegram_id ON verification_attempts(telegram_id);
+CREATE INDEX IF NOT EXISTS idx_verification_attempts_code ON verification_attempts(verification_code);
+CREATE INDEX IF NOT EXISTS idx_verification_attempts_status ON verification_attempts(status);
+CREATE INDEX IF NOT EXISTS idx_verification_attempts_expiry ON verification_attempts(code_expires_at);
 
-CREATE INDEX IF NOT EXISTS idx_verification_status ON verification_attempts(status);
-CREATE INDEX IF NOT EXISTS idx_verification_last_attempt ON verification_attempts(last_attempt_at);
-
+-- Add verification tracking tables
 CREATE TABLE IF NOT EXISTS dm_checks (
   id SERIAL PRIMARY KEY,
   verification_code TEXT NOT NULL,
