@@ -89,15 +89,19 @@ class VerificationService {
         // Log all DMs for debugging
         if (messages?.data) {
           console.log(`Found ${messages.data.length} DMs`);
+          console.log(`Looking for DM from ${username} (ID: ${expectedUserId}) with code: ${verificationCode}`);
           for (const dm of messages.data) {
-            console.log('DM:', {
+            console.log('DM Details:', {
               sender_id: dm.sender_id,
+              sender_username: messages.includes?.users?.find(u => u.id === dm.sender_id)?.username,
               text: dm.text,
-              matches_code: dm.text.includes(verificationCode),
+              matches_code: dm.text?.includes(verificationCode),
               matches_sender: dm.sender_id === expectedUserId,
               time: new Date(dm.created_at).toISOString()
             });
           }
+        } else {
+          console.log('No DMs found in response');
         }
       } catch (err) {
         console.error('Error fetching DMs:', err);
