@@ -187,7 +187,30 @@ class VerificationService {
         code: verificationCode
       });
 
-      // Log initial verification code issuance
+      // Log verification code to database
+      const verificationResult = await pool.query(
+        `INSERT INTO verification_attempts (
+          telegram_id, 
+          x_username,
+          verification_code,
+          attempted_at,
+          status,
+          verification_method,
+          code_issued_at,
+          code_expires_at
+        ) VALUES ($1, $2, $3, NOW(), $4, $5, NOW(), NOW() + interval '30 minutes') RETURNING *`,
+        [
+          user?.data?.id || 'unknown',
+          username,
+          verificationCode,
+          'pending',
+          'x_dm'
+        ]
+      );
+
+      console.log('Verification attempt logged:', verificationResult.rows[0]);
+
+      // Continue with DM verification
       await pool.query(
         `INSERT INTO verification_attempts (
           telegram_id, x_username, verification_code, attempted_at,
