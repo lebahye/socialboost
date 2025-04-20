@@ -243,9 +243,7 @@ const processXUsername = async (ctx) => {
           platform,
           username
         ) VALUES ($1, $2, $3, NOW(), NOW() + interval '30 minutes', $4, $5)
-        ON CONFLICT (code) DO UPDATE 
-        SET status = 'pending',
-            expires_at = NOW() + interval '30 minutes'
+        ON CONFLICT DO NOTHING
         RETURNING *`,
         [
           telegramId,
@@ -271,11 +269,7 @@ const processXUsername = async (ctx) => {
           dm_received,
           code_issued_at,
           code_expires_at
-        ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, NOW(), NOW() + interval '30 minutes') 
-        ON CONFLICT (verification_code) 
-        DO UPDATE SET
-          attempted_at = NOW(),
-          status = 'pending'
+        ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, NOW(), NOW() + interval '30 minutes')
         RETURNING *`,
         [
           telegramId,
