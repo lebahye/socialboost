@@ -42,7 +42,6 @@ CREATE TABLE IF NOT EXISTS verification_attempts (
 CREATE INDEX IF NOT EXISTS idx_verification_attempts_telegram_id ON verification_attempts(telegram_id);
 CREATE INDEX IF NOT EXISTS idx_verification_attempts_code ON verification_attempts(verification_code);
 CREATE INDEX IF NOT EXISTS idx_verification_attempts_status ON verification_attempts(status);
-CREATE INDEX IF NOT EXISTS idx_verification_attempts_expiry ON verification_attempts(code_expires_at);
 
 -- Add verification tracking tables
 CREATE TABLE IF NOT EXISTS dm_checks (
