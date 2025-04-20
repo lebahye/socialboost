@@ -304,7 +304,6 @@ class VerificationService {
             is_recent: isRecent,
             time_elapsed_mins: Math.floor(timeElapsed / 60000)
           });
-          const isRecent = timeElapsed < 30 * 60 * 1000; // 30 minutes
 
           console.log('Checking DM:', {
             text: msg.text,
