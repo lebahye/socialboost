@@ -270,8 +270,24 @@ class VerificationService {
       const userId = user.data.id;
       console.log(`Checking DMs for user ${userId} with code ${verificationCode}`);
 
+      // First verify the code exists in verification_codes
+      const codeResult = await pool.query(
+        'SELECT * FROM verification_codes WHERE code = $1 AND username = $2 AND status = $3',
+        [verificationCode, username, 'pending']
+      );
+
+      if (!codeResult.rows[0]) {
+        console.log('Verification code not found or expired');
+        return {
+          verified: false,
+          message: '⚠️ Verification code not found or expired. Please generate a new code with /link'
+        };
+      }
+
       let verificationMessage = null;
       if (messages?.data) {
+        console.log(`Found ${messages.data.length} DMs to check`);
+        
         for (const msg of messages.data) {
           const messageTime = new Date(msg.created_at);
           const timeElapsed = Date.now() - messageTime.getTime();
@@ -279,6 +295,15 @@ class VerificationService {
           // Check if message contains the code (case insensitive)
           const matchesCode = msg.text?.toLowerCase().includes(verificationCode.toLowerCase());
           const matchesSender = msg.sender_id === userId;
+          const isRecent = timeElapsed < 30 * 60 * 1000; // 30 minutes
+
+          console.log('Checking DM:', {
+            text: msg.text,
+            matches_code: matchesCode,
+            matches_sender: matchesSender,
+            is_recent: isRecent,
+            time_elapsed_mins: Math.floor(timeElapsed / 60000)
+          });
           const isRecent = timeElapsed < 30 * 60 * 1000; // 30 minutes
 
           console.log('Checking DM:', {
@@ -293,6 +318,35 @@ class VerificationService {
           if (matchesCode && matchesSender && isRecent) {
             verificationMessage = msg;
             console.log('Found matching verification message:', msg);
+
+            // Update verification status in both tables
+            await pool.query(
+              'UPDATE verification_codes SET status = $1, verified_at = NOW() WHERE code = $2',
+              ['verified', verificationCode]
+            );
+
+            await pool.query(
+              'UPDATE verification_attempts SET status = $1, dm_received = true, dm_message_text = $2, dm_sender_id = $3 WHERE verification_code = $4',
+              ['verified', msg.text, msg.sender_id, verificationCode]
+            );
+
+            // Update user's social accounts
+            await pool.query(
+              `UPDATE users 
+               SET social_accounts = jsonb_set(
+                 COALESCE(social_accounts, '[]'::jsonb),
+                 '{0}',
+                 jsonb_build_object(
+                   'platform', 'x',
+                   'username', $1,
+                   'is_verified', true,
+                   'verified_at', now()
+                 )
+               )
+               WHERE telegram_id = $2`,
+              [username, userId]
+            );
+
             return {
               verified: true,
               message_id: verificationMessage.id,
