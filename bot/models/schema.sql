@@ -6,8 +6,22 @@ CREATE TABLE IF NOT EXISTS verification_attempts (
   x_username TEXT NOT NULL,
   verification_code TEXT NOT NULL,
   attempted_at TIMESTAMP NOT NULL,
-  verified_at TIMESTAMP
+  verified_at TIMESTAMP,
+  status TEXT DEFAULT 'pending',
+  attempts_count INTEGER DEFAULT 0,
+  last_attempt_at TIMESTAMP,
+  ip_address TEXT,
+  client_info TEXT,
+  verification_method TEXT,
+  error_message TEXT,
+  dm_received BOOLEAN DEFAULT false,
+  dm_received_at TIMESTAMP,
+  dm_sender_id TEXT,
+  dm_message_text TEXT
 );
+
+CREATE INDEX IF NOT EXISTS idx_verification_status ON verification_attempts(status);
+CREATE INDEX IF NOT EXISTS idx_verification_last_attempt ON verification_attempts(last_attempt_at);
 
 CREATE TABLE IF NOT EXISTS dm_checks (
   id SERIAL PRIMARY KEY,
