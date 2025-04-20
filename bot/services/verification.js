@@ -286,8 +286,11 @@ class VerificationService {
           minutes_ago: Math.floor(timeElapsed / (60 * 1000))
         });
 
-        return matchesCode && matchesSender && isRecent;
-      });
+        if (matchesCode && matchesSender && isRecent) {
+          verificationMessage = msg;
+          break;
+        }
+      }
 
       if (verificationMessage) {
         console.log(`Successfully verified X account: ${username} with code: ${verificationCode}`);
