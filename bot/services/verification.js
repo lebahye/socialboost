@@ -272,23 +272,32 @@ class VerificationService {
       console.log(`Checking DMs for user ${userId} with code ${verificationCode}`);
       
       let verificationMessage = null;
-      for (const msg of messages.data || []) {
-        const messageTime = new Date(msg.created_at);
-        console.log(`Checking message:`, {
-          text: msg.text,
-          time: messageTime,
-          sender: msg.sender_id
-        });
-        const timeElapsed = Date.now() - messageTime.getTime();
-        const matchesCode = msg.text?.trim() === verificationCode;
-        const matchesSender = msg.sender_id === userId;
-        const isRecent = timeElapsed < 30 * 60 * 1000; // Extended to 30 minutes
+      if (messages?.data) {
+        for (const msg of messages.data) {
+          const messageTime = new Date(msg.created_at);
+          const timeElapsed = Date.now() - messageTime.getTime();
+          
+          // Check if message contains the code (case insensitive)
+          const matchesCode = msg.text?.toLowerCase().includes(verificationCode.toLowerCase());
+          const matchesSender = msg.sender_id === userId;
+          const isRecent = timeElapsed < 30 * 60 * 1000; // 30 minutes
 
-        // Log each DM check to database
-        pool.query(
-          'INSERT INTO dm_checks (verification_code, message_text, sender_id, is_match, check_time) VALUES ($1, $2, $3, $4, NOW())',
-          [verificationCode, msg.text, msg.sender_id, matchesCode && matchesSender]
-        ).catch(err => console.error('Error logging DM check:', err));
+          console.log('Checking DM:', {
+            text: msg.text,
+            code: verificationCode,
+            matches_code: matchesCode,
+            matches_sender: matchesSender,
+            is_recent: isRecent,
+            time_elapsed_mins: Math.floor(timeElapsed / (60 * 1000))
+          });
+
+          if (matchesCode && matchesSender && isRecent) {
+            verificationMessage = msg;
+            console.log('Found matching verification message:', msg);
+            break;
+          }
+        }
+      }
 
         // Log each DM check
         console.log('Checking DM:', {
