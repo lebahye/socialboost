@@ -69,9 +69,7 @@ class VerificationService {
         console.log(`Starting verification check for user: ${username}`);
         console.log(`Looking for verification code: ${verificationCode}`);
         
-        // Get user ID first
-        const userLookup = await twitterClient.v2.userByUsername(username);
-        if (!userLookup?.data) {
+        if (!user?.data) {
           console.log(`Could not find Twitter user: ${username}`);
           return false;
         }
