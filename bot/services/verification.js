@@ -173,9 +173,18 @@ class VerificationService {
       const verificationMessage = messages.data.find(msg => {
         const messageTime = new Date(msg.created_at);
         const timeElapsed = Date.now() - messageTime.getTime();
-        const matchesCode = msg.text?.includes(verificationCode);
+        const matchesCode = msg.text?.trim() === verificationCode;
         const matchesSender = msg.sender_id === expectedUserId;
-        const isRecent = timeElapsed < 15 * 60 * 1000;
+        const isRecent = timeElapsed < 30 * 60 * 1000; // Extended to 30 minutes
+        
+        // Log each DM check
+        console.log('Checking DM:', {
+          text: msg.text,
+          expected_code: verificationCode,
+          matches_exactly: msg.text?.trim() === verificationCode,
+          sender_matches: matchesSender,
+          is_recent: isRecent
+        });
 
         // Log detailed verification attempt
         console.log('Checking DM:', {
