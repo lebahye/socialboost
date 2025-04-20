@@ -1,3 +1,22 @@
+
+-- Add verification_codes table
+CREATE TABLE IF NOT EXISTS verification_codes (
+  id SERIAL PRIMARY KEY,
+  telegram_id TEXT NOT NULL,
+  code TEXT NOT NULL UNIQUE,
+  status TEXT DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP,
+  platform TEXT NOT NULL,
+  username TEXT NOT NULL,
+  CONSTRAINT code_unique UNIQUE (code)
+);
+
+CREATE INDEX IF NOT EXISTS idx_verification_codes_telegram_id ON verification_codes(telegram_id);
+CREATE INDEX IF NOT EXISTS idx_verification_codes_code ON verification_codes(code);
+CREATE INDEX IF NOT EXISTS idx_verification_codes_status ON verification_codes(status);
+
+
 -- Add verification tracking tables
 CREATE TABLE IF NOT EXISTS verification_attempts (
   id SERIAL PRIMARY KEY,

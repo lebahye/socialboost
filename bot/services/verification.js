@@ -203,38 +203,63 @@ class VerificationService {
       // Log verification code to database immediately when issued
       const pool = this.pool;
       try {
+        // Use a transaction to ensure both inserts succeed or fail together
+        await pool.query('BEGIN');
+
         const verificationResult = await pool.query(
-        `INSERT INTO verification_attempts (
-          telegram_id,
-          x_username,
-          verification_code,
-          attempted_at,
-          status,
-          verification_method,
-          client_info,
-          ip_address,
-          dm_received,
-          dm_message_text,
-          dm_sender_id,
-          code_issued_at,
-          code_expires_at
-        ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, $8, $9, $10, NOW(), NOW() + interval '30 minutes') RETURNING *`,
-        [
-          user?.data?.id || 'unknown',
-          username,
-          verificationCode,
-          'pending',
-          'x_dm',
-          JSON.stringify({
-            platform: 'twitter',
-            verification_type: 'dm'
-          }),
-          null, // ip_address
-          messages?.data ? true : false,
-          messages?.data?.[0]?.text || null,
-          messages?.data?.[0]?.sender_id || null
-        ]
-      );
+          `INSERT INTO verification_attempts (
+            telegram_id,
+            x_username,
+            verification_code,
+            attempted_at,
+            status,
+            verification_method,
+            client_info,
+            ip_address,
+            dm_received,
+            dm_message_text,
+            dm_sender_id,
+            code_issued_at,
+            code_expires_at
+          ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, $8, $9, $10, NOW(), NOW() + interval '30 minutes') RETURNING *`,
+          [
+            user?.data?.id || 'unknown',
+            username,
+            verificationCode,
+            'pending',
+            'x_dm',
+            JSON.stringify({
+              platform: 'twitter',
+              verification_type: 'dm'
+            }),
+            null, // ip_address
+            messages?.data ? true : false,
+            messages?.data?.[0]?.text || null,
+            messages?.data?.[0]?.sender_id || null
+          ]
+        );
+
+        // Also write to verification_codes directly
+        await pool.query(
+          `INSERT INTO verification_codes (
+            telegram_id,
+            code,
+            status,
+            created_at,
+            expires_at,
+            platform,
+            username
+          ) VALUES ($1, $2, $3, NOW(), NOW() + interval '30 minutes', $4, $5)`,
+          [
+            user?.data?.id || 'unknown',
+            verificationCode,
+            'pending',
+            'twitter',
+            username
+          ]
+        );
+
+        await pool.query('COMMIT');
 
       console.log('Verification attempt logged:', verificationResult.rows[0]);
       } catch (err) {
