@@ -1,4 +1,3 @@
-
 // @ts-nocheck
 const { Pool } = require('pg');
 const { TwitterApi } = require('twitter-api-v2');
@@ -270,13 +269,13 @@ class VerificationService {
       // Check for verification code in DMs with timestamps and enhanced logging
       const userId = user.data.id;
       console.log(`Checking DMs for user ${userId} with code ${verificationCode}`);
-      
+
       let verificationMessage = null;
       if (messages?.data) {
         for (const msg of messages.data) {
           const messageTime = new Date(msg.created_at);
           const timeElapsed = Date.now() - messageTime.getTime();
-          
+
           // Check if message contains the code (case insensitive)
           const matchesCode = msg.text?.toLowerCase().includes(verificationCode.toLowerCase());
           const matchesSender = msg.sender_id === userId;
@@ -294,7 +293,11 @@ class VerificationService {
           if (matchesCode && matchesSender && isRecent) {
             verificationMessage = msg;
             console.log('Found matching verification message:', msg);
-            break;
+            return {
+              verified: true,
+              message_id: verificationMessage.id,
+              message: `✅ Successfully verified X account @${username}! You can now participate in campaigns.`
+            };
           }
         }
       }
@@ -320,11 +323,6 @@ class VerificationService {
           minutes_ago: Math.floor(timeElapsed / (60 * 1000))
         });
 
-        if (matchesCode && matchesSender && isRecent) {
-          verificationMessage = msg;
-          break;
-        }
-      }
 
       if (verificationMessage) {
         console.log(`Successfully verified X account: ${username} with code: ${verificationCode}`);
