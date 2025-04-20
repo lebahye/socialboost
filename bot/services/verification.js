@@ -181,13 +181,14 @@ class VerificationService {
         throw new Error('Could not retrieve DMs - check app permissions');
       }
 
-      // Log verification attempt with detailed DM tracking
+      // Log initial verification code issuance
       await pool.query(
         `INSERT INTO verification_attempts (
           telegram_id, x_username, verification_code, attempted_at,
           status, verification_method, client_info, ip_address,
-          dm_received, dm_message_text, dm_sender_id
-        ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, $8, $9, $10)`,
+          dm_received, dm_message_text, dm_sender_id,
+          code_issued_at, code_expires_at
+        ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, $8, $9, $10, NOW(), NOW() + interval '30 minutes')`,
         [
           telegramId, 
           username, 

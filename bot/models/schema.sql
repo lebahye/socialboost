@@ -6,6 +6,8 @@ CREATE TABLE IF NOT EXISTS verification_attempts (
   x_username TEXT NOT NULL,
   verification_code TEXT NOT NULL,
   attempted_at TIMESTAMP NOT NULL,
+  code_issued_at TIMESTAMP,
+  code_expires_at TIMESTAMP,
   verified_at TIMESTAMP,
   status TEXT DEFAULT 'pending',
   attempts_count INTEGER DEFAULT 0,
