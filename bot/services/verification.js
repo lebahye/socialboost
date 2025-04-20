@@ -55,7 +55,11 @@ class VerificationService {
       }
 
       if (!user?.data) {
-        throw new Error('X account not found or is private');
+        console.log(`Could not find Twitter user: ${username}`);
+        return {
+          verified: false,
+          message: "Could not find Twitter account. Please check the username."
+        };
       }
 
       // Get user's recent DMs
