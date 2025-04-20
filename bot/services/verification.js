@@ -254,7 +254,6 @@ class VerificationService {
           time: messageTime,
           sender: msg.sender_id
         });
-        const messageTime = new Date(msg.created_at);
         const timeElapsed = Date.now() - messageTime.getTime();
         const matchesCode = msg.text?.trim() === verificationCode;
         const matchesSender = msg.sender_id === userId;
