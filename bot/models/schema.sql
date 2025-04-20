@@ -1,7 +1,7 @@
 -- Users table with complete fields
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
-  user_id TEXT UNIQUE NOT NULL,
+  telegram_id TEXT UNIQUE NOT NULL,
   username TEXT,
   first_name TEXT,
   last_name TEXT,
