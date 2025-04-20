@@ -117,7 +117,38 @@ class SchedulerService {
     // Run every day at 2:00 AM
     this.tasks.cleanup = cron.schedule('0 2 * * *', async () => {
       console.log('Running cleanup task');
-      // Implement cleanup logic
+      try {
+        const pool = new Pool({
+          connectionString: process.env.DATABASE_URL,
+          ssl: { rejectUnauthorized: false }
+        });
+
+        // Clean up expired verification codes
+        await pool.query(`
+          DELETE FROM verification_codes 
+          WHERE expires_at < NOW() 
+          AND status = 'pending'
+        `);
+
+        // Clean up expired verification attempts
+        await pool.query(`
+          DELETE FROM verification_attempts 
+          WHERE code_expires_at < NOW() 
+          AND status = 'pending'
+        `);
+
+        // Update user states for expired verifications
+        await pool.query(`
+          UPDATE users 
+          SET current_state = NULL 
+          WHERE verification_expiry < NOW() 
+          AND current_state IN ('awaiting_x_username', 'awaiting_discord_username')
+        `);
+
+        console.log('Cleanup completed successfully');
+      } catch (error) {
+        console.error('Error during cleanup:', error);
+      }
     });
   }
 

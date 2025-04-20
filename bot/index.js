@@ -3,8 +3,24 @@ const { Pool } = require('pg');
 const { TwitterApi } = require('twitter-api-v2');
 require('dotenv').config();
 
-// Initialize bot
-const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
+// Initialize bot with instance handling
+const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN, {
+  handlerTimeout: 90_000, // 90 seconds timeout
+  telegram: {
+    webhookReply: false,
+    apiRoot: process.env.TELEGRAM_API_ROOT || 'https://api.telegram.org'
+  }
+});
+
+// Handle webhook errors
+bot.catch((err, ctx) => {
+  console.error('Bot webhook error:', err);
+  if (err.code === 409) {
+    console.log('Detected multiple instances, shutting down this instance');
+    process.exit(1);
+  }
+  ctx.reply('An error occurred. Please try again later.');
+});
 
 // Use session middleware
 const LocalSession = require('telegraf-session-local');

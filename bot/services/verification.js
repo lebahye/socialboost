@@ -49,6 +49,30 @@ class VerificationService {
         throw new Error('Twitter client not initialized');
       }
 
+      // Rate limit handling
+      const handleRateLimit = async (error) => {
+        if (error.code === 429 || error.errors?.some(e => e.code === 88)) {
+          const resetTime = error.rateLimit?.reset || Math.floor(Date.now() / 1000) + 900;
+          const waitTime = (resetTime * 1000) - Date.now();
+          console.log(`Rate limited. Waiting ${Math.ceil(waitTime / 1000)} seconds`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          return true;
+        }
+        return false;
+      };
+
+      // Retry mechanism for rate limits
+      const withRateLimitRetry = async (operation) => {
+        try {
+          return await operation();
+        } catch (error) {
+          if (await handleRateLimit(error)) {
+            return await operation();
+          }
+          throw error;
+        }
+      };
+
       // Validate inputs
       if (!username || !verificationCode) {
         throw new Error('Missing required verification parameters');

@@ -112,9 +112,30 @@ const linkDiscordCallback = async (ctx) => {
 /**
  * Handler for processing X username submission
  */
+const validateSocialHandle = (platform, handle) => {
+  const patterns = {
+    x: /^[A-Za-z0-9_]{1,15}$/,
+    discord: /^.+#\d{4}$/,
+  };
+  
+  if (!patterns[platform]) return false;
+  return patterns[platform].test(handle);
+};
+
 const processXUsername = async (ctx) => {
-  const xUsername = ctx.message.text.trim();
+  const xUsername = ctx.message.text.trim().replace('@', '');
   const telegramId = ctx.from.id.toString();
+
+  if (!validateSocialHandle('x', xUsername)) {
+    await ctx.reply(
+      '❌ Invalid X username format. Username must:\n' +
+      '• Be 1-15 characters long\n' +
+      '• Only contain letters, numbers, and underscores\n' +
+      '• Not include @ symbol\n\n' +
+      'Please try again with a valid username.'
+    );
+    return;
+  }
 
   // Check if username starts with @
   if (xUsername.startsWith('@')) {

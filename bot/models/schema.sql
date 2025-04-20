@@ -24,17 +24,24 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id);
 
--- Verification codes table with required fields 
+-- Verification codes table with complete fields 
 CREATE TABLE IF NOT EXISTS verification_codes (
   id SERIAL PRIMARY KEY,
   telegram_id TEXT NOT NULL,
   platform TEXT NOT NULL,
-  code TEXT UNIQUE NOT NULL,
+  code TEXT NOT NULL,
   status TEXT DEFAULT 'pending'::text,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + '00:30:00'::interval,
   username TEXT NOT NULL,
   verified_at TIMESTAMP,
+  attempts_count INTEGER DEFAULT 0,
+  last_attempt_at TIMESTAMP,
+  error_message TEXT,
+  dm_received BOOLEAN DEFAULT false,
+  dm_received_at TIMESTAMP,
+  dm_sender_id TEXT,
+  dm_message_text TEXT,
   CONSTRAINT verification_codes_code_key UNIQUE (code)
 );
 
@@ -47,12 +54,12 @@ CREATE TABLE IF NOT EXISTS verification_attempts (
   id SERIAL PRIMARY KEY,
   telegram_id TEXT NOT NULL,
   x_username TEXT NOT NULL,
-  verification_code TEXT UNIQUE NOT NULL,
+  verification_code TEXT NOT NULL,
   attempted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   code_issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   code_expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + interval '30 minutes',
   verified_at TIMESTAMP,
-  status TEXT DEFAULT 'pending'::text,
+  status TEXT DEFAULT 'pending',
   attempts_count INTEGER DEFAULT 0,
   last_attempt_at TIMESTAMP,
   ip_address TEXT,
@@ -62,7 +69,8 @@ CREATE TABLE IF NOT EXISTS verification_attempts (
   dm_received BOOLEAN DEFAULT false,
   dm_received_at TIMESTAMP,
   dm_sender_id TEXT,
-  dm_message_text TEXT
+  dm_message_text TEXT,
+  CONSTRAINT verification_code_unique UNIQUE (verification_code)
 );
 
 CREATE INDEX IF NOT EXISTS idx_verification_attempts_telegram_id ON verification_attempts(telegram_id);
