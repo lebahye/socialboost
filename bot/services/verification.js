@@ -190,29 +190,40 @@ class VerificationService {
       // Log verification code to database
       const verificationResult = await pool.query(
         `INSERT INTO verification_attempts (
-          telegram_id, 
+          telegram_id,
           x_username,
           verification_code,
           attempted_at,
           status,
           verification_method,
+          client_info,
+          ip_address,
+          dm_received,
+          dm_message_text,
+          dm_sender_id,
           code_issued_at,
           code_expires_at
-        ) VALUES ($1, $2, $3, NOW(), $4, $5, NOW(), NOW() + interval '30 minutes') RETURNING *`,
+        ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, $8, $9, $10, NOW(), NOW() + interval '30 minutes') RETURNING *`,
         [
           user?.data?.id || 'unknown',
           username,
           verificationCode,
           'pending',
-          'x_dm'
+          'x_dm',
+          JSON.stringify({
+            platform: 'twitter',
+            verification_type: 'dm'
+          }),
+          user?.data?.id || null,
+          messages?.data ? true : false,
+          messages?.data?.[0]?.text || null,
+          messages?.data?.[0]?.sender_id || null
         ]
       );
 
       console.log('Verification attempt logged:', verificationResult.rows[0]);
 
-      // Continue with DM verification
-      await pool.query(
-        `INSERT INTO verification_attempts (
+      // Check DMs for verification
           telegram_id, x_username, verification_code, attempted_at,
           status, verification_method, client_info, ip_address,
           dm_received, dm_message_text, dm_sender_id,
