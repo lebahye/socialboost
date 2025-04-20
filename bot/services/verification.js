@@ -194,7 +194,7 @@ class VerificationService {
       }
 
       console.log('Storing verification code:', {
-        user_id: user?.data?.id,
+        telegram_id: user?.data?.id,
         username: username,
         code: verificationCode
       });
@@ -272,8 +272,8 @@ class VerificationService {
       }
 
       // Check for verification code in DMs with timestamps and enhanced logging
-      const userId = user.data.id;
-      console.log(`Checking DMs for user ${userId} with code ${verificationCode}`);
+      const telegramId = user.data.id;
+      console.log(`Checking DMs for user ${telegramId} with code ${verificationCode}`);
 
       // First verify the code exists in verification_codes
       const codeResult = await pool.query(
@@ -292,14 +292,14 @@ class VerificationService {
       let verificationMessage = null;
       if (messages?.data) {
         console.log(`Found ${messages.data.length} DMs to check`);
-        
+
         for (const msg of messages.data) {
           const messageTime = new Date(msg.created_at);
           const timeElapsed = Date.now() - messageTime.getTime();
 
           // Check if message contains the code (case insensitive)
           const matchesCode = msg.text?.toLowerCase().includes(verificationCode.toLowerCase());
-          const matchesSender = msg.sender_id === userId;
+          const matchesSender = msg.sender_id === telegramId;
           const isRecent = timeElapsed < 30 * 60 * 1000; // 30 minutes
 
           console.log('Checking DM:', {
@@ -348,7 +348,7 @@ class VerificationService {
                  )
                )
                WHERE telegram_id = $2`,
-              [username, userId]
+              [username, telegramId]
             );
 
             return {
