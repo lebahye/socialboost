@@ -1,16 +1,43 @@
+-- Users table with complete fields
+CREATE TABLE IF NOT EXISTS users (
+  id SERIAL PRIMARY KEY,
+  telegram_id TEXT UNIQUE NOT NULL,
+  username TEXT,
+  first_name TEXT,
+  last_name TEXT,
+  language TEXT DEFAULT 'en',
+  is_project_owner BOOLEAN DEFAULT false,
+  is_verified BOOLEAN DEFAULT false,
+  current_state TEXT,
+  social_accounts JSONB DEFAULT '[]',
+  credits INTEGER DEFAULT 0,
+  verification_code TEXT,
+  verification_expiry TIMESTAMP,
+  referral_code TEXT UNIQUE,
+  referred_by TEXT,
+  is_premium BOOLEAN DEFAULT false,
+  achievements JSONB DEFAULT '[]', 
+  referral_count INTEGER DEFAULT 0,
+  campaigns_completed INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Verification codes table
 CREATE TABLE IF NOT EXISTS verification_codes (
   id SERIAL PRIMARY KEY,
   telegram_id TEXT NOT NULL,
-  code TEXT NOT NULL UNIQUE,
+  code TEXT NOT NULL,
   status TEXT DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + interval '30 minutes',
   platform TEXT NOT NULL,
   username TEXT NOT NULL,
-  verified_at TIMESTAMP
+  verified_at TIMESTAMP,
+  CONSTRAINT code_unique UNIQUE (code)
 );
 
+-- Create indexes after tables
+CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_telegram_id ON verification_codes(telegram_id);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_code ON verification_codes(code);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_status ON verification_codes(status);
@@ -64,30 +91,6 @@ CREATE TABLE IF NOT EXISTS campaign_posts (
   campaign_id INTEGER REFERENCES campaigns(id),
   owner_id TEXT NOT NULL,
   channel_id TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Users table with complete fields
-CREATE TABLE IF NOT EXISTS users (
-  id SERIAL PRIMARY KEY,
-  telegram_id TEXT UNIQUE NOT NULL,
-  username TEXT,
-  first_name TEXT,
-  last_name TEXT,
-  language TEXT DEFAULT 'en',
-  is_project_owner BOOLEAN DEFAULT false,
-  is_verified BOOLEAN DEFAULT false,
-  current_state TEXT,
-  social_accounts JSONB DEFAULT '[]',
-  credits INTEGER DEFAULT 0,
-  verification_code TEXT,
-  verification_expiry TIMESTAMP,
-  referral_code TEXT UNIQUE,
-  referred_by TEXT,
-  is_premium BOOLEAN DEFAULT false,
-  achievements JSONB DEFAULT '[]', 
-  referral_count INTEGER DEFAULT 0,
-  campaigns_completed INTEGER DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
