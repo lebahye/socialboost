@@ -1,4 +1,4 @@
-const { Pool } = require('pg');
+const { Pool } = Drequire('pg');
 const { TwitterApi } = require('twitter-api-v2');
 const { Client, Intents } = require('discord.js');
 
