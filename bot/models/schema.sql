@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS users (
 -- Verification codes table
 CREATE TABLE IF NOT EXISTS verification_codes (
   id SERIAL PRIMARY KEY,
-  user_id TEXT UNIQUE NOT NULL,
+  telegram_id TEXT NOT NULL,
   code TEXT NOT NULL,
   status TEXT DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
