@@ -14,46 +14,45 @@ CREATE TABLE IF NOT EXISTS users (
   verification_code TEXT,
   verification_expiry TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT users_pkey PRIMARY KEY (id),
-  CONSTRAINT users_telegram_id_key UNIQUE (telegram_id)
+  referral_code TEXT UNIQUE,
+  referred_by TEXT,
+  is_premium BOOLEAN DEFAULT false,
+  achievements JSONB DEFAULT '[]',
+  referral_count INTEGER DEFAULT 0,
+  campaigns_completed INTEGER DEFAULT 0
 );
 
-CREATE UNIQUE INDEX users_pkey USING BTREE (id);
-CREATE UNIQUE INDEX users_telegram_id_key USING BTREE (telegram_id);
-
--- Create indexes after tables
 CREATE INDEX IF NOT EXISTS idx_users_telegram_id ON users(telegram_id);
 
--- Verification codes table with all required fields
+-- Verification codes table with required fields 
 CREATE TABLE IF NOT EXISTS verification_codes (
   id SERIAL PRIMARY KEY,
-  telegram_id TEXT UNIQUE NOT NULL,
+  telegram_id TEXT NOT NULL,
   platform TEXT NOT NULL,
-  code TEXT NOT NULL,
-  status TEXT DEFAULT 'pending',
+  code TEXT UNIQUE NOT NULL,
+  status TEXT DEFAULT 'pending'::text,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + '00:30:00'::interval,
   username TEXT NOT NULL,
   verified_at TIMESTAMP,
-  CONSTRAINT code_unique UNIQUE (code)
+  CONSTRAINT verification_codes_code_key UNIQUE (code)
 );
 
 CREATE INDEX IF NOT EXISTS idx_verification_codes_telegram_id ON verification_codes(telegram_id);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_code ON verification_codes(code);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_status ON verification_codes(status);
-CREATE INDEX IF NOT EXISTS idx_verification_codes_expires ON verification_codes(expires_at);
 
--- Verification attempts table 
+-- Verification attempts table
 CREATE TABLE IF NOT EXISTS verification_attempts (
   id SERIAL PRIMARY KEY,
-  telegram_id TEXT UNIQUE NOT NULL,
+  telegram_id TEXT NOT NULL,
   x_username TEXT NOT NULL,
   verification_code TEXT UNIQUE NOT NULL,
   attempted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   code_issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   code_expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + interval '30 minutes',
   verified_at TIMESTAMP,
-  status TEXT DEFAULT 'pending',
+  status TEXT DEFAULT 'pending'::text,
   attempts_count INTEGER DEFAULT 0,
   last_attempt_at TIMESTAMP,
   ip_address TEXT,
@@ -63,52 +62,24 @@ CREATE TABLE IF NOT EXISTS verification_attempts (
   dm_received BOOLEAN DEFAULT false,
   dm_received_at TIMESTAMP,
   dm_sender_id TEXT,
-  dm_message_text TEXT,
-  CONSTRAINT verification_code_unique UNIQUE (verification_code)
+  dm_message_text TEXT
 );
 
-CREATE INDEX idx_verification_status_code USING BTREE (verification_code, status);
-CREATE INDEX idx_verification_code USING BTREE (verification_code);
-CREATE INDEX idx_verification_code_status USING BTREE (status);
-CREATE INDEX idx_verification_last_attempt USING BTREE (last_attempt_at);
-CREATE INDEX idx_verification_expiry USING BTREE (code_expires_at);
-CREATE INDEX idx_verification_status USING BTREE (status);
-CREATE INDEX idx_telegram_id USING BTREE (telegram_id);
+CREATE INDEX IF NOT EXISTS idx_verification_attempts_telegram_id ON verification_attempts(telegram_id);
+CREATE INDEX IF NOT EXISTS idx_verification_attempts_code ON verification_attempts(verification_code);
+CREATE INDEX IF NOT EXISTS idx_verification_attempts_status ON verification_attempts(status);
 
--- Add verification tracking tables
-CREATE TABLE IF NOT EXISTS dm_checks (
-  id SERIAL PRIMARY KEY,
-  verification_code TEXT NOT NULL,
-  message_text TEXT,
-  sender_id TEXT NOT NULL,
-  is_match BOOLEAN NOT NULL,
-  check_time TIMESTAMP NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_verification_code ON verification_attempts(verification_code);
-CREATE INDEX IF NOT EXISTS idx_telegram_id ON verification_attempts(telegram_id);
-
-
--- Campaign posts tracking for rate limiting
-CREATE TABLE IF NOT EXISTS campaign_posts (
-  id SERIAL PRIMARY KEY,
-  campaign_id INTEGER REFERENCES campaigns(id),
-  owner_id TEXT NOT NULL,
-  channel_id TEXT NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Projects table with enhanced fields
+-- Projects table
 CREATE TABLE IF NOT EXISTS projects (
   id SERIAL PRIMARY KEY,
   name VARCHAR(50) NOT NULL,
   description TEXT,
   category TEXT NOT NULL,
   owner_id TEXT NOT NULL REFERENCES users(telegram_id),
-  subscription JSONB DEFAULT '{"isActive": true, "campaignsRemaining": 3}',
+  subscription JSONB DEFAULT '{"isActive": true, "campaignsRemaining": 3}'::jsonb,
   campaigns_remaining INTEGER DEFAULT 3,
-  social_accounts JSONB DEFAULT '{"x": null, "discord": null}',
-  settings JSONB DEFAULT '{}',
+  social_accounts JSONB DEFAULT '{}'::jsonb,
+  settings JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -125,40 +96,58 @@ CREATE TABLE IF NOT EXISTS campaigns (
   end_date TIMESTAMP,
   target_participants INTEGER DEFAULT 0,
   current_participants INTEGER DEFAULT 0,
-  rewards JSONB DEFAULT '[]',
-  settings JSONB DEFAULT '{}',
-  status TEXT DEFAULT 'draft',
+  rewards JSONB DEFAULT '[]'::jsonb,
+  settings JSONB DEFAULT '{}'::jsonb,
+  status TEXT DEFAULT 'draft'::text,
   private BOOLEAN DEFAULT false,
   created_by TEXT REFERENCES users(telegram_id),
-  participants JSONB DEFAULT '[]',
+  participants JSONB DEFAULT '[]'::jsonb,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Add analytics tracking
-CREATE TABLE IF NOT EXISTS analytics (
-  id SERIAL PRIMARY KEY,
-  campaign_id INTEGER,
-  metric_type TEXT NOT NULL,
-  value INTEGER DEFAULT 0,
-  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT analytics_campaign_id_fkey FOREIGN KEY (campaign_id) REFERENCES public.campaigns (id) ON UPDATE NO ACTION ON DELETE NO ACTION,
-  CONSTRAINT analytics_pkey PRIMARY KEY (id)
-);
-
-CREATE UNIQUE INDEX analytics_pkey USING BTREE (id);
+-- Campaign participants table
 CREATE TABLE IF NOT EXISTS campaign_participants (
   id SERIAL PRIMARY KEY,
-  campaign_id INTEGER,
-  telegram_id TEXT UNIQUE NOT NULL,
+  campaign_id INTEGER REFERENCES campaigns(id),
+  telegram_id TEXT NOT NULL,
   telegram_username TEXT,
   participated BOOLEAN DEFAULT false,
   participation_date TIMESTAMP,
   rewarded BOOLEAN DEFAULT false,
   reward_type VARCHAR(50),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT campaign_participants_pkey PRIMARY KEY (id),
-  CONSTRAINT campaign_participants_user_id_key UNIQUE (telegram_id)
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE UNIQUE INDEX campaign_participants_pkey USING BTREE (id);
-CREATE UNIQUE INDEX campaign_participants_user_id_key USING BTREE (telegram_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_participants_telegram_id ON campaign_participants(telegram_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_participants_campaign_id ON campaign_participants(campaign_id);
+
+-- Analytics table
+CREATE TABLE IF NOT EXISTS analytics (
+  id SERIAL PRIMARY KEY, 
+  campaign_id INTEGER REFERENCES campaigns(id),
+  metric_type TEXT NOT NULL,
+  value INTEGER DEFAULT 0,
+  timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_analytics_campaign_id ON analytics(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_metric_type ON analytics(metric_type);
+
+-- Add verification tracking tables
+CREATE TABLE IF NOT EXISTS dm_checks (
+  id SERIAL PRIMARY KEY,
+  verification_code TEXT NOT NULL,
+  message_text TEXT,
+  sender_id TEXT NOT NULL,
+  is_match BOOLEAN NOT NULL,
+  check_time TIMESTAMP NOT NULL
+);
+
+-- Campaign posts tracking for rate limiting
+CREATE TABLE IF NOT EXISTS campaign_posts (
+  id SERIAL PRIMARY KEY,
+  campaign_id INTEGER REFERENCES campaigns(id),
+  owner_id TEXT NOT NULL,
+  channel_id TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
