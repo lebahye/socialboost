@@ -68,6 +68,7 @@ class VerificationService {
         // Get DMs with expanded user info
         messages = await twitterClient.v2.listDirectMessages({
           max_results: 50,
+          'dm.fields': ['text', 'sender_id', 'created_at'],
           'user.fields': ['username'],
           expansions: ['sender_id']
         });
@@ -75,16 +76,27 @@ class VerificationService {
         console.log('Retrieved DMs for verification check');
         console.log(`Looking for verification code ${verificationCode} from user ${username}`);
 
+        // Get user ID from username
+        const userLookup = await twitterClient.v2.userByUsername(username);
+        if (!userLookup?.data) {
+          console.log('Could not find user:', username);
+          return { verified: false };
+        }
+        const expectedUserId = userLookup.data.id;
+        console.log('Expected user ID:', expectedUserId);
+
         // Log all DMs for debugging
         if (messages?.data) {
-          console.log('All received DMs:');
-          messages.data.forEach(dm => {
-            console.log({
-              sender: dm.sender_id,
+          console.log(`Found ${messages.data.length} DMs`);
+          for (const dm of messages.data) {
+            console.log('DM:', {
+              sender_id: dm.sender_id,
               text: dm.text,
+              matches_code: dm.text.includes(verificationCode),
+              matches_sender: dm.sender_id === expectedUserId,
               time: new Date(dm.created_at).toISOString()
             });
-          });
+          }
         }
       } catch (err) {
         console.error('Error fetching DMs:', err);
@@ -99,22 +111,22 @@ class VerificationService {
         throw new Error('Could not retrieve DMs - check app permissions');
       }
 
-      console.log(`Checking ${messages.data.length} DMs for verification code: ${verificationCode}`);
-
       // Check for verification code in DMs with timestamps
       const verificationMessage = messages.data.find(msg => {
         const messageTime = new Date(msg.created_at);
         const timeElapsed = Date.now() - messageTime.getTime();
-        const matches = msg.text.includes(verificationCode);
+        const matchesCode = msg.text?.includes(verificationCode);
+        const matchesSender = msg.sender_id === expectedUserId;
+        const isRecent = timeElapsed < 15 * 60 * 1000;
 
-        console.log(`Checking DM:`, {
-          text: msg.text,
-          matches: matches,
-          timeElapsed: timeElapsed,
-          withinWindow: timeElapsed < 15 * 60 * 1000
+        console.log('Checking message:', {
+          code_match: matchesCode,
+          sender_match: matchesSender,
+          is_recent: isRecent,
+          text: msg.text
         });
 
-        return matches && timeElapsed < 15 * 60 * 1000;
+        return matchesCode && matchesSender && isRecent;
       });
 
       if (verificationMessage) {
