@@ -1,7 +1,8 @@
+
 // @ts-nocheck
 const { Pool } = require('pg');
 const { TwitterApi } = require('twitter-api-v2');
-const { Client, Intents } = require('discord.js');
+const { Client, IntentsBitField } = require('discord.js');
 
 class VerificationService {
   constructor() {
@@ -24,16 +25,27 @@ class VerificationService {
 
     // Initialize Discord client
     if (process.env.DISCORD_BOT_TOKEN) {
-      this.discordClient = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.DIRECT_MESSAGES] });
+      this.discordClient = new Client({ 
+        intents: [
+          IntentsBitField.Flags.Guilds, 
+          IntentsBitField.Flags.DirectMessages
+        ] 
+      });
       this.discordClient.login(process.env.DISCORD_BOT_TOKEN);
     }
   }
 
+  /**
+   * Verify X (Twitter) account by checking DMs for a verification code
+   * @param {string} username - X username
+   * @param {string} verificationCode - Code to verify
+   * @returns {Promise<Object>} - Verification result
+   */
   async verifyXAccount(username, verificationCode) {
     try {
       console.log(`Attempting to verify X account: ${username} with code: ${verificationCode}`);
 
-      const twitterClient = global.twitterClient;
+      const twitterClient = global.twitterClient || this.twitterClient;
       if (!twitterClient) {
         throw new Error('Twitter client not initialized');
       }
@@ -216,7 +228,7 @@ class VerificationService {
             platform: 'twitter',
             verification_type: 'dm'
           }),
-          user?.data?.id || null,
+          null, // ip_address
           messages?.data ? true : false,
           messages?.data?.[0]?.text || null,
           messages?.data?.[0]?.sender_id || null
@@ -225,9 +237,8 @@ class VerificationService {
 
       console.log('Verification attempt logged:', verificationResult.rows[0]);
 
-      // Check DMs for verification
-
       // Check for verification code in DMs with timestamps
+      const userId = user.data.id;
       const verificationMessage = messages.data.find(msg => {
         const messageTime = new Date(msg.created_at);
         const timeElapsed = Date.now() - messageTime.getTime();
@@ -279,22 +290,24 @@ class VerificationService {
           message: `⚠️ Verification failed. Please make sure:\n1. You sent the exact code: ${verificationCode}\n2. You sent it as a DM to @SCampaign49365\n3. You're verifying the correct account`
         };
       }
-
-      console.log(`Verification failed for X account: ${username}`);
-      return { verified: false };
-
     } catch (error) {
       console.error('X verification error:', error);
       throw error;
     }
   }
 
+  /**
+   * Verify Discord account
+   * @param {string} discordId - Discord user ID
+   * @param {string} verificationCode - Code to verify
+   * @returns {Promise<boolean>} - Verification result
+   */
   async verifyDiscordAccount(discordId, verificationCode) {
     try {
       const user = await this.discordClient.users.fetch(discordId);
       const dm = await user.createDM();
       await dm.send(`Please reply with verification code: ${verificationCode}`);
-      //This needs further implementation to actually verify the code.  This is a placeholder.
+      //This needs further implementation to actually verify the code. This is a placeholder.
       return true;
     } catch (error) {
       console.error('Discord verification error:', error);
@@ -302,6 +315,12 @@ class VerificationService {
     }
   }
 
+  /**
+   * Update user state in database
+   * @param {string|number} telegramId - Telegram user ID
+   * @param {string} state - User state
+   * @returns {Promise<void>}
+   */
   async updateUserState(telegramId, state) {
     const query = `
       UPDATE users 
@@ -311,14 +330,26 @@ class VerificationService {
     await this.pool.query(query, [state, telegramId.toString()]);
   }
 
+  /**
+   * Verify a social account
+   * @param {string|number} telegramId - Telegram user ID
+   * @param {string} platform - Social platform (x, twitter, discord)
+   * @param {string} username - Username on the platform
+   * @param {string} verificationCode - Code to verify
+   * @returns {Promise<boolean>} - Verification result
+   */
   async verifyAccount(telegramId, platform, username, verificationCode) {
     try {
-      let verified = false;
+      let verificationResult = false;
       if (platform === 'twitter' || platform === 'x') {
-        verified = await this.verifyXAccount(username, verificationCode);
+        verificationResult = await this.verifyXAccount(username, verificationCode);
       } else if (platform === 'discord') {
-        verified = await this.verifyDiscordAccount(username, verificationCode);
+        verificationResult = await this.verifyDiscordAccount(username, verificationCode);
       }
+
+      // Check if verification was successful
+      const verified = typeof verificationResult === 'object' ? 
+        verificationResult.verified : verificationResult;
 
       if (verified) {
         const updateQuery = `
@@ -344,6 +375,10 @@ class VerificationService {
     }
   }
 
+  /**
+   * Process all pending verifications in the database
+   * @returns {Promise<Object>} - Processing result
+   */
   async processPendingVerifications() {
     try {
       // Get users with unverified accounts
@@ -386,6 +421,13 @@ class VerificationService {
     }
   }
 
+  /**
+   * Manually verify a user's social account
+   * @param {string|number} telegramId - Telegram user ID
+   * @param {string} platform - Social platform (x, twitter, discord)
+   * @param {string} username - Username on the platform
+   * @returns {Promise<Object>} - Verification result
+   */
   async manuallyVerifyAccount(telegramId, platform, username) {
     try {
       const result = await this.pool.query('SELECT * FROM users WHERE telegram_id = $1', [telegramId]);
@@ -413,14 +455,22 @@ class VerificationService {
     }
   }
 
+  /**
+   * Set the bot instance for notifications
+   * @param {Object} bot - Telegram bot instance
+   */
   setBot(bot) {
     this.bot = bot;
   }
 }
 
-// Export instance
-const verificationService = new VerificationService();
-
+/**
+ * Verify user engagement with a social post
+ * @param {string} postId - X post ID
+ * @param {string} userXHandle - User's X handle
+ * @param {string} campaignId - Campaign ID
+ * @returns {Promise<Object>} - Verification result
+ */
 async function verifyXPostEngagement(postId, userXHandle, campaignId) {
   try {
     const client = verificationService.twitterClient;
@@ -462,6 +512,9 @@ async function verifyXPostEngagement(postId, userXHandle, campaignId) {
     return { verified: false, error: err.message };
   }
 }
+
+// Export instance
+const verificationService = new VerificationService();
 
 module.exports = {
   verificationService,
