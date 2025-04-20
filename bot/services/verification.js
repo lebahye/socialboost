@@ -66,13 +66,25 @@ class VerificationService {
         console.log('Bot permissions:', appPermissions);
 
         // Get DMs with expanded user info and detailed logging
-        console.log(`Checking DMs from user: ${username} with verification code: ${verificationCode}`);
+        console.log(`Starting verification check for user: ${username}`);
+        console.log(`Looking for verification code: ${verificationCode}`);
+        
+        // Get user ID first
+        const userLookup = await twitterClient.v2.userByUsername(username);
+        if (!userLookup?.data) {
+          console.log(`Could not find Twitter user: ${username}`);
+          return false;
+        }
+        
         messages = await twitterClient.v2.listDirectMessages({
           max_results: 50,
           'dm.fields': ['text', 'sender_id', 'created_at', 'event_type'],
           'user.fields': ['username'],
           expansions: ['sender_id', 'referenced_tweets']
         });
+
+        // Log message count
+        console.log(`Retrieved ${messages?.data?.length || 0} recent DMs`);
 
         // Log DM details for debugging
         console.log('Starting DM verification check for:', {
@@ -167,15 +179,16 @@ class VerificationService {
         const matchesSender = msg.sender_id === expectedUserId;
         const isRecent = timeElapsed < 15 * 60 * 1000;
 
-        // Detailed logging for each message check
-        console.log('Verification Check:', {
-          message_id: msg.id,
-          sender: messages.includes?.users?.find(u => u.id === msg.sender_id)?.username,
-          text_preview: msg.text?.substring(0, 50),
-          code_match: matchesCode,
-          sender_match: matchesSender,
+        // Log detailed verification attempt
+        console.log('Checking DM:', {
+          from_username: messages.includes?.users?.find(u => u.id === msg.sender_id)?.username,
+          expected_username: username,
+          message_text: msg.text,
+          contains_code: msg.text?.includes(verificationCode),
+          sender_matches: matchesSender,
           is_recent: isRecent,
-          time_elapsed_mins: Math.floor(timeElapsed / (60 * 1000))
+          time_sent: new Date(msg.created_at).toISOString(),
+          minutes_ago: Math.floor(timeElapsed / (60 * 1000))
         });
 
         return matchesCode && matchesSender && isRecent;
