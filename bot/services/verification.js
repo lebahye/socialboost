@@ -68,12 +68,12 @@ class VerificationService {
         // Get DMs with expanded user info and detailed logging
         console.log(`Starting verification check for user: ${username}`);
         console.log(`Looking for verification code: ${verificationCode}`);
-        
+
         if (!user?.data) {
           console.log(`Could not find Twitter user: ${username}`);
           return false;
         }
-        
+
         messages = await twitterClient.v2.listDirectMessages({
           max_results: 50,
           'dm.fields': ['text', 'sender_id', 'created_at', 'event_type'],
@@ -99,7 +99,7 @@ class VerificationService {
             const sender = messages.includes?.users?.find(u => u.id === dm.sender_id);
             const messageTime = new Date(dm.created_at);
             const timeElapsed = Date.now() - messageTime.getTime();
-            
+
             console.log('DM Details:', {
               sender_username: sender?.username,
               message_text: dm.text,
@@ -130,26 +130,34 @@ class VerificationService {
         console.log('Retrieved DMs for verification check');
         console.log(`Looking for verification code ${verificationCode} from user ${username}`);
 
-        // Get user ID from username
-        const userLookup = await twitterClient.v2.userByUsername(username);
-        if (!userLookup?.data) {
-          console.log('Could not find user:', username);
-          return { verified: false };
+        // Get user ID first
+        const userInfo = await twitterClient.v2.userByUsername(username);
+        if (!userInfo?.data) {
+          console.log(`Could not find Twitter user: ${username}`);
+          return false;
         }
-        const expectedUserId = userLookup.data.id;
-        console.log('Expected user ID:', expectedUserId);
+
+        const userId = userInfo.data.id;
+        console.log(`Found user ID: ${userId}`);
+
+        messages = await twitterClient.v2.listDirectMessages({
+          max_results: 50,
+          'dm.fields': ['text', 'sender_id', 'created_at', 'event_type'],
+          'user.fields': ['username'],
+          expansions: ['sender_id', 'referenced_tweets']
+        });
 
         // Log all DMs for debugging
         if (messages?.data) {
           console.log(`Found ${messages.data.length} DMs`);
-          console.log(`Looking for DM from ${username} (ID: ${expectedUserId}) with code: ${verificationCode}`);
+          console.log(`Looking for DM from ${username} (ID: ${userId}) with code: ${verificationCode}`);
           for (const dm of messages.data) {
             console.log('DM Details:', {
               sender_id: dm.sender_id,
               sender_username: messages.includes?.users?.find(u => u.id === dm.sender_id)?.username,
               text: dm.text,
               matches_code: dm.text?.includes(verificationCode),
-              matches_sender: dm.sender_id === expectedUserId,
+              matches_sender: dm.sender_id === userId,
               time: new Date(dm.created_at).toISOString()
             });
           }
@@ -174,9 +182,9 @@ class VerificationService {
         const messageTime = new Date(msg.created_at);
         const timeElapsed = Date.now() - messageTime.getTime();
         const matchesCode = msg.text?.trim() === verificationCode;
-        const matchesSender = msg.sender_id === expectedUserId;
+        const matchesSender = msg.sender_id === userId;
         const isRecent = timeElapsed < 30 * 60 * 1000; // Extended to 30 minutes
-        
+
         // Log each DM check
         console.log('Checking DM:', {
           text: msg.text,
