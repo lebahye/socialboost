@@ -65,12 +65,13 @@ class VerificationService {
         const appPermissions = await twitterClient.v2.me();
         console.log('Bot permissions:', appPermissions);
 
-        // Get DMs with expanded user info
+        // Get DMs with expanded user info and detailed logging
+        console.log(`Checking DMs from user: ${username}`);
         messages = await twitterClient.v2.listDirectMessages({
           max_results: 50,
           'dm.fields': ['text', 'sender_id', 'created_at'],
           'user.fields': ['username'],
-          expansions: ['sender_id']
+          expansions: ['sender_id', 'referenced_tweets']
         });
 
         console.log('Retrieved DMs for verification check');
@@ -130,10 +131,17 @@ class VerificationService {
       });
 
       if (verificationMessage) {
-        console.log(`Successfully verified X account: ${username}`);
+        console.log(`Successfully verified X account: ${username} with code: ${verificationCode}`);
         return {
           verified: true,
-          message_id: verificationMessage.id
+          message_id: verificationMessage.id,
+          message: `✅ Successfully verified X account @${username}! You can now participate in campaigns.`
+        };
+      } else {
+        console.log(`Verification failed for ${username}. Code not found: ${verificationCode}`);
+        return {
+          verified: false,
+          message: `⚠️ Verification failed. Please make sure:\n1. You sent the exact code: ${verificationCode}\n2. You sent it as a DM to @SCampaign49365\n3. You're verifying the correct account`
         };
       }
 
