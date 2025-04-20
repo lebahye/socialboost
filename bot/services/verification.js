@@ -69,10 +69,32 @@ class VerificationService {
         console.log(`Checking DMs from user: ${username} with verification code: ${verificationCode}`);
         messages = await twitterClient.v2.listDirectMessages({
           max_results: 50,
-          'dm.fields': ['text', 'sender_id', 'created_at'],
+          'dm.fields': ['text', 'sender_id', 'created_at', 'event_type'],
           'user.fields': ['username'],
-          expansions: ['sender_id']
+          expansions: ['sender_id', 'referenced_tweets']
         });
+
+        // Log DM details for debugging
+        console.log('DM Response:', {
+          total_dms: messages?.data?.length || 0,
+          expected_user: username,
+          verification_code: verificationCode
+        });
+
+        // Log all received DMs for debugging
+        if (messages?.data) {
+          messages.data.forEach(dm => {
+            const dmText = dm.text || '';
+            console.log('Processing DM:', {
+              from_user: messages.includes?.users?.find(u => u.id === dm.sender_id)?.username,
+              text_preview: dmText.substring(0, 50),
+              has_code: dmText.includes(verificationCode),
+              time: new Date(dm.created_at).toISOString()
+            });
+          });
+        } else {
+          console.log('No DMs found in response');
+        }
 
         // Log all received DMs for debugging
         if (messages?.data) {
@@ -138,11 +160,15 @@ class VerificationService {
         const matchesSender = msg.sender_id === expectedUserId;
         const isRecent = timeElapsed < 15 * 60 * 1000;
 
-        console.log('Checking message:', {
+        // Detailed logging for each message check
+        console.log('Verification Check:', {
+          message_id: msg.id,
+          sender: messages.includes?.users?.find(u => u.id === msg.sender_id)?.username,
+          text_preview: msg.text?.substring(0, 50),
           code_match: matchesCode,
           sender_match: matchesSender,
           is_recent: isRecent,
-          text: msg.text
+          time_elapsed_mins: Math.floor(timeElapsed / (60 * 1000))
         });
 
         return matchesCode && matchesSender && isRecent;
