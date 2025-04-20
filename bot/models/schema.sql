@@ -5,22 +5,27 @@ CREATE TABLE IF NOT EXISTS verification_attempts (
   telegram_id TEXT NOT NULL,
   x_username TEXT NOT NULL,
   verification_code TEXT NOT NULL,
-  attempted_at TIMESTAMP NOT NULL,
-  code_issued_at TIMESTAMP,
-  code_expires_at TIMESTAMP,
+  attempted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  code_issued_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  code_expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + interval '30 minutes',
   verified_at TIMESTAMP,
   status TEXT DEFAULT 'pending',
   attempts_count INTEGER DEFAULT 0,
   last_attempt_at TIMESTAMP,
   ip_address TEXT,
-  client_info TEXT,
+  client_info JSONB,
   verification_method TEXT,
   error_message TEXT,
   dm_received BOOLEAN DEFAULT false,
   dm_received_at TIMESTAMP,
   dm_sender_id TEXT,
-  dm_message_text TEXT
+  dm_message_text TEXT,
+  CONSTRAINT verification_code_unique UNIQUE (verification_code)
 );
+
+CREATE INDEX IF NOT EXISTS idx_verification_code ON verification_attempts(verification_code);
+CREATE INDEX IF NOT EXISTS idx_telegram_id ON verification_attempts(telegram_id);
+CREATE INDEX IF NOT EXISTS idx_status ON verification_attempts(status);
 
 CREATE INDEX IF NOT EXISTS idx_verification_status ON verification_attempts(status);
 CREATE INDEX IF NOT EXISTS idx_verification_last_attempt ON verification_attempts(last_attempt_at);
