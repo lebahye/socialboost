@@ -43,6 +43,13 @@ CREATE TABLE IF NOT EXISTS verification_codes (
   dm_sender_id TEXT,
   dm_message_text TEXT,
   CONSTRAINT verification_codes_code_key UNIQUE (code)
+  last_attempt_at TIMESTAMP,
+  error_message TEXT,
+  dm_received BOOLEAN DEFAULT false,
+  dm_received_at TIMESTAMP,
+  dm_sender_id TEXT,
+  dm_message_text TEXT,
+  CONSTRAINT verification_codes_code_key UNIQUE (code)
 );
 
 CREATE INDEX IF NOT EXISTS idx_verification_codes_telegram_id ON verification_codes(telegram_id);
