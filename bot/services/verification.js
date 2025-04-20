@@ -181,6 +181,12 @@ class VerificationService {
         throw new Error('Could not retrieve DMs - check app permissions');
       }
 
+      // Log verification attempt to database
+      await pool.query(
+        'INSERT INTO verification_attempts (telegram_id, x_username, verification_code, attempted_at) VALUES ($1, $2, $3, NOW())',
+        [telegramId, username, verificationCode]
+      );
+
       // Check for verification code in DMs with timestamps
       const verificationMessage = messages.data.find(msg => {
         const messageTime = new Date(msg.created_at);
@@ -188,6 +194,12 @@ class VerificationService {
         const matchesCode = msg.text?.trim() === verificationCode;
         const matchesSender = msg.sender_id === userId;
         const isRecent = timeElapsed < 30 * 60 * 1000; // Extended to 30 minutes
+
+        // Log each DM check to database
+        pool.query(
+          'INSERT INTO dm_checks (verification_code, message_text, sender_id, is_match, check_time) VALUES ($1, $2, $3, $4, NOW())',
+          [verificationCode, msg.text, msg.sender_id, matchesCode && matchesSender]
+        ).catch(err => console.error('Error logging DM check:', err));
 
         // Log each DM check
         console.log('Checking DM:', {

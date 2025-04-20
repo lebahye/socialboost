@@ -1,4 +1,27 @@
 
+-- Add verification tracking tables
+CREATE TABLE IF NOT EXISTS verification_attempts (
+  id SERIAL PRIMARY KEY,
+  telegram_id TEXT NOT NULL,
+  x_username TEXT NOT NULL,
+  verification_code TEXT NOT NULL,
+  attempted_at TIMESTAMP NOT NULL,
+  verified_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS dm_checks (
+  id SERIAL PRIMARY KEY,
+  verification_code TEXT NOT NULL,
+  message_text TEXT,
+  sender_id TEXT NOT NULL,
+  is_match BOOLEAN NOT NULL,
+  check_time TIMESTAMP NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_verification_code ON verification_attempts(verification_code);
+CREATE INDEX IF NOT EXISTS idx_telegram_id ON verification_attempts(telegram_id);
+
+
 -- Campaign posts tracking for rate limiting
 CREATE TABLE IF NOT EXISTS campaign_posts (
   id SERIAL PRIMARY KEY,
