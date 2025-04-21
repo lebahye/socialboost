@@ -94,3 +94,12 @@ mode = "sequential"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "node bot/test-db.js"
+
+[[workflows.workflow]]
+name = "Database Reset"
+author = 39354119
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "cd bot && node setup-db.js"
