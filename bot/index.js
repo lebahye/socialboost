@@ -190,16 +190,43 @@ bot.command('project', manageProjectHandler);
 // Campaign commands
 bot.command('newcampaign', async (ctx) => {
   try {
-    await ctx.scene.enter('campaignCreation');
+    const { newCampaignHandler } = require('./handlers/campaignHandlers');
+    await newCampaignHandler(ctx);
   } catch (error) {
-    console.error('Error entering campaign creation:', error);
+    console.error('Error in newcampaign command:', error);
     await ctx.reply('An error occurred. Please try again.');
   }
 });
-bot.command('campaigns', listCampaignsHandler);
-bot.command('campaign', manageCampaignHandler);
-bot.command('campaign', manageCampaignHandler || (async (ctx) => await ctx.reply('Campaign management is not available')));
-bot.command('postcampaign', postCampaignToChannelHandler || (async (ctx) => await ctx.reply('Campaign posting is not available')));
+
+bot.command('campaigns', async (ctx) => {
+  try {
+    const { listCampaignsHandler } = require('./handlers/campaignHandlers');
+    await listCampaignsHandler(ctx);
+  } catch (error) {
+    console.error('Error in campaigns command:', error);
+    await ctx.reply('An error occurred. Please try again.');
+  }
+});
+
+bot.command('campaign', async (ctx) => {
+  try {
+    const { manageCampaignHandler } = require('./handlers/campaignHandlers');
+    await manageCampaignHandler(ctx);
+  } catch (error) {
+    console.error('Error in campaign command:', error);
+    await ctx.reply('An error occurred. Please try again.');
+  }
+});
+
+bot.command('postcampaign', async (ctx) => {
+  try {
+    const { postCampaignToChannelHandler } = require('./handlers/campaignHandlers');
+    await postCampaignToChannelHandler(ctx);
+  } catch (error) {
+    console.error('Error in postcampaign command:', error);
+    await ctx.reply('An error occurred. Please try again.');
+  }
+});
 bot.command('analytics', analyticsHandler || (async (ctx) => await ctx.reply('Analytics feature is not available')));
 bot.command('stats', userStatsHandler || (async (ctx) => await ctx.reply('Stats feature is not available')));
 bot.command('export', exportDataHandler || (async (ctx) => await ctx.reply('Export feature is not available')));
