@@ -1,4 +1,3 @@
-
 const { Pool } = require('pg');
 const { calculateProjectVerificationFee } = require('../utils/monetization');
 
@@ -35,14 +34,14 @@ const verifyProjectHandler = async (ctx) => {
     }
 
     const project = projectResult.rows[0];
-    
+
     if (project.is_verified) {
       return ctx.reply('This project is already verified! ✅');
     }
 
     // Calculate verification fee
     const verificationFee = calculateProjectVerificationFee();
-    
+
     await ctx.reply(
       `🔍 *Project Verification*\n\n` +
       `Verifying your project gives it a trusted badge and priority in listings.\n\n` +
