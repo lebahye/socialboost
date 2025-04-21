@@ -128,9 +128,15 @@ class VerificationService {
         };
       }
 
-      // Get user's recent tweets that quote tweet our verification tweet
+      // Get user's recent DMs
+      let messages;
       try {
-        console.log(`Starting quote tweet verification check for user: ${username}`);
+        // First ensure we have DM permissions
+        const appPermissions = await twitterClient.v2.me();
+        console.log('Bot permissions:', appPermissions);
+
+        // Get DMs with expanded user info and detailed logging
+        console.log(`Starting verification check for user: ${username}`);
         console.log(`Looking for verification code: ${verificationCode}`);
 
         if (!user?.data) {
@@ -138,12 +144,7 @@ class VerificationService {
           return false;
         }
 
-        // Get recent tweets from the user that quote tweet our verification tweet
-        const tweets = await twitterClient.v2.userTimeline(user.data.id, {
-          max_results: 10,
-          "tweet.fields": ["referenced_tweets", "text", "created_at"],
-          expansions: ["referenced_tweets.id"]
-        });
+        messages = await twitterClient.v2.listDirectMessages({
           max_results: 50,
           'dm.fields': ['text', 'sender_id', 'created_at', 'event_type'],
           'user.fields': ['username'],

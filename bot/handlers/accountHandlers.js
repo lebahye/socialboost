@@ -304,10 +304,9 @@ const processXUsername = async (ctx) => {
     await ctx.reply(
       `✅ Your X account @${xUsername} has been linked!\n\n` +
       `To verify this account, please follow these steps:\n\n` +
-      `1. Visit our verification tweet: https://twitter.com/${process.env.X_VERIFICATION_BOT}/status/${process.env.X_VERIFICATION_TWEET_ID}\n` +
-      `2. Quote tweet it with the following verification code:\n\n` +
+      `1. Go to X and send a DIRECT MESSAGE (DM) to ${process.env.X_VERIFICATION_BOT} with the following unique code:\n\n` +
       `\`${verificationCode}\`\n\n` +
-      `3. Your account will be verified automatically once we detect the quote tweet\n` +
+      `2. Do NOT post this code publicly! Only send it via DM.\n` +
       `3. Once verified, you'll be able to participate in campaigns.\n\n` +
       `⚠️ This code:\n` +
       `• Is unique to your account\n` +
