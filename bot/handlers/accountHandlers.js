@@ -671,31 +671,29 @@ function generateVerificationCode() {
 const linkHandler = async (ctx) => {
   try {
     const userId = ctx.from.id;
-
-    // Check if user has pending verification
-    const { rows: existing } = await pool.query(
-      'SELECT * FROM verification_attempts WHERE telegram_id = $1 AND status = $2',
-      [userId, 'pending']
+    
+    // Check if user exists
+    const userResult = await pool.query(
+      'SELECT * FROM users WHERE telegram_id = $1',
+      [userId.toString()]
     );
 
-    if (existing.length > 0) {
-      // Delete existing pending attempts
-      await pool.query(
-        'DELETE FROM verification_attempts WHERE telegram_id = $1 AND status = $2',
-        [userId, 'pending']
-      );
+    if (!userResult.rows[0]) {
+      return ctx.reply('Please start the bot first with /start');
     }
 
-    // Generate unique verification code
-    const verificationCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-
-    // Store new verification attempt
+    // Update user state to await username
     await pool.query(
-      'INSERT INTO verification_attempts (telegram_id, verification_code, status) VALUES ($1, $2, $3)',
-      [userId, verificationCode, 'pending']
+      'UPDATE users SET current_state = $1 WHERE telegram_id = $2',
+      ['awaiting_x_username', userId.toString()]
     );
 
-    await ctx.reply('Please send your X username without the @ symbol.\nFor example, if your X handle is @username, just send\nusername');
+    await ctx.reply(
+      '📱 *Linking your X (Twitter) account*\n\n' +
+      'Please send your X username *without* the @ symbol.\n' +
+      'For example, if your X handle is @username, just send `username`',
+      { parse_mode: 'Markdown' }
+    );
   } catch (error) {
     console.error('Error in linkHandler:', error);
     await ctx.reply('Sorry, an error occurred. Please try again later.');
