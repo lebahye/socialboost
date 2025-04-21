@@ -61,11 +61,11 @@ class VerificationService {
           return await operation();
         } catch (error) {
           console.error('API Error:', error);
-          
+
           if (error.code === 429 || error.errors?.some(e => e.code === 88)) {
             throw new Error('Rate limit reached. Please try again in a few minutes.');
           }
-          
+
           if (error.code === 349) {
             throw new Error('Bot lacks required permissions. Please contact support.');
           }
@@ -146,7 +146,7 @@ class VerificationService {
 
         messages = await twitterClient.v2.listDirectMessages({
           max_results: 50,
-          'dm.fields': ['text', 'sender_id', 'created_at', 'event_type'],
+          'dm_fields': ['text', 'sender_id', 'created_at', 'event_type'],
           'user.fields': ['username'],
           expansions: ['sender_id', 'referenced_tweets']
         });
@@ -212,7 +212,7 @@ class VerificationService {
 
         messages = await twitterClient.v2.listDirectMessages({
           max_results: 50,
-          'dm.fields': ['text', 'sender_id', 'created_at', 'event_type'],
+          'dm_fields': ['text', 'sender_id', 'created_at', 'event_type'],
           'user.fields': ['username'],
           expansions: ['sender_id', 'referenced_tweets']
         });
