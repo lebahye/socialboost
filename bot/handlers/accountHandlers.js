@@ -173,7 +173,7 @@ const processXUsername = async (ctx) => {
     // Generate verification code with user-specific prefix
     const userPrefix = telegramId.substring(0, 3);
     const verificationCode = `${userPrefix}-${generateVerificationCode()}`;
-    
+
     console.log('Generated verification code:', verificationCode);
 
     // First send verification instructions to user
@@ -248,7 +248,7 @@ const processXUsername = async (ctx) => {
         code: verificationCode
       });
 
-      // First store in verification_codes
+      // First store in verification_codes with proper error handling
       const codeResult = await pool.query(
         `INSERT INTO verification_codes (
             telegram_id,
@@ -259,11 +259,12 @@ const processXUsername = async (ctx) => {
             platform,
             username
           ) VALUES ($1, $2, $3, NOW(), NOW() + interval '30 minutes', $4, $5)
-          ON CONFLICT ON CONSTRAINT verification_codes_code_key DO UPDATE
-          SET telegram_id = EXCLUDED.telegram_id,
-              status = EXCLUDED.status,
-              expires_at = EXCLUDED.expires_at,
-              username = EXCLUDED.username
+          ON CONFLICT (code) DO UPDATE
+          SET telegram_id = $1,
+              status = 'pending',
+              expires_at = NOW() + interval '30 minutes',
+              platform = $4,
+              username = $5
           RETURNING *`,
         [
           telegramId,
