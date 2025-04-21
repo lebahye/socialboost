@@ -20,7 +20,7 @@ const newCampaignHandler = async (ctx) => {
     // Verify user exists and has required permissions
     const userId = ctx.from.id.toString();
     const result = await pool.query(
-      'SELECT is_project_owner, username FROM users WHERE telegram_id = $1',
+      'SELECT is_project_owner FROM users WHERE telegram_id = $1',
       [userId]
     );
 
@@ -38,14 +38,17 @@ const newCampaignHandler = async (ctx) => {
 
     // Check if user has any projects
     const projectResult = await pool.query(
-      'SELECT COUNT(*) FROM projects WHERE owner_id = $1',
+      'SELECT * FROM projects WHERE owner_id = $1 AND (subscription->\'campaignsRemaining\')::int > 0',
       [userId]
     );
 
-    if (projectResult.rows[0].count === '0') {
-      await ctx.reply('You need to create a project first. Use /newproject to create one.');
+    if (!projectResult.rows.length) {
+      await ctx.reply('You either have no projects or have used all your campaign slots. Use /newproject to create a project or upgrade your subscription for more campaigns.');
       return;
     }
+
+    // Store projects in session for campaign creation
+    ctx.session.availableProjects = projectResult.rows;
 
     // Enter campaign creation scene
     return ctx.scene.enter('campaignCreation');
