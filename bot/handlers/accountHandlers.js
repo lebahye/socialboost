@@ -270,6 +270,16 @@ const processXUsername = async (ctx) => {
           code_issued_at,
           code_expires_at
         ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, NOW(), NOW() + interval '30 minutes')
+        ON CONFLICT (verification_code) DO UPDATE
+        SET telegram_id = EXCLUDED.telegram_id,
+            x_username = EXCLUDED.x_username,
+            attempted_at = NOW(),
+            status = EXCLUDED.status,
+            verification_method = EXCLUDED.verification_method,
+            client_info = EXCLUDED.client_info,
+            dm_received = EXCLUDED.dm_received,
+            code_issued_at = NOW(),
+            code_expires_at = NOW() + interval '30 minutes'
         RETURNING *`,
         [
           telegramId,
