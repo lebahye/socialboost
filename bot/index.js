@@ -188,7 +188,6 @@ bot.command('myprojects', listProjectsHandler);
 bot.command('project', manageProjectHandler);
 
 // Campaign commands
-const { newCampaignHandler } = require('./handlers/campaignHandlers');
 bot.command('newcampaign', async (ctx) => {
   try {
     await newCampaignHandler(ctx);
