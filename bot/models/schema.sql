@@ -70,7 +70,8 @@ CREATE TABLE IF NOT EXISTS verification_attempts (
   dm_received_at TIMESTAMP,
   dm_sender_id TEXT,
   dm_message_text TEXT,
-  CONSTRAINT verification_code_unique UNIQUE (verification_code)
+  CONSTRAINT verification_code_unique UNIQUE (verification_code),
+  CONSTRAINT verification_attempts_user_telegram_unique UNIQUE (telegram_id, verification_code)
 );
 
 CREATE INDEX IF NOT EXISTS idx_verification_attempts_telegram_id ON verification_attempts(telegram_id);
