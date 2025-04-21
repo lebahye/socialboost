@@ -239,8 +239,20 @@ const manageCampaignHandler = async (ctx) => {
     }
 
     if (!ctx.session?.listedCampaigns || !Array.isArray(ctx.session.listedCampaigns)) {
-      await ctx.reply('Please use /campaigns first to see available campaigns.');
-      return;
+      // Get campaigns directly if not in session
+      const { rows: campaigns } = await pool.query(`
+        SELECT c.*, p.name as project_name 
+        FROM campaigns c
+        LEFT JOIN projects p ON c.project_id = p.id
+        WHERE c.created_by = $1 OR c.private = false
+      `, [userId]);
+
+      if (!campaigns || campaigns.length === 0) {
+        await ctx.reply('No campaigns found. You can create a new campaign with /newcampaign');
+        return;
+      }
+
+      ctx.session.listedCampaigns = campaigns;
     }
 
     if (campaignNumber < 1 || campaignNumber > ctx.session.listedCampaigns.length) {
