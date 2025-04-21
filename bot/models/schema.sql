@@ -48,6 +48,7 @@ CREATE TABLE IF NOT EXISTS verification_codes (
 CREATE INDEX IF NOT EXISTS idx_verification_codes_telegram_id ON verification_codes(telegram_id);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_code ON verification_codes(code);
 CREATE INDEX IF NOT EXISTS idx_verification_codes_status ON verification_codes(status);
+CREATE INDEX IF NOT EXISTS idx_verification_codes_expires ON verification_codes(expires_at);
 
 -- Verification attempts table
 CREATE TABLE IF NOT EXISTS verification_attempts (
