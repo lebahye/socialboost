@@ -99,7 +99,7 @@ bot.use(async (ctx, next) => {
 const { startHandler, helpHandler, statusHandler, tutorialHandler, welcomeHandler, registerHandler } = require('./handlers/basicHandlers');
 const { linkSocialHandler, linkXAccountCallback, linkDiscordCallback, verifyAccountHandler, unlinkAccountHandler, unlinkAccountCallback, textHandler } = require('./handlers/accountHandlers');
 const { newProjectHandler, listProjectsHandler, manageProjectHandler } = require('./handlers/projectHandlers');
-const { newCampaignHandler, listCampaignsHandler, manageCampaignHandler, postCampaignToChannelHandler } = require('./handlers/campaignHandlers');
+const { newCampaignHandler, listCampaignsHandler, manageCampaignHandler, postCampaignToChannelHandler, joinCampaignCallback } = require('./handlers/campaignHandlers');
 const { analyticsHandler, exportDataHandler, userStatsHandler } = require('./handlers/analyticsHandlers');
 const { registerPaymentHandlers } = require('./handlers/paymentHandlers');
 const { paymentService } = require('./services/paymentService');
@@ -188,9 +188,9 @@ bot.command('myprojects', listProjectsHandler);
 bot.command('project', manageProjectHandler);
 
 // Campaign commands
+const { newCampaignHandler } = require('./handlers/campaignHandlers');
 bot.command('newcampaign', async (ctx) => {
   try {
-    const { newCampaignHandler } = require('./handlers/campaignHandlers');
     await newCampaignHandler(ctx);
   } catch (error) {
     console.error('Error in newcampaign command:', error);
@@ -252,14 +252,14 @@ registerPaymentHandlers(bot);
 paymentService.setBot(bot);
 
 // Register callback query handlers
-const { joinCampaignCallback } = require('./handlers/campaignHandlers');
+
 bot.action(/join_campaign_(.+)/, joinCampaignCallback);
 bot.action(/link_([a-z]+)/, async (ctx) => {
   try {
     await ctx.answerCbQuery(); // Acknowledge the button press
     const platform = ctx.match[1];
     console.log('Link action callback received:', platform);
-    
+
     const accountHandlers = require('./handlers/accountHandlers');
     if (platform === 'x') {
       await accountHandlers.linkXAccountCallback(ctx);
