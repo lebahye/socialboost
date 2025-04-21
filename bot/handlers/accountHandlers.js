@@ -259,7 +259,7 @@ const processXUsername = async (ctx) => {
             platform,
             username
           ) VALUES ($1, $2, $3, NOW(), NOW() + interval '30 minutes', $4, $5)
-          ON CONFLICT ON CONSTRAINT verification_codes_code_key DO UPDATE
+          ON CONFLICT (code) DO UPDATE
           SET telegram_id = $1,
               status = 'pending',
               expires_at = NOW() + interval '30 minutes',
