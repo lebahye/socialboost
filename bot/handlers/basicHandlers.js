@@ -190,7 +190,8 @@ const statusHandler = async (ctx) => {
     let statusMessage = `*📊 Your Account Status*\n\n`;
     statusMessage += `*User:* ${user.username || ctx.from.username || 'No username'}\n`;
     statusMessage += `*Joined:* ${new Date(user.created_at).toDateString()}\n`;
-    statusMessage += `*Account Type:* ${user.is_project_owner ? 'Project Owner' : 'Participant'}\n`;
+    statusMessage += `• Account Type: ${user.is_project_owner ? 'Project Owner' : 'Participant'}\n`;
+    if (user.is_admin) statusMessage += '• Admin Status: ✅\n';
 
     await ctx.replyWithMarkdown(statusMessage);
   } catch (error) {
