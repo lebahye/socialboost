@@ -176,6 +176,22 @@ const processXUsername = async (ctx) => {
     
     console.log('Generated verification code:', verificationCode);
 
+    // First send verification instructions to user
+    await ctx.reply(
+      `✅ Your X account @${xUsername} has been linked!\n\n` +
+      `To verify this account, please follow these steps:\n\n` +
+      `1. Go to X and send a DIRECT MESSAGE (DM) to ${process.env.X_VERIFICATION_BOT} with the following unique code:\n\n` +
+      `\`${verificationCode}\`\n\n` +
+      `2. Do NOT post this code publicly! Only send it via DM.\n` +
+      `3. Once verified, you'll be able to participate in campaigns.\n\n` +
+      `⚠️ This code:\n` +
+      `• Is unique to your account\n` +
+      `• Will expire in 30 minutes\n` +
+      `• Can only be used once\n\n` +
+      `Use /verify command to check verification status.`,
+      { parse_mode: 'Markdown' }
+    );
+
     // Get current social accounts
     const userResult = await pool.query(
       'SELECT social_accounts FROM users WHERE telegram_id = $1',
