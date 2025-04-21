@@ -173,8 +173,8 @@ const processXUsername = async (ctx) => {
     // Generate verification code with user-specific prefix
     const userPrefix = telegramId.substring(0, 3);
     const verificationCode = `${userPrefix}-${generateVerificationCode()}`;
-
-    // Rate limiting check removed temporarily to fix the error
+    
+    console.log('Generated verification code:', verificationCode);
 
     // Get current social accounts
     const userResult = await pool.query(
