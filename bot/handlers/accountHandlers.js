@@ -668,6 +668,41 @@ function generateVerificationCode() {
   return crypto.randomBytes(3).toString('hex').toUpperCase();
 }
 
+const linkHandler = async (ctx) => {
+  try {
+    const userId = ctx.from.id;
+
+    // Check if user has pending verification
+    const { rows: existing } = await pool.query(
+      'SELECT * FROM verification_attempts WHERE telegram_id = $1 AND status = $2',
+      [userId, 'pending']
+    );
+
+    if (existing.length > 0) {
+      // Delete existing pending attempts
+      await pool.query(
+        'DELETE FROM verification_attempts WHERE telegram_id = $1 AND status = $2',
+        [userId, 'pending']
+      );
+    }
+
+    // Generate unique verification code
+    const verificationCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    // Store new verification attempt
+    await pool.query(
+      'INSERT INTO verification_attempts (telegram_id, verification_code, status) VALUES ($1, $2, $3)',
+      [userId, verificationCode, 'pending']
+    );
+
+    await ctx.reply('Please send your X username without the @ symbol.\nFor example, if your X handle is @username, just send\nusername');
+  } catch (error) {
+    console.error('Error in linkHandler:', error);
+    await ctx.reply('Sorry, an error occurred. Please try again later.');
+  }
+};
+
+
 module.exports = {
   linkSocialHandler,
   linkXAccountCallback,
@@ -675,5 +710,6 @@ module.exports = {
   verifyAccountHandler,
   unlinkAccountHandler,
   unlinkAccountCallback,
-  textHandler
+  textHandler,
+  linkHandler
 };
