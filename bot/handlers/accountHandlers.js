@@ -235,16 +235,20 @@ const processXUsername = async (ctx) => {
       // First store in verification_codes
       const codeResult = await pool.query(
         `INSERT INTO verification_codes (
-          telegram_id,
-          code,
-          status,
-          created_at,
-          expires_at,
-          platform,
-          username
-        ) VALUES ($1, $2, $3, NOW(), NOW() + interval '30 minutes', $4, $5)
-        ON CONFLICT DO NOTHING
-        RETURNING *`,
+            telegram_id,
+            code,
+            status,
+            created_at,
+            expires_at,
+            platform,
+            username
+          ) VALUES ($1, $2, $3, NOW(), NOW() + interval '30 minutes', $4, $5)
+          ON CONFLICT (code) DO UPDATE
+          SET telegram_id = EXCLUDED.telegram_id,
+              status = EXCLUDED.status,
+              expires_at = EXCLUDED.expires_at,
+              username = EXCLUDED.username
+          RETURNING *`,
         [
           telegramId,
           verificationCode,
@@ -259,28 +263,17 @@ const processXUsername = async (ctx) => {
       // Then store attempt details
       const verificationResult = await pool.query(
         `INSERT INTO verification_attempts (
-          telegram_id,
-          x_username,
-          verification_code,
-          attempted_at,
-          status,
-          verification_method,
-          client_info,
-          dm_received,
-          code_issued_at,
-          code_expires_at
-        ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, NOW(), NOW() + interval '30 minutes')
-        ON CONFLICT (verification_code) DO UPDATE
-        SET telegram_id = EXCLUDED.telegram_id,
-            x_username = EXCLUDED.x_username,
-            attempted_at = NOW(),
-            status = EXCLUDED.status,
-            verification_method = EXCLUDED.verification_method,
-            client_info = EXCLUDED.client_info,
-            dm_received = EXCLUDED.dm_received,
-            code_issued_at = NOW(),
-            code_expires_at = NOW() + interval '30 minutes'
-        RETURNING *`,
+            telegram_id,
+            x_username,
+            verification_code,
+            attempted_at,
+            status,
+            verification_method,
+            client_info,
+            dm_received,
+            code_issued_at,
+            code_expires_at
+          ) VALUES ($1, $2, $3, NOW(), $4, $5, $6, $7, NOW(), NOW() + interval '30 minutes')`,
         [
           telegramId,
           xUsername,
@@ -671,7 +664,7 @@ function generateVerificationCode() {
 const linkHandler = async (ctx) => {
   try {
     const userId = ctx.from.id;
-    
+
     // Check if user exists
     const userResult = await pool.query(
       'SELECT * FROM users WHERE telegram_id = $1',
