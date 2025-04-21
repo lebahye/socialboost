@@ -12,8 +12,12 @@ build = ["sh", "-c", "cd bot && npm install"]
 localPort = 3000
 externalPort = 80
 
+[[ports]]
+localPort = 3001
+externalPort = 3001
+
 [workflows]
-runButton = "Bot Dev"
+runButton = "Bot"
 
 [[workflows.workflow]]
 name = "Dev"
