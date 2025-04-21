@@ -17,10 +17,9 @@ const pool = new Pool({
  */
 const newCampaignHandler = async (ctx) => {
   try {
-    // Initialize user state if not exists
-    if (!ctx.session) {
-      ctx.session = {};
-    }
+    // Initialize session and user state
+    ctx.session = ctx.session || {};
+    ctx.session.campaignCreation = {};
 
     // Verify user exists and has required permissions
     const userId = ctx.from.id.toString();
@@ -28,6 +27,8 @@ const newCampaignHandler = async (ctx) => {
       'SELECT * FROM users WHERE telegram_id = $1',
       [userId]
     );
+
+    console.log('User query result:', result.rows);
 
     console.log('Starting campaign creation for user:', userId);
 
