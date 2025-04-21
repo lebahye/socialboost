@@ -45,13 +45,14 @@ async function setupDatabase() {
       CREATE TABLE IF NOT EXISTS verification_codes (
         id SERIAL PRIMARY KEY,
         telegram_id TEXT NOT NULL,
-        code TEXT NOT NULL UNIQUE,
+        code TEXT NOT NULL,
         status TEXT DEFAULT 'pending',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         expires_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP + interval '30 minutes',
         platform TEXT NOT NULL,
         username TEXT NOT NULL,
-        verified_at TIMESTAMP
+        verified_at TIMESTAMP,
+        CONSTRAINT verification_codes_code_key UNIQUE (code)
       );
 
       CREATE INDEX IF NOT EXISTS idx_verification_codes_telegram_id ON verification_codes(telegram_id);
