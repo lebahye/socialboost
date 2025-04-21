@@ -17,10 +17,15 @@ const pool = new Pool({
  */
 const newCampaignHandler = async (ctx) => {
   try {
+    // Initialize user state if not exists
+    if (!ctx.session) {
+      ctx.session = {};
+    }
+
     // Verify user exists and has required permissions
     const userId = ctx.from.id.toString();
     const result = await pool.query(
-      'SELECT is_project_owner FROM users WHERE telegram_id = $1',
+      'SELECT * FROM users WHERE telegram_id = $1',
       [userId]
     );
 
