@@ -202,14 +202,11 @@ bot.command('newcampaign', async (ctx) => {
 
 bot.command('campaigns', async (ctx) => {
   try {
-    const { listCampaignsHandler } = require('./handlers/campaignHandlers');
     await listCampaignsHandler(ctx);
   } catch (error) {
     console.error('Error in campaigns command:', error);
     await ctx.reply('An error occurred. Please try again.');
   }
-});
-
 });
 
 bot.command('postcampaign', async (ctx) => {
