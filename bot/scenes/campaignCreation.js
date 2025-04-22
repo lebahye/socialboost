@@ -23,7 +23,7 @@ const campaignCreationScene = new Scenes.WizardScene(
       const projects = await Project.findByTelegramId(user.telegramId);
       console.log('Found projects:', projects);
 
-    if (!projects || projects.length === 0) {
+      if (!projects || projects.length === 0) {
       await ctx.reply(
         '❌ You don\'t have any projects yet.\n\n' +
         'Please create a project first using the /newproject command.'
