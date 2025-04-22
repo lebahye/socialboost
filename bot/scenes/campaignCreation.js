@@ -15,10 +15,13 @@ const campaignCreationScene = new Scenes.WizardScene(
   'campaignCreation',
   // Step 1: Select project or start over if no projects
   async (ctx) => {
-    const user = { telegramId: ctx.from.id.toString() };
+    try {
+      const user = { telegramId: ctx.from.id.toString() };
+      console.log('User ID:', user.telegramId);
 
-    // Check if user has any projects
-    const projects = await Project.findByTelegramId(user.telegramId);
+      // Check if user has any projects
+      const projects = await Project.findByTelegramId(user.telegramId);
+      console.log('Found projects:', projects);
 
     if (!projects || projects.length === 0) {
       await ctx.reply(
@@ -50,7 +53,7 @@ const campaignCreationScene = new Scenes.WizardScene(
 
     // Generate project selection keyboard
     const projectButtons = ctx.wizard.state.availableProjects.map((project, index) => {
-      const remaining = project.subscription.campaignsRemaining;
+      const remaining = project.subscription?.campaignsRemaining || 0;
       return [{
         text: `${project.name} (${remaining} campaign${remaining === 1 ? '' : 's'} left)`,
         callback_data: `project_${index}`
