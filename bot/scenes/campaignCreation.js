@@ -24,9 +24,41 @@ const campaignCreationScene = new Scenes.WizardScene(
       console.log('Found projects:', projects);
 
       if (!projects || projects.length === 0) {
+        await ctx.reply(
+          '❌ You don\'t have any projects yet.\n\n' +
+          'Please create a project first using the /newproject command.'
+        );
+        return ctx.scene.leave();
+      }
+
+      // Check if any projects have remaining campaigns
+      const projectsWithCampaigns = projects.filter(p => 
+        p.subscription && parseInt(p.subscription.campaignsRemaining) > 0
+      );
+
+      if (projectsWithCampaigns.length === 0) {
+        await ctx.reply(
+          '❌ None of your projects have remaining campaigns.\n\n' +
+          'Please upgrade your subscription to create more campaigns.'
+        );
+        return ctx.scene.leave();
+      }
+
+      // Generate project selection keyboard
+      const keyboard = projectsWithCampaigns.map((project, index) => ([{
+        text: `${project.name} (${project.subscription.campaignsRemaining} campaigns left)`,
+        callback_data: `project_${index}`
+      }]));
+
+      keyboard.push([{ text: 'Cancel', callback_data: 'cancel' }]);
+
       await ctx.reply(
-        '❌ You don\'t have any projects yet.\n\n' +
-        'Please create a project first using the /newproject command.'
+        '🚀 *Campaign Creation - Step 1/6*\n\n' +
+        'Select which project this campaign is for:',
+        {
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: keyboard }
+        }
       );
       return ctx.scene.leave();
     }
