@@ -17,7 +17,7 @@ const pool = new Pool({
  */
 const newCampaignHandler = async (ctx) => {
   try {
-    // Initialize user state if not exists
+    // Initialize session if not exists
     if (!ctx.session) {
       ctx.session = {};
     }
@@ -26,16 +26,9 @@ const newCampaignHandler = async (ctx) => {
     // Get user from database
     const userId = ctx.from.id.toString();
     const result = await pool.query(
-      'SELECT * FROM users WHERE telegram_id = $1 AND is_project_owner = true',
+      'SELECT * FROM users WHERE telegram_id = $1',
       [userId]
     );
-
-    if (!result.rows[0]) {
-      await ctx.reply('Only project owners can create campaigns. Use /register first to register as a project owner.');
-      return;
-    }
-
-    console.log('Starting campaign creation for user:', userId);
 
     if (!result.rows[0]) {
       await ctx.reply('Please start the bot first with /start');
@@ -43,9 +36,11 @@ const newCampaignHandler = async (ctx) => {
     }
 
     if (!result.rows[0].is_project_owner) {
-      await ctx.reply('Only project owners can create campaigns. Use /help for available commands.');
+      await ctx.reply('Only project owners can create campaigns. Use /register first to register as a project owner.');
       return;
     }
+
+    console.log('Starting campaign creation for user:', userId);
 
     // Check if user has any projects
     const projectResult = await pool.query(
