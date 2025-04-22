@@ -203,7 +203,6 @@ bot.command('newcampaign', async (ctx) => {
 
 bot.command('campaigns', async (ctx) => {
   try {
-    const { listCampaignsHandler } = require('./handlers/campaignHandlers');
     await listCampaignsHandler(ctx);
   } catch (error) {
     console.error('Error in campaigns command:', error);
@@ -213,7 +212,6 @@ bot.command('campaigns', async (ctx) => {
 
 bot.command('postcampaign', async (ctx) => {
   try {
-    const { postCampaignToChannelHandler } = require('./handlers/campaignHandlers');
     await postCampaignToChannelHandler(ctx);
   } catch (error) {
     console.error('Error in postcampaign command:', error);
