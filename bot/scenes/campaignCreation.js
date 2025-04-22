@@ -30,56 +30,54 @@ const campaignCreationScene = new Scenes.WizardScene(
         );
         return ctx.scene.leave();
       }
+
+      // Check if user has subscription with remaining campaigns
+      const hasAvailableProjects = projects.some(
+        project => project.subscription && 
+        project.subscription.isActive &&
+        project.subscription.campaignsRemaining > 0
+      );
+
+      if (!hasAvailableProjects) {
+        await ctx.reply(
+          '❌ None of your projects have remaining campaigns in their subscription.\n\n' +
+          'Please upgrade your subscription using the /upgrade command.'
+        );
+        return ctx.scene.leave();
+      }
+
+      // Initialize wizard state
+      ctx.wizard.state.campaignData = {};
+      ctx.wizard.state.availableProjects = projects.filter(
+        p => p.subscription && p.subscription.isActive && p.subscription.campaignsRemaining > 0
+      );
+
+      // Generate project selection keyboard
+      const projectButtons = ctx.wizard.state.availableProjects.map((project, index) => [{
+        text: `${project.name} (${project.subscription.campaignsRemaining} campaign${project.subscription.campaignsRemaining === 1 ? '' : 's'} left)`,
+        callback_data: `project_${index}`
+      }]);
+
+      projectButtons.push([{ text: 'Cancel', callback_data: 'cancel' }]);
+
+      await ctx.reply(
+        '🚀 *Campaign Creation - Step 1/6*\n\n' +
+        'First, let\'s select which project this campaign is for.\n\n' +
+        'Choose from your projects below:',
+        {
+          parse_mode: 'Markdown',
+          reply_markup: {
+            inline_keyboard: projectButtons
+          }
+        }
+      );
+
+      return ctx.wizard.next();
     } catch (error) {
       console.error('Error in campaign creation:', error);
       await ctx.reply('An error occurred while creating the campaign. Please try again.');
       return ctx.scene.leave();
     }
-
-    // Check if user has subscription with remaining campaigns
-    const hasAvailableProjects = projects.some(
-      project => project.subscription.isActive &&
-      project.subscription.campaignsRemaining > 0
-    );
-
-    if (!hasAvailableProjects) {
-      await ctx.reply(
-        '❌ None of your projects have remaining campaigns in their subscription.\n\n' +
-        'Please upgrade your subscription using the /upgrade command.'
-      );
-      return ctx.scene.leave();
-    }
-
-    // Initialize wizard state
-    ctx.wizard.state.campaignData = {};
-    ctx.wizard.state.availableProjects = projects.filter(
-      p => p.subscription.isActive && p.subscription.campaignsRemaining > 0
-    );
-
-    // Generate project selection keyboard
-    const projectButtons = ctx.wizard.state.availableProjects.map((project, index) => {
-      const remaining = project.subscription?.campaignsRemaining || 0;
-      return [{
-        text: `${project.name} (${remaining} campaign${remaining === 1 ? '' : 's'} left)`,
-        callback_data: `project_${index}`
-      }];
-    });
-
-    projectButtons.push([{ text: 'Cancel', callback_data: 'cancel' }]);
-
-    await ctx.reply(
-      '🚀 *Campaign Creation - Step 1/6*\n\n' +
-      'First, let\'s select which project this campaign is for.\n\n' +
-      'Choose from your projects below:',
-      {
-        parse_mode: 'Markdown',
-        reply_markup: {
-          inline_keyboard: projectButtons
-        }
-      }
-    );
-
-    return ctx.wizard.next();
   },
 
   // Step 2: Handle project selection and ask for campaign name
@@ -517,12 +515,12 @@ const campaignCreationScene = new Scenes.WizardScene(
           [project.id]
         );
 
-        // Update project subscription
-        await pool.query(`
-          UPDATE projects 
-          SET subscription = jsonb_set(subscription, '{campaignsRemaining}', (COALESCE((subscription->>'campaignsRemaining')::text::int, 3) - 1)::text::jsonb)
-          WHERE id = $1
-        `, [project.id]);
+        // Update project subscription - This line is duplicated, remove one.
+        //await pool.query(`
+        //  UPDATE projects 
+        //  SET subscription = jsonb_set(subscription, '{campaignsRemaining}', (COALESCE((subscription->>'campaignsRemaining')::text::int, 3) - 1)::text::jsonb)
+        //  WHERE id = $1
+        //`, [project.id]);
 
         const durationDays = Math.ceil((savedCampaign.endDate - savedCampaign.startDate) / (1000 * 60 * 60 * 24));
         const rewardsText = savedCampaign.rewards.map((reward, index) =>
