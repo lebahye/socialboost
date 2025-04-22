@@ -75,6 +75,12 @@ const campaignCreationScene = new Scenes.WizardScene(
     );
 
     return ctx.wizard.next();
+  } catch (error) {
+    console.error('Error in campaign creation:', error);
+    await ctx.reply('An error occurred while creating the campaign. Please try again.');
+    return ctx.scene.leave();
+  }
+
   },
 
   // Step 2: Handle project selection and ask for campaign name
