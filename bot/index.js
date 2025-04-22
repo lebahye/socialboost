@@ -190,6 +190,7 @@ bot.command('project', manageProjectHandler);
 // Campaign commands
 bot.command('newcampaign', async (ctx) => {
   try {
+    await ctx.reply('🚀 Starting campaign creation process...');
     await newCampaignHandler(ctx);
     if (!ctx.scene.current) {
       await ctx.scene.enter('campaignCreation');
