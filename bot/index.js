@@ -210,7 +210,20 @@ bot.command('campaigns', async (ctx) => {
   }
 });
 
-}
+// Import campaign handlers
+const { 
+  newCampaignHandler,
+  manageCampaignHandler,
+  listCampaignsHandler,
+  postCampaignToChannelHandler
+} = require('./handlers/campaignHandlers');
+
+// Register campaign commands
+bot.command('newcampaign', newCampaignHandler);
+bot.command('campaign', manageCampaignHandler);
+bot.command('campaigns', listCampaignsHandler);
+bot.command('postcampaign', postCampaignToChannelHandler);
+  }
 });
 
 bot.command('postcampaign', async (ctx) => {
