@@ -16,59 +16,75 @@ const campaignCreationScene = new Scenes.WizardScene(
   // Step 1: Select project or start over if no projects
   async (ctx) => {
     try {
-      const user = { telegramId: ctx.from.id.toString() };
-      console.log('User ID:', user.telegramId);
+      // Initialize session
+      if (!ctx.session) {
+        ctx.session = {};
+      }
 
-      // Check if user has any projects
-      const projects = await Project.findByTelegramId(user.telegramId);
-      console.log('Found projects:', projects);
+      const userId = ctx.from.id.toString();
+
+      // Get user from database
+      const userResult = await pool.query(
+        'SELECT * FROM users WHERE telegram_id = $1',
+        [userId]
+      );
+
+      if (!userResult.rows[0]) {
+        await ctx.reply('Please start the bot first with /start');
+        return ctx.scene.leave();
+      }
+
+      const user = userResult.rows[0];
+
+      if (!user.is_project_owner) {
+        await ctx.reply('Only project owners can create campaigns. Use /register first to register as a project owner.');
+        return ctx.scene.leave();
+      }
+
+      // Get projects with remaining campaigns
+      const { rows: projects } = await pool.query(`
+        SELECT p.*, 
+               COALESCE((p.subscription->>'campaignsRemaining')::int, 0) as campaigns_remaining,
+               COALESCE((p.subscription->>'isActive')::boolean, false) as is_subscription_active
+        FROM projects p 
+        WHERE p.owner_id = $1
+      `, [userId]);
 
       if (!projects || projects.length === 0) {
+        await ctx.reply('You don\'t have any projects. Use /newproject to create one first.');
+        return ctx.scene.leave();
+      }
+
+      // Filter projects with remaining campaigns
+      const availableProjects = projects.filter(p => 
+        p.is_subscription_active && p.campaigns_remaining > 0
+      );
+
+      if (availableProjects.length === 0) {
         await ctx.reply(
-          '❌ You don\'t have any projects yet.\n\n' +
-          'Please create a project first using the /newproject command.'
+          '❌ None of your projects have remaining campaigns.\n\n' +
+          'Please upgrade your subscription to create more campaigns.'
         );
         return ctx.scene.leave();
       }
 
-      // Check if user has subscription with remaining campaigns
-      const hasAvailableProjects = projects.some(
-        project => project.subscription && 
-        project.subscription.isActive &&
-        project.subscription.campaignsRemaining > 0
-      );
-
-      if (!hasAvailableProjects) {
-        await ctx.reply(
-          '❌ None of your projects have remaining campaigns in their subscription.\n\n' +
-          'Please upgrade your subscription using the /upgrade command.'
-        );
-        return ctx.scene.leave();
-      }
-
-      // Initialize wizard state
-      ctx.wizard.state.campaignData = {};
-      ctx.wizard.state.availableProjects = projects.filter(
-        p => p.subscription && p.subscription.isActive && p.subscription.campaignsRemaining > 0
-      );
+      // Store available projects in session
+      ctx.wizard.state.availableProjects = availableProjects;
 
       // Generate project selection keyboard
-      const projectButtons = ctx.wizard.state.availableProjects.map((project, index) => [{
-        text: `${project.name} (${project.subscription.campaignsRemaining} campaign${project.subscription.campaignsRemaining === 1 ? '' : 's'} left)`,
+      const keyboard = availableProjects.map((project, index) => ([{
+        text: `${project.name} (${project.campaigns_remaining} campaigns left)`,
         callback_data: `project_${index}`
-      }]);
+      }]));
 
-      projectButtons.push([{ text: 'Cancel', callback_data: 'cancel' }]);
+      keyboard.push([{ text: 'Cancel', callback_data: 'cancel' }]);
 
       await ctx.reply(
         '🚀 *Campaign Creation - Step 1/6*\n\n' +
-        'First, let\'s select which project this campaign is for.\n\n' +
-        'Choose from your projects below:',
+        'Select which project this campaign is for:',
         {
           parse_mode: 'Markdown',
-          reply_markup: {
-            inline_keyboard: projectButtons
-          }
+          reply_markup: { inline_keyboard: keyboard }
         }
       );
 
@@ -515,12 +531,6 @@ const campaignCreationScene = new Scenes.WizardScene(
           [project.id]
         );
 
-        // Update project subscription - This line is duplicated, remove one.
-        //await pool.query(`
-        //  UPDATE projects 
-        //  SET subscription = jsonb_set(subscription, '{campaignsRemaining}', (COALESCE((subscription->>'campaignsRemaining')::text::int, 3) - 1)::text::jsonb)
-        //  WHERE id = $1
-        //`, [project.id]);
 
         const durationDays = Math.ceil((savedCampaign.endDate - savedCampaign.startDate) / (1000 * 60 * 60 * 24));
         const rewardsText = savedCampaign.rewards.map((reward, index) =>

@@ -17,47 +17,12 @@ const pool = new Pool({
  */
 const newCampaignHandler = async (ctx) => {
   try {
-    // Initialize session if not exists
-    if (!ctx.session) {
-      ctx.session = {};
-    }
-    ctx.session.campaignCreation = {};
-
-    // Get user from database
-    const userId = ctx.from.id.toString();
-    const result = await pool.query(
-      'SELECT * FROM users WHERE telegram_id = $1',
-      [userId]
-    );
-
-    if (!result.rows[0]) {
-      await ctx.reply('Please start the bot first with /start');
-      return;
-    }
-
-    if (!result.rows[0].is_project_owner) {
-      await ctx.reply('Only project owners can create campaigns. Use /register first to register as a project owner.');
-      return;
-    }
-
-    console.log('Starting campaign creation for user:', userId);
-
-    // Check if user has any projects
-    const projectResult = await pool.query(
-      'SELECT * FROM projects WHERE owner_id = $1 AND (subscription->\'campaignsRemaining\')::int > 0',
-      [userId]
-    );
-
-    if (!projectResult.rows.length) {
-      await ctx.reply('You either have no projects or have used all your campaign slots. Use /newproject to create a project or upgrade your subscription for more campaigns.');
-      return;
-    }
-
-    // Store projects in session for campaign creation
-    ctx.session.availableProjects = projectResult.rows;
-
-    // Enter campaign creation scene
+    await ctx.reply('🚀 Starting campaign creation process...');
     return ctx.scene.enter('campaignCreation');
+  } catch (error) {
+    console.error('Error in newCampaignHandler:', error);
+    await ctx.reply('An error occurred while creating campaign. Please try again.');
+  }
   } catch (error) {
     console.error('Error in newCampaignHandler:', error);
     await ctx.reply('An error occurred while creating a new campaign. Please try again.');
