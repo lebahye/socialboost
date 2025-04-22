@@ -118,6 +118,24 @@ bot.command('healthcheck', async (ctx) => {
   }
 });
 
+// Import all handlers at the top
+const {
+  startHandler,
+  helpHandler,
+  statusHandler,
+  tutorialHandler,
+  welcomeHandler,
+  registerHandler
+} = require('./handlers/basicHandlers');
+
+const {
+  newCampaignHandler,
+  listCampaignsHandler,
+  manageCampaignHandler,
+  postCampaignToChannelHandler,
+  joinCampaignCallback
+} = require('./handlers/campaignHandlers');
+
 // Register command handlers
 bot.command('start', async (ctx) => {
   // Check for referral code in deep link
