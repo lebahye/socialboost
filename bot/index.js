@@ -188,18 +188,9 @@ bot.command('myprojects', listProjectsHandler);
 bot.command('project', manageProjectHandler);
 
 // Campaign commands
-bot.command('newcampaign', async (ctx) => {
-  try {
-    await ctx.reply('🚀 Starting campaign creation process...');
-    if (!ctx.session) {
-      ctx.session = {};
-    }
-    await ctx.scene.enter('campaignCreation');
-  } catch (error) {
-    console.error('Error in newcampaign command:', error);
-    await ctx.reply('An error occurred while creating campaign. Please make sure you:\n1. Are registered as a project owner (/register)\n2. Have an active project (/newproject)\n3. Have campaign slots available');
-  }
-});
+bot.command('newcampaign', newCampaignHandler);
+bot.command('campaign', manageCampaignHandler);
+bot.command('campaigns', listCampaignsHandler);
 
 bot.command('campaigns', async (ctx) => {
   try {

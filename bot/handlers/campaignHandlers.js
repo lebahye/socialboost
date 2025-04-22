@@ -17,11 +17,14 @@ const pool = new Pool({
  */
 const newCampaignHandler = async (ctx) => {
   try {
+    if (!ctx.session) {
+      ctx.session = {};
+    }
     await ctx.reply('🚀 Starting campaign creation process...');
     return ctx.scene.enter('campaignCreation');
   } catch (error) {
     console.error('Error in newCampaignHandler:', error);
-    await ctx.reply('An error occurred while creating a new campaign. Please try again.');
+    await ctx.reply('An error occurred while creating campaign. Please try again.');
   }
 };
 
