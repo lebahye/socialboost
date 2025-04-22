@@ -190,7 +190,10 @@ bot.command('project', manageProjectHandler);
 // Campaign commands
 bot.command('newcampaign', async (ctx) => {
   try {
-    await ctx.scene.enter('campaignCreation');
+    await newCampaignHandler(ctx);
+    if (!ctx.scene.current) {
+      await ctx.scene.enter('campaignCreation');
+    }
   } catch (error) {
     console.error('Error in newcampaign command:', error);
     await ctx.reply('An error occurred while creating campaign. Please make sure you:\n1. Are registered as a project owner (/register)\n2. Have an active project (/newproject)\n3. Have campaign slots available');
@@ -199,6 +202,7 @@ bot.command('newcampaign', async (ctx) => {
 
 bot.command('campaigns', async (ctx) => {
   try {
+    const { listCampaignsHandler } = require('./handlers/campaignHandlers');
     await listCampaignsHandler(ctx);
   } catch (error) {
     console.error('Error in campaigns command:', error);
