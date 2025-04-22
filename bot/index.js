@@ -210,13 +210,19 @@ bot.command('campaigns', async (ctx) => {
   }
 });
 
-bot.command('campaign', async (ctx) => {
-  try {
-    const { manageCampaignHandler } = require('./handlers/campaignHandlers');
-    await manageCampaignHandler(ctx);
-  } catch (error) {
-    console.error('Error in campaign command:', error);
-    await ctx.reply('An error occurred. Please try again.');
+// Import campaign handlers
+const { 
+  newCampaignHandler,
+  manageCampaignHandler,
+  listCampaignsHandler,
+  postCampaignToChannelHandler
+} = require('./handlers/campaignHandlers');
+
+// Register campaign commands
+bot.command('newcampaign', newCampaignHandler);
+bot.command('campaign', manageCampaignHandler);
+bot.command('campaigns', listCampaignsHandler);
+bot.command('postcampaign', postCampaignToChannelHandler);
   }
 });
 
