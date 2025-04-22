@@ -16,10 +16,13 @@ const campaignCreationScene = new Scenes.WizardScene(
   // Step 1: Select project or start over if no projects
   async (ctx) => {
     try {
-      // Initialize session
+      // Initialize session and wizard state
       if (!ctx.session) {
         ctx.session = {};
       }
+      
+      // Initialize campaign data
+      ctx.wizard.state.campaignData = {};
 
       const userId = ctx.from.id.toString();
 

@@ -20,6 +20,23 @@ const newCampaignHandler = async (ctx) => {
     if (!ctx.session) {
       ctx.session = {};
     }
+    
+    // Check if user exists
+    const { rows: [user] } = await pool.query(
+      'SELECT * FROM users WHERE telegram_id = $1',
+      [ctx.from.id.toString()]
+    );
+    
+    if (!user) {
+      await ctx.reply('Please start the bot first with /start command');
+      return;
+    }
+
+    if (!user.is_project_owner) {
+      await ctx.reply('Only project owners can create campaigns. Use /register first to register as a project owner.');
+      return;
+    }
+
     await ctx.reply('🚀 Starting campaign creation process...');
     return ctx.scene.enter('campaignCreation');
   } catch (error) {
