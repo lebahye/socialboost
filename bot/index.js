@@ -194,7 +194,6 @@ bot.command('newcampaign', async (ctx) => {
     if (!ctx.session) {
       ctx.session = {};
     }
-    await newCampaignHandler(ctx);
     await ctx.scene.enter('campaignCreation');
   } catch (error) {
     console.error('Error in newcampaign command:', error);
