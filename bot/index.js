@@ -210,8 +210,6 @@ bot.command('campaigns', async (ctx) => {
   }
 });
 
-});
-
 bot.command('postcampaign', async (ctx) => {
   try {
     const { postCampaignToChannelHandler } = require('./handlers/campaignHandlers');
