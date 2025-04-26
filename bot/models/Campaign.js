@@ -1,4 +1,3 @@
-
 const { Pool } = require('pg');
 
 const pool = new Pool({
@@ -39,7 +38,7 @@ class Campaign {
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
       RETURNING *
     `;
-    
+
     const values = [
       name, description, projectId, projectName, safeXPostUrl,
       startDate || new Date(), safeEndDate, safeTargetParticipants,
@@ -48,8 +47,19 @@ class Campaign {
       JSON.stringify([]), JSON.stringify([])
     ];
 
-    const { rows } = await pool.query(query, values);
-    return rows[0];
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const { rows } = await client.query(query, values);
+      await client.query('COMMIT');
+      return rows[0];
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error in campaign creation:', error);
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   static async findById(id) {
@@ -62,7 +72,7 @@ class Campaign {
     const whereClause = Object.entries(conditions)
       .map(([key, value], index) => `${key} = $${index + 1}`)
       .join(' AND ');
-    
+
     const query = `SELECT * FROM campaigns WHERE ${whereClause}`;
     const { rows } = await pool.query(query, Object.values(conditions));
     return rows;
@@ -89,7 +99,7 @@ class Campaign {
       WHERE id = $1
       RETURNING *
     `;
-    
+
     const { rows } = await pool.query(query, values);
     return rows[0];
   }

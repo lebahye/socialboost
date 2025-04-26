@@ -1,3 +1,23 @@
+
+const enhancedSessionMiddleware = (ctx, next) => {
+  if (!ctx.session) ctx.session = {};
+  
+  // Save session before scene transitions
+  const originalEnter = ctx.scene.enter;
+  ctx.scene.enter = async (sceneId, ...rest) => {
+    try {
+      await ctx.session.save();
+      return originalEnter.call(ctx.scene, sceneId, ...rest);
+    } catch (error) {
+      console.error('Scene transition error:', error);
+      ctx.reply('An error occurred. Please try again.');
+    }
+  };
+  
+  return next();
+};
+
+
 const User = require('../models/User');
 const Project = require('../models/Project');
 
