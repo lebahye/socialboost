@@ -48,8 +48,13 @@ const campaignScene = new Scenes.WizardScene(
       const campaign = await Campaign.create({
         name: ctx.scene.state.campaignData.name,
         description: ctx.scene.state.campaignData.description,
-        createdBy: ctx.from.id,
-        status: 'active'
+        createdBy: ctx.from.id.toString(),
+        status: 'active',
+        startDate: new Date(),
+        endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
+        projectId: ctx.scene.state.campaignData.projectId || null,
+        projectName: ctx.scene.state.campaignData.projectName || 'Default Project',
+        rewards: []
       });
 
       await ctx.reply('Campaign created successfully!');

@@ -50,13 +50,24 @@ class Campaign {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
+      
+      // Validate required fields
+      if (!name || !description || !createdBy) {
+        throw new Error('Missing required fields');
+      }
+
       const { rows } = await client.query(query, values);
       await client.query('COMMIT');
+      
+      if (!rows[0]) {
+        throw new Error('Failed to create campaign');
+      }
+      
       return rows[0];
     } catch (error) {
       await client.query('ROLLBACK');
       console.error('Error in campaign creation:', error);
-      throw error;
+      throw new Error(`Campaign creation failed: ${error.message}`);
     } finally {
       client.release();
     }
