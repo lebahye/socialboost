@@ -1,5 +1,5 @@
 const { Scenes } = require('telegraf');
-const { pool } = require('../db'); // Updated import
+const db = require('../db'); // Updated import
 const Campaign = require('../models/Campaign');
 
 const campaignScene = new Scenes.WizardScene(
